@@ -1,7 +1,3 @@
-Đây là nội dung file README.md được tối ưu hóa dựa trên mẫu bạn cung cấp, nhưng được tinh chỉnh để trông chuyên nghiệp, có cấu trúc phân tầng rõ ràng và tập trung vào dự án 3D Print Shop của bạn.
-
-Bạn có thể copy toàn bộ nội dung dưới đây:
-
 🚀 3D Printed Model Shop - Backend API
 Dự án được khởi tạo dựa trên Clean.Architecture.Solution.Template phiên bản 8.0.6, sử dụng .NET 8 SDK làm nền tảng cốt lõi.
 
