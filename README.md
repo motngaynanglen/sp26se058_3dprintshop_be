@@ -10,6 +10,7 @@ Dự án được xây dựng nhằm cung cấp giải pháp trọn gói từ vi
 * **Trình trạng:** Development (Fall 2025)
 * **Nền tảng:** .NET 8 SDK
 * **Kiến trúc:** Clean Architecture (Jason Taylor Template v8.0.6)
+
 Dự án được khởi tạo dựa trên [Clean.Architecture.Solution.Template](https://github.com/jasontaylordev/CleanArchitecture) phiên bản **8.0.6**, sử dụng **.NET 8 SDK** làm nền tảng cốt lõi.
 
 ---
@@ -40,28 +41,30 @@ Dự án được phân tách thành 4 lớp rõ rệt để đảm bảo khả 
 * **Visual Studio 2022** (v17.8 trở lên).
 
 ### 2. Thiết lập dự án
-```bash
+
 # Clone dự án
+```bash
 git clone [https://github.com/your-username/sp26se058_3dprintshop_be.git](https://github.com/your-username/sp26se058_3dprintshop_be.git)
-
+```
 # Khôi phục các thư viện NuGet
+```bash
 dotnet restore
-
+```
 # Build Solution
+```bash
 dotnet build -tl
-
+```
 ### 3. Chạy ứng dụng (Hot Reload)
 Để chạy Web API và tự động cập nhật khi thay đổi code:
 ```bash
-cd .\src\Web\
-dotnet watch run
-
+dotnet watch run --project src/Web
+```
 ### 4. Kiểm thử (Testing)
 Dự án bao gồm Unit Tests, Integration Tests và Functional Tests:
 ```bash
 dotnet test
-
-🎨 Quy chuẩn Code & Định dạng
+```
+### 🎨 Quy chuẩn Code & Định dạng
 Dự án tích hợp sẵn EditorConfig nhằm duy trì phong cách viết code đồng nhất cho toàn bộ thành viên.
 
-[!IMPORTANT] Vui lòng không thay đổi file .editorconfig ở thư mục gốc để tránh xung đột khi Merge code.
+❗ **LƯU Ý QUAN TRỌNG:** > Vui lòng không thay đổi file `.editorconfig` ở thư mục gốc để tránh xung đột khi Merge code giữa các thành viên.
