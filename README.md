@@ -1,64 +1,67 @@
-🚀 3D Printed Model Shop - Backend API
-Dự án được khởi tạo dựa trên Clean.Architecture.Solution.Template phiên bản 8.0.6, sử dụng .NET 8 SDK làm nền tảng cốt lõi.
+# 🚀 3D Printed Model Shop - Backend API
 
-🏗 Cấu trúc Solution
-Dự án tuân thủ mô hình Clean Architecture để đảm bảo tính dễ bảo trì và mở rộng:
+> **Hệ thống thương mại điện tử in ấn 3D thông minh, tích hợp AI chuyển đổi hình ảnh 2D thành mô hình 3D.**
 
-src/Domain: Chứa các thực thể (Entities), Enums và Logic cốt lõi.
+---
 
-src/Application: Chứa Logic nghiệp vụ (Use Cases), CQRS (MediatR), Mapping và Validation.
+## 📌 Tổng quan dự án
+Dự án được xây dựng nhằm cung cấp giải pháp trọn gói từ việc tạo mô hình đến sản xuất vật lý. Hệ thống sử dụng công nghệ AI tiên tiến để hỗ trợ người dùng tạo ra các mẫu in 3D độc bản từ hình ảnh cá nhân.
 
-src/Infrastructure: Kết nối cơ sở dữ liệu (EF Core), AI Services và các dịch vụ ngoại vi khác.
+* **Trình trạng:** Development (Fall 2025)
+* **Nền tảng:** .NET 8 SDK
+* **Kiến trúc:** Clean Architecture (Jason Taylor Template v8.0.6)
+Dự án được khởi tạo dựa trên [Clean.Architecture.Solution.Template](https://github.com/jasontaylordev/CleanArchitecture) phiên bản **8.0.6**, sử dụng **.NET 8 SDK** làm nền tảng cốt lõi.
 
-src/Web: Cổng giao tiếp API (REST) và cấu hình Middleware.
+---
 
-🛠 Lệnh vận hành cơ bản
-1. Build dự án
-Sử dụng Terminal tại thư mục gốc để biên dịch toàn bộ Solution:
+## 🏗 Kiến trúc hệ thống (Clean Architecture)
+Dự án được phân tách thành 4 lớp rõ rệt để đảm bảo khả năng mở rộng và kiểm thử độc lập:
 
-Bash
+1. **Domain**: Chứa các thực thể lõi (Entities), Enums, Value Objects và logic nghiệp vụ cơ bản.
+2. **Application**: Xử lý logic nghiệp vụ chính thông qua các Use Cases (CQRS Pattern).
+3. **Infrastructure**: Kết nối cơ sở dữ liệu (EF Core), lưu trữ Cloud, và tích hợp AI Service.
+4. **Web**: Cung cấp các RESTful API endpoints và cấu hình Swagger UI.
 
+---
+
+## 🛠 Công nghệ & Kỹ thuật
+* **Framework:** .NET 8 (LTS) & C# 12
+* **Quản lý thư viện:** Central Package Management (CPM) qua `Directory.Packages.props`.
+* **Pattern:** CQRS với MediatR, FluentValidation.
+* **Database:** SQL Server với Entity Framework Core.
+* **Định dạng Solution:** Standard `.sln` (Tương thích tối đa với VS 2022).
+
+---
+
+## 🚀 Hướng dẫn cài đặt nhanh
+
+### 1. Yêu cầu hệ thống
+* **.NET 8 SDK** (phiên bản 8.0.x).
+* **Visual Studio 2022** (v17.8 trở lên).
+
+### 2. Thiết lập dự án
+```bash
+# Clone dự án
+git clone [https://github.com/your-username/sp26se058_3dprintshop_be.git](https://github.com/your-username/sp26se058_3dprintshop_be.git)
+
+# Khôi phục các thư viện NuGet
+dotnet restore
+
+# Build Solution
 dotnet build -tl
-2. Chạy ứng dụng (Hot Reload)
-Để chạy Web API với tính năng tự động tải lại khi thay đổi code:
 
-Bash
-
+### 3. Chạy ứng dụng (Hot Reload)
+Để chạy Web API và tự động cập nhật khi thay đổi code:
+```bash
 cd .\src\Web\
 dotnet watch run
-🔗 Swagger UI: Truy cập https://localhost:5001 (hoặc cổng được cấu hình) để xem tài liệu API.
 
-3. Kiểm thử (Testing)
-Hệ thống bao gồm Unit Tests, Integration Tests và Functional Tests:
-
-Bash
-
+### 4. Kiểm thử (Testing)
+Dự án bao gồm Unit Tests, Integration Tests và Functional Tests:
+```bash
 dotnet test
+
 🎨 Quy chuẩn Code & Định dạng
-Dự án tích hợp sẵn EditorConfig nhằm duy trì phong cách viết code đồng nhất cho toàn bộ thành viên (Kiên, Bách, Hải, Tuấn).
+Dự án tích hợp sẵn EditorConfig nhằm duy trì phong cách viết code đồng nhất cho toàn bộ thành viên.
 
-Lưu ý: Vui lòng không thay đổi file .editorconfig ở thư mục gốc để tránh xung đột khi Merge code.
-
-⚡ Code Scaffolding (Tạo nhanh Use Case)
-Template hỗ trợ tạo nhanh các Command và Query theo chuẩn CQRS. Di chuyển vào thư mục .\src\Application\ và sử dụng:
-
-Tạo Command mới:
-
-Bash
-
-dotnet new ca-usecase -n Create3DModel -fn Models -ut command -rt int
-Tạo Query mới:
-
-Bash
-
-dotnet new ca-usecase -n Get3DModels -fn Models -ut query -rt ModelsVm
-Nếu gặp lỗi không tìm thấy lệnh ca-usecase, hãy cài đặt lại template:
-
-Bash
-
-dotnet new install Clean.Architecture.Solution.Template::8.0.6
-📦 Quản lý thư viện (CPM)
-Dự án sử dụng Central Package Management. Để thêm hoặc cập nhật thư viện NuGet, vui lòng chỉnh sửa tại file: 👉 Directory.Packages.props
-
-🤝 Hỗ trợ & Tài liệu
-Để tìm hiểu sâu hơn về cách vận hành template này, bạn có thể tham khảo tại Clean Architecture Project Website.
+[!IMPORTANT] Vui lòng không thay đổi file .editorconfig ở thư mục gốc để tránh xung đột khi Merge code.
