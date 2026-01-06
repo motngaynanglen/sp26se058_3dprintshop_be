@@ -2,16 +2,20 @@
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 using sp26se058_3dprintshop_be.Web.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddWebServices(this IServiceCollection services)
+    public static IServiceCollection AddWebServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -31,6 +35,29 @@ public static class DependencyInjection
             options.SuppressModelStateInvalidFilter = true);
 
         services.AddEndpointsApiExplorer();
+        // --- CẤU HÌNH AUTHENTICATION THỰC TẾ ---
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["Secret"];
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true, // Kiểm tra xem Token còn hạn không
+                ValidateIssuerSigningKey = true, // Kiểm tra chữ ký bảo mật
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+            };
+        });
+        services.AddAuthorization(); // Kích hoạt phân quyền
 
         services.AddOpenApiDocument((configure, sp) =>
         {
