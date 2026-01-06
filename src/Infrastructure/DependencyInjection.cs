@@ -49,6 +49,8 @@ public static class DependencyInjection
         services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
 
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
         return services;
     }
 }
