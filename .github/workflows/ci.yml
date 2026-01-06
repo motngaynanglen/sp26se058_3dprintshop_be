@@ -1,0 +1,40 @@
+name: .NET Core Web API CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # Chạy trên Ubuntu cho nhẹ và nhanh (Web API không cần Windows-latest)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    # Restore các gói NuGet (Sẽ quét toàn bộ Solution)
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Build dự án ở chế độ Release để kiểm tra lỗi biên dịch
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    # Chạy Unit Tests (Nếu nhóm có viết project Test)
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    # Bước này để đảm bảo file cấu hình appsettings.json không làm lỗi app
+    - name: Check appsettings format
+      run: |
+        cat src/Web/appsettings.json | jq .
