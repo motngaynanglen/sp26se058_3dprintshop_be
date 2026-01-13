@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Application.Common.Models;
 
 namespace sp26se058_3dprintshop_be.Infrastructure.Identity;
 public class JwtTokenGenerator : IJwtTokenGenerator
@@ -20,7 +20,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         _configuration = configuration;
     }
 
-    public string GenerateToken(User user)
+    public string GenerateToken(UserIdentity user)
     {
         // 1. Lấy thông số từ appsettings.json
         var secretKey = _configuration["JwtSettings:Secret"];
@@ -36,7 +36,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new Claim(JwtRegisteredClaimNames.Sub, user.Username),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, user.Role) // Quan trọng để phân quyền [Authorize(Roles = "Admin")]
+            new Claim(ClaimTypes.Role, user.Role) // Quan trọng để phân quyền [Authorize(Roles = "Customer")]
         };
 
         // 3. Tạo Token
