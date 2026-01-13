@@ -32,9 +32,9 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    # Chạy Unit Tests (Nếu nhóm có viết project Test)
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
+    # Chạy Unit Tests (Nếu nhóm có viết project Test) tạm cmt lại vì chưa có test
+    # - name: Test
+    #   run: dotnet test --no-build --configuration Release --verbosity normal
 
     # Bước này để đảm bảo file cấu hình appsettings.json không làm lỗi app
     - name: Check appsettings format
