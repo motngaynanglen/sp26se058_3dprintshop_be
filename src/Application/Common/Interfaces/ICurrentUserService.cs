@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Models;
 
 namespace sp26se058_3dprintshop_be.Application.Common.Interfaces;
-public interface IJwtTokenGenerator
+public interface ICurrentUserService
 {
-    string GenerateToken(UserIdentity user);
+    string? AccountId { get; } 
 }

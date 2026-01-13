@@ -20,7 +20,8 @@ public class CreateTodoListCommandValidator : AbstractValidator<CreateTodoListCo
 
     public async Task<bool> BeUniqueTitle(string title, CancellationToken cancellationToken)
     {
-        return await _context.TodoLists
-            .AllAsync(l => l.Title != title, cancellationToken);
+        //return await _context.TodoLists
+        //    .AllAsync(l => l.Title != title, cancellationToken);
+        return await Task.FromResult(true);
     }
 }
