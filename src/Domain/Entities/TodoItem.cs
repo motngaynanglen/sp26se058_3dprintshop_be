@@ -1,5 +1,7 @@
-﻿namespace sp26se058_3dprintshop_be.Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
+namespace sp26se058_3dprintshop_be.Domain.Entities;
+[NotMapped]
 public class TodoItem : BaseAuditableEntity
 {
     public int ListId { get; set; }

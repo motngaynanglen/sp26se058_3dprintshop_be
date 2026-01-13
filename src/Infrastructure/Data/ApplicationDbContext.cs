@@ -11,9 +11,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<TodoList> TodoLists => Set<TodoList>();
+    //public DbSet<TodoList> TodoLists => Set<TodoList>();
 
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+    //public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Manager> Managers => Set<Manager>();
+    public DbSet<Staff> Staffs => Set<Staff>();
+    public DbSet<Customer> Customers => Set<Customer>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
