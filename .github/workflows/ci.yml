@@ -26,12 +26,12 @@ jobs:
 
     # Restore các gói NuGet (Sẽ quét toàn bộ Solution)
     - name: Restore dependencies
-      # run: dotnet restore
-      run: dotnet build src/Web/Web.csproj --configuration Release --no-restore 
+      run: dotnet restore
 
     # Build dự án ở chế độ Release để kiểm tra lỗi biên dịch
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      # run: dotnet build --no-restore --configuration Release
+      run: dotnet build src/Web/Web.csproj --configuration Release --no-restore 
 
     # Chạy Unit Tests (Nếu nhóm có viết project Test) tạm cmt lại vì chưa có test
     # - name: Test
