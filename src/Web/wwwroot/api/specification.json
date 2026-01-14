@@ -6,6 +6,16 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/": {
+      "options": {
+        "operationId": "Options",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/auth/system-login": {
       "post": {
         "tags": [

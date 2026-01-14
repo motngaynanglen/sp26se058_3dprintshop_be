@@ -16,7 +16,8 @@ public class AuthEndpoints : EndpointGroupBase
     {
         var group = app.MapGroup("/api/auth")
                        .WithTags("Auth")
-                       .WithOpenApi(); // Ép Swagger phải nhận diện group này
+                       .WithOpenApi()
+                       .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
         group.MapPost("/system-login", SystemLogin);
         group.MapPost("/login", Login);
