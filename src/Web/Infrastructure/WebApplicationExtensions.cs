@@ -19,10 +19,13 @@ public static class WebApplicationExtensions
     {
         var endpointGroupType = typeof(EndpointGroupBase);
 
-        var assembly = Assembly.GetExecutingAssembly();
+        //var assembly = Assembly.GetExecutingAssembly();
+        var assembly = typeof(Program).Assembly;
 
+        //var endpointGroupTypes = assembly.GetExportedTypes()
+        //    .Where(t => t.IsSubclassOf(endpointGroupType));
         var endpointGroupTypes = assembly.GetExportedTypes()
-            .Where(t => t.IsSubclassOf(endpointGroupType));
+        .Where(t => t.IsSubclassOf(endpointGroupType) && !t.IsAbstract);
 
         foreach (var type in endpointGroupTypes)
         {
