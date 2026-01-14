@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using sp26se058_3dprintshop_be.Infrastructure.Service;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -50,6 +51,7 @@ public static class DependencyInjection
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.Administrator)));
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IPasswordService, PasswordService>();
 
         return services;
     }
