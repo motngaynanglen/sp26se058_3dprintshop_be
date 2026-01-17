@@ -59,6 +59,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ResponseLoginMo
         }
         user = new UserIdentity
         {
+            Id = account.Id.ToString(),
             Username = request.Username,
             Email = account.Email,
         };
