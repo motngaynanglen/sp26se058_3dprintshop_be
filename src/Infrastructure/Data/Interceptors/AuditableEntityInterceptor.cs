@@ -42,15 +42,33 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
             {
                 var utcNow = _dateTime.GetUtcNow();
+                var user = GetCurrentUserId();
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedBy = _user.Id;
+                    entry.Entity.CreatedBy = user;
                     entry.Entity.Created = utcNow;
                 } 
-                entry.Entity.LastModifiedBy = _user.Id;
+                entry.Entity.LastModifiedBy = user;
                 entry.Entity.LastModified = utcNow;
             }
         }
+    }
+    private string GetCurrentUserId()
+    {
+        // 1. Nếu không có User (chưa đăng nhập - ví dụ: Register)
+        if (string.IsNullOrEmpty(_user.Id))
+        {
+            return "SYSTEM";
+        }
+
+        // 2. Nếu là Admin/Dev (Bạn có thể check dựa trên Claims hoặc Role)
+        //if (_user.IsAdmin)
+        //{
+        //    return "SYSTEM_ADMIN";
+        //}
+
+        // 3. Nếu là User bình thường đã đăng nhập
+        return _user.Id;
     }
 }
 
