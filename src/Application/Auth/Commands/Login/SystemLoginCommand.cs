@@ -9,7 +9,6 @@ using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Auth.Commands.Login;
 public class SystemLoginCommand : IRequest<ResponseLoginModel>
@@ -52,6 +51,7 @@ public class SystemLoginCommandHandler : IRequestHandler<SystemLoginCommand, Res
         {
             user = new UserIdentity
             {
+                Id = "DEV_ADMIN",
                 Username = devAdminUsername,
                 Email = devAdminUsername,
                 Role = Roles.Administrator,
