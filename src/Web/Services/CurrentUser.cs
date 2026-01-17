@@ -12,6 +12,10 @@ public class CurrentUser : IUser
     {
         _httpContextAccessor = httpContextAccessor;
     }
-
+    // Lấy UserId từ NameIdentifier Claim trong JWT
     public string? Id => _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+    // Lấy Username
+    public string? Username => _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+    // Kiểm tra xem User có Role Admin hay không
+    //public bool IsAdmin => _httpContextAccessor.HttpContext?.User?.IsInRole("Admin") ?? false;
 }

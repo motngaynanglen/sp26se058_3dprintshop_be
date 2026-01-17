@@ -33,7 +33,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         // 2. Định nghĩa các "thẻ tên" (Claims) đính kèm vào Token
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Username),
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.Username),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.Role, user.Role) // Quan trọng để phân quyền [Authorize(Roles = "Customer")]
