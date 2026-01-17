@@ -17,6 +17,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddWebServices(this IServiceCollection services, IConfiguration configuration)
     {
+
         services.AddDatabaseDeveloperPageExceptionFilter();
 
         services.AddScoped<IUser, CurrentUser>();
@@ -54,7 +55,9 @@ public static class DependencyInjection
                 ValidateIssuerSigningKey = true, // Kiểm tra chữ ký bảo mật
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidAudience = jwtSettings["Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
+
+                // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
         });
         services.AddAuthorization(); // Kích hoạt phân quyền
