@@ -60,6 +60,7 @@ jobs:
               --name 3dprint-api \
               --restart always \
               -p 80:8080 \
+              -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRING }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest
 
             # 5. Dọn dẹp các Image cũ không dùng đến để tiết kiệm dung lượng VPS
