@@ -18,6 +18,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Manager> Managers => Set<Manager>();
     public DbSet<Staff> Staffs => Set<Staff>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<DesignTemplate> DesignTemplates => Set<DesignTemplate>();
+    public DbSet<DesignVariant> DesignVariants => Set<DesignVariant>();
+    public DbSet<ConceptTag> ConceptTags => Set<ConceptTag>();
+    public DbSet<DesignTag> DesignTags => Set<DesignTag>();
+    public DbSet<Material> Materials => Set<Material>();
+    public DbSet<MaterialPriceHistory> MaterialPriceHistories => Set<MaterialPriceHistory>();
+    public DbSet<VariantMaterialOption> VariantMaterialOptions => Set<VariantMaterialOption>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
