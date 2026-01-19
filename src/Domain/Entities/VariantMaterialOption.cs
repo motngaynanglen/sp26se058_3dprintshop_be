@@ -11,9 +11,9 @@ public class VariantMaterialOption : BaseAuditableEntity
     [Required]
     [ForeignKey(nameof(MaterialId))]
     public Guid MaterialId { get; set; }
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal EstimatedWeight_Grams { get; set; }
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal MarkupPercentage { get; set; } // Phụ thu theo độ khó mẫu
     public bool IsDefault { get; set; }
 

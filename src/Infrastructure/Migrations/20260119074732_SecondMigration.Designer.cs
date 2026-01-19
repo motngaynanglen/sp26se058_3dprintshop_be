@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260119074732_SecondMigration")]
+    partial class SecondMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,7 +123,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ConceptTags");
+                    b.ToTable("ConceptTag");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Customer", b =>
@@ -207,7 +210,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("DesignTemplateId");
 
-                    b.ToTable("DesignTags");
+                    b.ToTable("DesignTag");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignTemplate", b =>
@@ -256,7 +259,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("DesignTemplates");
+                    b.ToTable("DesignTemplate");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignVariant", b =>
@@ -306,7 +309,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("DesignTemplateId");
 
-                    b.ToTable("DesignVariants");
+                    b.ToTable("DesignVariant");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Invoice", b =>
@@ -372,7 +375,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Invoices");
+                    b.ToTable("Invoice");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Manager", b =>
@@ -450,7 +453,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Materials");
+                    b.ToTable("Material");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialPriceHistory", b =>
@@ -499,7 +502,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("MaterialPriceHistories");
+                    b.ToTable("MaterialPriceHistory");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Order", b =>
@@ -531,23 +534,18 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.Property<string>("OrderStatus")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("PENDING");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
                     b.Property<decimal>("TotalPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("Orders");
+                    b.ToTable("Order");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.OrderItem", b =>
@@ -600,7 +598,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItem");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Staff", b =>
@@ -699,7 +697,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("InvoiceId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transaction");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.VariantMaterialOption", b =>
@@ -747,7 +745,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("VariantMaterialOptions");
+                    b.ToTable("VariantMaterialOption");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Customer", b =>
@@ -822,17 +820,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Material");
-                });
-
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Order", b =>
-                {
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Customer", "Customer")
-                        .WithMany("Orders")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.OrderItem", b =>
@@ -913,11 +900,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ConceptTag", b =>
                 {
                     b.Navigation("DesignTags");
-                });
-
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Customer", b =>
-                {
-                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignTemplate", b =>
