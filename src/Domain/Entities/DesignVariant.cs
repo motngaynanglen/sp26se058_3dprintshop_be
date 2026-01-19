@@ -14,7 +14,7 @@ public class DesignVariant : BaseAuditableEntity
     [Required]
     [MaxLength(255)]
     public string Name { get; set; } = null!;
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal BasePrice { get; set; }
     public bool IsActive { get; set; } = true;
 
