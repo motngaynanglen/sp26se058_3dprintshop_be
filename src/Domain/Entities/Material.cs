@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace sp26se058_3dprintshop_be.Domain.Entities;
 
@@ -8,7 +9,7 @@ public class Material : BaseAuditableEntity
     [MaxLength(100)]
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
-    //[Column(TypeName = "decimal(18,4)")]
+    [Column(TypeName = "decimal(18,4)")]
     public decimal Density { get; set; }
     public bool IsActive { get; set; } = true;
 
