@@ -9,9 +9,9 @@ public class MaterialPriceHistory : BaseAuditableEntity
     [ForeignKey(nameof(MaterialId))]
     public Guid MaterialId { get; set; }
     public int MinOrderValue { get; set; }
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal BaseCostPerGram { get; set; }
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal TotalServiceCostPerGram { get; set; }
     public DateTime EffectiveDate { get; set; }
     public bool IsCurrent { get; set; }

@@ -21,6 +21,12 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.SubTotal)
             .HasPrecision(18, 2);
 
+        builder.Property(i => i.TaxAmount)
+            .HasPrecision(18, 2);
+
+        builder.Property(i => i.ShippingFee)
+            .HasPrecision(18, 2);
+
         builder.Property(i => i.TotalAmount)
             .HasPrecision(18, 2);
 
