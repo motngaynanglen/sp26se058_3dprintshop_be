@@ -12,7 +12,7 @@ public class Order : BaseAuditableEntity
     [Required]
     public Guid CustomerId { get; set; }
 
-    //[Column(TypeName = "decimal(18,2)")]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal TotalPrice { get; set; }
 
     [MaxLength(20)]
