@@ -15,4 +15,7 @@ public class Customer : BaseAuditableEntity
 
     [ForeignKey(nameof(AccountId))]
     public Account Account { get; set; } = null!;
+    
+    // Một khách hàng có thể có nhiều đơn hàng
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }
