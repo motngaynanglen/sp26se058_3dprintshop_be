@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
-namespace sp26se058_3dprintshop_be.Application.Auth.Commands.Register;
+namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 public record RegisterCommand : IRequest<bool>
 {
     public string Username { get; init; } = null!;
