@@ -43,13 +43,38 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             {
                 var utcNow = _dateTime.GetUtcNow();
                 var user = GetCurrentUserId();
+
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedBy = user;
                     entry.Entity.Created = utcNow;
-                } 
-                entry.Entity.LastModifiedBy = user;
-                entry.Entity.LastModified = utcNow;
+
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
+                if (entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
+                {
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
+                if (entry.State == EntityState.Deleted)
+                {
+                    if (entry.Entity.DeletedBy == "HARD_DELETE_FLAG")
+                    {
+                        //Tiếp tục xóa
+                        continue;
+                    }
+                    // Thay đổi trạng thái từ Xóa sang Sửa (Modified) để EF Update thay vì Delete
+                    entry.State = EntityState.Modified;
+
+                    // Gán thông tin người xóa và ngày xóa
+                    entry.Entity.DeletedBy = user;
+                    entry.Entity.Deleted = utcNow;
+
+                    // Đồng thời cập nhật luôn thông tin Modified để đồng nhất
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
             }
         }
     }

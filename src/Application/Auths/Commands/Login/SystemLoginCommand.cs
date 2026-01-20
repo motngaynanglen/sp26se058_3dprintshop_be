@@ -10,7 +10,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
-namespace sp26se058_3dprintshop_be.Application.Auth.Commands.Login;
+namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 public class SystemLoginCommand : IRequest<ResponseLoginModel>
 {
     public string Username { get; init; } = null!;
@@ -54,7 +54,7 @@ public class SystemLoginCommandHandler : IRequestHandler<SystemLoginCommand, Res
                 Id = "DEV_ADMIN",
                 Username = devAdminUsername,
                 Email = devAdminUsername,
-                Role = Roles.Administrator,
+                Role = Roles.ADMIN,
             };
         }
         if (user == null)
@@ -71,7 +71,7 @@ public class SystemLoginCommandHandler : IRequestHandler<SystemLoginCommand, Res
             AccountId = user.Username,
             UserName = user.Username,
             FullName = devAdminFullname ?? user.Username,
-            Role = Roles.Administrator,
+            Role = Roles.ADMIN,
             Token = jwt,
         };
       
