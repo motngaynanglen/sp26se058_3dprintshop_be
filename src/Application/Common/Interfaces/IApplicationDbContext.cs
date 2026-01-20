@@ -11,5 +11,18 @@ public interface IApplicationDbContext
     DbSet<Manager> Managers { get; }
     DbSet<Staff> Staffs { get; }
     DbSet<Customer> Customers { get; }
+    DbSet<Order> Orders { get; }
+    DbSet<OrderItem> OrderItems { get; }
+    DbSet<Invoice> Invoices { get; }
+    DbSet<Transaction> Transactions { get; }
+    DbSet<DesignTemplate> DesignTemplates { get; }
+    DbSet<DesignVariant> DesignVariants { get; }
+    DbSet<ConceptTag> ConceptTags { get; }
+    DbSet<DesignTag> DesignTags { get; }
+    DbSet<Material> Materials { get; }
+    DbSet<MaterialPriceHistory> MaterialPriceHistories { get; }
+    DbSet<VariantMaterialOption> VariantMaterialOptions { get; }
+
+    void HardRemove<TEntity>(TEntity entity) where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
