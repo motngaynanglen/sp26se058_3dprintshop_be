@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Win32;
-using sp26se058_3dprintshop_be.Application.Auth.Commands.Login;
-using sp26se058_3dprintshop_be.Application.Auth.Commands.Register;
+using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
+using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Entities;
