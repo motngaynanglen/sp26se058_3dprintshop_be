@@ -4,6 +4,8 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using sp26se058_3dprintshop_be.Domain.Common;
+using System.Linq.Expressions;
 
 namespace sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -34,5 +36,38 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         //base.OnModelCreating(builder); remove ASP core identity
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        foreach (var entityType in builder.Model.GetEntityTypes())
+        {
+            // Kiểm tra xem thực thể có kế thừa BaseAuditableEntity không
+            if (typeof(BaseAuditableEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                // Tạo Lambda Expression: e => e.Deleted == null
+                var parameter = Expression.Parameter(entityType.ClrType, "e");
+                var propertyMethodInfo = typeof(EF).GetMethod("Property")!.MakeGenericMethod(typeof(DateTimeOffset?));
+                var deletedProperty = Expression.Call(propertyMethodInfo, parameter, Expression.Constant(nameof(BaseAuditableEntity.Deleted)));
+                var compareExpression = Expression.MakeBinary(ExpressionType.Equal, deletedProperty, Expression.Constant(null, typeof(DateTimeOffset?)));
+                var lambda = Expression.Lambda(compareExpression, parameter);
+
+                // Áp dụng bộ lọc
+                builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+
+                var indexBuilder = builder.Entity(entityType.ClrType)
+                .HasIndex(nameof(BaseAuditableEntity.Deleted));
+
+                if (Database.IsSqlServer())
+                {
+                    indexBuilder.HasFilter("[Deleted] IS NULL");
+                }
+            }
+        }
+    }
+    public void HardRemove<TEntity>(TEntity entity) where TEntity : class
+    {
+        if (entity is BaseAuditableEntity auditable)
+        {
+            auditable.DeletedBy = "HARD_DELETE_FLAG";
+        }
+        this.Set<TEntity>().Remove(entity);
     }
 }
