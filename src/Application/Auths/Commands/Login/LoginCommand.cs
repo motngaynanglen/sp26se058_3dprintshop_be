@@ -9,7 +9,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
-namespace sp26se058_3dprintshop_be.Application.Auth.Commands.Login;
+namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 public record LoginCommand : IRequest<ResponseLoginModel>
 {
     public string Username { get; init; } = null!;
@@ -66,13 +66,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ResponseLoginMo
         switch (account)
         {
             case { Manager: not null }:
-                user.Role = Roles.Manager;
+                user.Role = Roles.MANAGER;
                 break;
             case { Staff: not null }:
-                user.Role = Roles.Staff;
+                user.Role = Roles.STAFF;
                 break;
             case { Customer: not null }:
-                user.Role = Roles.Customer;
+                user.Role = Roles.CUSTOMER;
                 break;
             default:
                 throw new UnauthorizedAccessException("Tên đăng nhập hoặc mật khẩu không chính xác.");
