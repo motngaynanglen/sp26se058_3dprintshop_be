@@ -5,13 +5,13 @@ namespace sp26se058_3dprintshop_be.Domain.Entities;
 
 public class Invoice : BaseAuditableEntity
 {
-    public Guid OrderId { get; set; }
-    public string InvoiceCode { get; set; } = null!;
+    public  Guid OrderId { get; set; }
+    public required string InvoiceCode { get; set; }
     public decimal SubTotal { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal ShippingFee { get; set; }
     public decimal TotalAmount { get; set; }
-    public string PaymentStatus { get; set; } = "UNPAID"; // Unpaid, Partially_Paid, Paid, Refunded
+    public required string PaymentStatus { get; set; } = "UNPAID"; // Unpaid, Partially_Paid, Paid, Refunded
     public DateTime? DueDate { get; set; }
 
     // Navigation

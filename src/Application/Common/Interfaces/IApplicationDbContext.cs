@@ -21,8 +21,11 @@ public interface IApplicationDbContext
     DbSet<DesignTag> DesignTags { get; }
     DbSet<Material> Materials { get; }
     DbSet<MaterialPriceHistory> MaterialPriceHistories { get; }
-    DbSet<VariantMaterialOption> VariantMaterialOptions { get; }
-
+    DbSet<InventoryTransaction> InventoryTransactions { get; }
+    DbSet<DesignWork> DesignWorks { get; }
+    DbSet<DesignLog> DesignLogs { get; }
+    DbSet<DesignVersionHistory> DesignVersionHistorys { get; }
+    DbSet<TechnicalDraft> TechnicalDrafts { get; }
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
