@@ -13,9 +13,9 @@ public class AccountDto
     public string Username { get; set; } = null!;
     public string Fullname { get; set; } = null!;
     public string Email { get; set; } = null!;
-    public string? Profile_Image_URL { get; set; }
-    public string? Contact_Phone { get; set; }
-    public bool Is_active { get; set; }
+    public string? ProfileImageURL { get; set; }
+    public string? ContactPhone { get; set; }
+    public bool IsActive { get; set; }
 
     // Thuộc tính tính toán dựa trên quan hệ
     public string Role { get; set; } = null!;

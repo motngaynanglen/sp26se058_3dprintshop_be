@@ -27,6 +27,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasOne(o => o.Customer)       // Một đơn hàng có một khách hàng
             .WithMany(a => a.Orders)          // Một khách hàng có nhiều đơn hàng
             .HasForeignKey(o => o.CustomerId) // Khóa ngoại là CustomerId
+            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict); // Không xóa khách hàng nếu đã có đơn hàng (để bảo vệ dữ liệu audit)
 
         // Cấu hình quan hệ 1-N với OrderItems

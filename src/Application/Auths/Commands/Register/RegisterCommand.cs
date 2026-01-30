@@ -52,12 +52,15 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
 
         // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
-
+        if (passwordHash == null)
+        {
+            throw new Exception("Lỗi tạo pass");
+        }
         // 3. Khởi tạo Account mới
         var newAccount = new Account
         {
             Username = request.Username,
-            Password_Hash = passwordHash,
+            PasswordHash = passwordHash,
             Fullname = request.Fullname,
             Email = request.Email,
         };
