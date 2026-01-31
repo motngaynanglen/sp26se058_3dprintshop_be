@@ -9,23 +9,14 @@ using System.Threading.Tasks;
 namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class Account : BaseAuditableEntity // Kế thừa để có CreatedBy, LastModifiedBy
 {
-    [MaxLength(20)]
-    [Required]
-    public string Username { get; set; } = null!;
-    [MaxLength(40)]
-    public string Fullname { get; set; } = null!;
-    [MaxLength(40)]
-    public string Email { get; set; } = null!;
-    [MaxLength(255)]
-    public string? Profile_Image_URL { get; set; }
-    [MaxLength(15)]
-    public string? Contact_Phone { get; set; } 
-    [MaxLength(15)]
-    public string? Zalo_Phone { get; set; }
-    [MaxLength(255)]
-    public string Password_Hash { get; set; } = null!;
-    public bool Is_active { get; set; } = true;
-
+    public required string Username { get; set; }
+    public required string Fullname { get; set; }
+    public required string Email { get; set; }
+    public string? ProfileImageURL { get; set; }
+    public string? ContactPhone { get; set; }
+    public string? ZaloPhone { get; set; }
+    public required string PasswordHash { get; set; }
+    public bool IsActive { get; set; } = true;
     // Navigation properties (Mối quan hệ 1:1)
     public virtual Staff? Staff { get; set; }
     public virtual Customer? Customer { get; set; }

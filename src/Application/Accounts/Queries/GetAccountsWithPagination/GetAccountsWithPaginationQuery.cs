@@ -65,7 +65,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>
             {
                 "Name" => request.SortDescending ? query.OrderByDescending(x => x.Fullname) : query.OrderBy(x => x.Fullname),
                 "Email" => request.SortDescending ? query.OrderByDescending(x => x.Email) : query.OrderBy(x => x.Email),
-                "Phone" => request.SortDescending ? query.OrderByDescending(x => x.Contact_Phone) : query.OrderBy(x => x.Contact_Phone),
+                "Phone" => request.SortDescending ? query.OrderByDescending(x => x.ContactPhone) : query.OrderBy(x => x.ContactPhone),
                 "Created" => request.SortDescending ? query.OrderByDescending(x => x.Created) : query.OrderBy(x => x.Created),
                 "Deleted" => request.SortDescending ? query.OrderByDescending(x => x.Deleted) : query.OrderBy(x => x.Deleted),
                 _ => query.OrderBy(x => x.Username) // Mặc định theo Username

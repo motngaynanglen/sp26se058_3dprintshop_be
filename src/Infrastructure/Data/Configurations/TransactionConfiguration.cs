@@ -14,7 +14,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {
 
         builder.Property(t => t.Amount)
-            .HasPrecision(18, 2) // Quan trọng cho tiền tệ
+            .HasPrecision(18, 2) 
             .IsRequired();
 
         builder.Property(t => t.PaymentMethod)
@@ -24,7 +24,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasMaxLength(100);
 
         builder.Property(t => t.TransactionStatus)
-            .HasMaxLength(20)
+            .HasMaxLength(30)
             .IsRequired()
             .HasDefaultValue("PENDING");
 
@@ -35,9 +35,9 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.HasOne(t => t.Invoice)
             .WithMany(i => i.Transactions)
             .HasForeignKey(t => t.InvoiceId)
-            .OnDelete(DeleteBehavior.Cascade); // Xóa Invoice thì xóa lịch sử giao dịch
+            .IsRequired(); // ko xóa lịch sử giao dịch chung invoice
 
-        // 5. Thêm Index cho các trường hay tìm kiếm (Senior Tip)
+        // 5. Thêm Index cho các trường hay tìm kiếm
         builder.HasIndex(t => t.ExternalTransactionId);
     }
 }
