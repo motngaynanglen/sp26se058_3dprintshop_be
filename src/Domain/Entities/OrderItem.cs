@@ -7,23 +7,27 @@ public class OrderItem : BaseAuditableEntity
 {
     [Required]
     public Guid OrderId { get; set; }
-    [ForeignKey(nameof(OrderId))]
-    public virtual Order Order { get; set; } = null!;
 
+
+    // phân loại hàng hóa
+    public required string SourceType { get; set; } // 'Design', 'Pre-order', 'Shop' , 'custome-print'
+    public Guid? DesignWorkId { get; set; }
     public Guid? DesignVariantId { get; set; }
-    [ForeignKey(nameof(DesignVariantId))]
+    public Guid? TechnicalDraftId { get; set; }
+
+
+    public required int QuantityOrdered { get; set; }
+    public required decimal UnitPrice { get; set; }
+    public required decimal TotalPrice { get; set; }
+    public required string FulfillmentStatus { get; set; }
+
+    // Snapshot giá tại thời điểm chốt
+    //public decimal TotalServiceCostPerGram { get; set; } = 0; // cái này tạm bỏ đi nhỉ? khách cần gì biết 1 gram bao tiền đâu!
+
+    // Nativigation
+    public required virtual Order Order { get; set; }
+    public virtual DesignWork? DesignWork { get; set; }
     public virtual DesignVariant? DesignVariant { get; set; }
-
-    [Required]
-    public Guid MaterialId { get; set; }
-    [ForeignKey(nameof(MaterialId))]
-    public virtual Material Material { get; set; } = null!;
-
-    public int QuantityOrdered { get; set; }
-
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal UnitPrice { get; set; }
-
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal TotalPrice { get; set; }
+    public virtual TechnicalDraft? TechnicalDraft { get; set; }
+    public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
 }
