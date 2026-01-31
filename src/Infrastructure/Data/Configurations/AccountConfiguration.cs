@@ -14,33 +14,17 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
     public void Configure(EntityTypeBuilder<Account> builder)
     {
         // 1. Cấu hình các ràng buộc dữ liệu
-        builder.Property(a => a.Username)
-         .HasMaxLength(20)
-         .IsRequired();
+        builder.Property(a => a.Username).IsRequired().HasMaxLength(20);
+        builder.Property(a => a.Fullname).HasMaxLength(40);
+        builder.Property(a => a.Email).HasMaxLength(40);
+        builder.Property(a => a.PasswordHash).IsRequired().HasMaxLength(255);
 
-        builder.Property(a => a.Fullname)
-            .HasMaxLength(40)
-            .IsRequired();
 
-        builder.Property(a => a.Email)
-            .HasMaxLength(40)
-            .IsRequired();
+        builder.Property(a => a.ProfileImageURL).HasMaxLength(255);
+        builder.Property(a => a.ContactPhone).HasMaxLength(15);
+        builder.Property(a => a.ZaloPhone).HasMaxLength(15);
 
-        builder.Property(a => a.Profile_Image_URL)
-            .HasMaxLength(255);
-
-        builder.Property(a => a.Contact_Phone)
-            .HasMaxLength(15);
-
-        builder.Property(a => a.Zalo_Phone)
-            .HasMaxLength(15);
-
-        builder.Property(a => a.Password_Hash)
-            .HasMaxLength(255)
-            .IsRequired();
-
-        builder.Property(a => a.Is_active)
-            .HasDefaultValue(true);
+        builder.Property(a => a.IsActive).HasDefaultValue(true);
 
         // 2. Đánh Index Unique cho Username và Email (Tránh trùng lặp)
         builder.HasIndex(a => a.Username).IsUnique();
@@ -51,16 +35,16 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.HasOne(a => a.Staff)
             .WithOne(s => s.Account)
             .HasForeignKey<Staff>(s => s.AccountId) // Giả định bảng Staff có AccountId
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(a => a.Customer)
             .WithOne(c => c.Account)
             .HasForeignKey<Customer>(c => c.AccountId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(a => a.Manager)
             .WithOne(m => m.Account)
             .HasForeignKey<Manager>(m => m.AccountId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

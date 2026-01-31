@@ -53,7 +53,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ResponseLoginMo
             .AsNoTracking().FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
 
         // Sử dụng BCrypt để kiểm tra mật khẩu đã hash
-        if (account == null || !_passwordService.VerifyPassword(request.Password, account.Password_Hash))
+        if (account == null || !_passwordService.VerifyPassword(request.Password, account.PasswordHash))
         {
             throw new UnauthorizedAccessException("Tên đăng nhập hoặc mật khẩu không chính xác.");
         }

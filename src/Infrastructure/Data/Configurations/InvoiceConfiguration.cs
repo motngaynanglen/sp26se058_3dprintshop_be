@@ -12,35 +12,21 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 {
     public void Configure(EntityTypeBuilder<Invoice> builder)
     {
-        builder.HasKey(i => i.Id);
+        builder.HasIndex(i => i.InvoiceCode).IsUnique();
+        builder.Property(i => i.InvoiceCode).IsRequired().HasMaxLength(50);
 
-        builder.Property(i => i.InvoiceCode)
-            .HasMaxLength(50)
-            .IsRequired();
+        builder.Property(i => i.SubTotal).HasPrecision(18, 2);
+        builder.Property(i => i.ShippingFee).HasPrecision(18, 2);
+        builder.Property(i => i.TotalAmount).HasPrecision(18, 2);
+        builder.Property(i => i.TaxAmount).HasPrecision(18, 2);
 
-        builder.Property(i => i.SubTotal)
-            .HasPrecision(18, 2);
-
-        builder.Property(i => i.TaxAmount)
-            .HasPrecision(18, 2);
-
-        builder.Property(i => i.ShippingFee)
-            .HasPrecision(18, 2);
-
-        builder.Property(i => i.TotalAmount)
-            .HasPrecision(18, 2);
-
-        builder.Property(i => i.PaymentStatus)
-            .HasMaxLength(20)
-            .HasDefaultValue("UNPAID");
+        builder.Property(i => i.PaymentStatus).HasMaxLength(20).HasDefaultValue("UNPAID").IsRequired();
 
         // Cấu hình quan hệ 1-1 với Order
         builder.HasOne(i => i.Order)
             .WithOne(o => o.Invoice)
             .HasForeignKey<Invoice>(i => i.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.NoAction);
 
-        // Đảm bảo OrderId là duy nhất trong bảng Invoice
-        builder.HasIndex(i => i.OrderId).IsUnique();
     }
 }
