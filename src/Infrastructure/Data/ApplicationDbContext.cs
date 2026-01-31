@@ -30,7 +30,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<DesignTag> DesignTags => Set<DesignTag>();
     public DbSet<Material> Materials => Set<Material>();
     public DbSet<MaterialPriceHistory> MaterialPriceHistories => Set<MaterialPriceHistory>();
-    public DbSet<VariantMaterialOption> VariantMaterialOptions => Set<VariantMaterialOption>();
+    public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
+    public DbSet<DesignWork> DesignWorks => Set<DesignWork>();
+    public DbSet<DesignLog> DesignLogs => Set<DesignLog>();
+    public DbSet<DesignVersionHistory> DesignVersionHistorys => Set<DesignVersionHistory>();
+    public DbSet<TechnicalDraft> TechnicalDrafts => Set<TechnicalDraft>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

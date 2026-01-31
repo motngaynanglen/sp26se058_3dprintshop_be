@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace sp26se058_3dprintshop_be.Domain.Entities;
-public class DesignTemplate : BaseAuditableEntity
+public class ServicePackage : BaseAuditableEntity
 {
     public required string Code { get; set; }
     public required string Name { get; set; }
+    public decimal BasePrice { get; set; } = decimal.Zero;
     public string? Description { get; set; }
-    public required string FileUrl { get; set; }
-    public string? ThumbnailUrl { get; set; }
-    //Navigations
-    public virtual ICollection<DesignVariant> Variants { get; set; } = new List<DesignVariant>();
-    public virtual ICollection<DesignTag> DesignTags { get; set; } = new List<DesignTag>();
+    public bool IsSupported { get; set; } = true;
+    public string? HtmlRaw { get; set; }
+
+    public virtual ICollection<DesignWork> DesignWorks { get; set; } = new List<DesignWork>();
 }
