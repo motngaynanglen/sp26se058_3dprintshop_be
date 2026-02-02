@@ -8,11 +8,11 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 namespace sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 public class BaseResponseModel<T>
 {
-    public T? Data { get; set; }
-    public object? AdditionalData { get; set; }
-    public string? Message { get; set; }
     public int StatusCode { get; set; }
     public string Code { get; set; }
+    public string? Message { get; set; }
+    public T? Data { get; set; }
+    public object? AdditionalData { get; set; }
 
     public BaseResponseModel(int statusCode, string code, T? data, object? additionalData = null, string? message = null)
     {
