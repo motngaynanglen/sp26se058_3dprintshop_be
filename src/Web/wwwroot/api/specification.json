@@ -6,6 +6,118 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/account/query": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PostApiAccountQuery",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetAccountsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/add": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PostApiAccountAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/detail/{id}": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "GetApiAccountDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/update/{id}": {
+      "put": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PutApiAccountUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/auth/system-login": {
       "post": {
         "tags": [
@@ -84,6 +196,103 @@
   },
   "components": {
     "schemas": {
+      "GetAccountsWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string",
+                "nullable": true
+              },
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "sortBy": {
+                "type": "string",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "includeDeleted": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "PaginationRequest": {
+        "type": "object",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CreateAccountCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "fullname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateAccountCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
       "SystemLoginCommand": {
         "type": "object",
         "additionalProperties": false,

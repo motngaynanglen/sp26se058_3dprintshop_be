@@ -11,17 +11,19 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 [Authorize(Roles = Roles.ADMIN)]
-public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>>
+public class GetAccountsWithPaginationQuery : PaginationRequest,IRequest<PaginatedList<AccountDto>>
 {
     public string? Role { get; init; }
-    public string? SearchTerm { get; init; }
-    public int PageNumber { get; init; } = 1;
-    public int PageSize { get; init; } = 10;
+    public string? Search { get; init; }
+    
     // Sắp xếp
     public string? SortBy { get; init; } // "Name", "Phone", "Created", "Deleted"
     public bool SortDescending { get; init; } = false;
     // Có dữ liệu xóa mềm
     public bool IncludeDeleted { get; init; } = false;
+    // Sử dụng abtract class PaginationRequest để hỗ trợ
+    //public int PageNumber { get; init; } = 1;   
+    //public int PageSize { get; init; } = 10;
     public class GetAccountsWithPaginationQueryHandler : IRequestHandler<GetAccountsWithPaginationQuery, PaginatedList<AccountDto>>
     {
         private readonly IApplicationDbContext _context;
@@ -41,9 +43,9 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>
                 query = query.IgnoreQueryFilters();
             }
             // 1. Search theo thông tin cơ bản trong bảng Account
-            if (!string.IsNullOrEmpty(request.SearchTerm))
+            if (!string.IsNullOrEmpty(request.Search))
             {
-                var s = request.SearchTerm.ToLower();
+                var s = request.Search.ToLower();
                 query = query.Where(x =>
                     x.Username.ToLower().Contains(s) ||
                     x.Fullname.ToLower().Contains(s) ||
