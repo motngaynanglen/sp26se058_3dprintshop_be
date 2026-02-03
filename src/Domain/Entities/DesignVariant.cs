@@ -9,6 +9,7 @@ public class DesignVariant : BaseAuditableEntity
     // Base Data 
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
+    [StringLength(1000)]
     public string? Description { get; set; } 
     public decimal Price { get; set; } = decimal.Zero;
     public string? PreviewModelUrl { get; set; }

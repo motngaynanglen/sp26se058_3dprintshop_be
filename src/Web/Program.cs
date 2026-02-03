@@ -1,8 +1,20 @@
+using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var cs = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    options.UseMySql(
+        cs,
+        ServerVersion.AutoDetect(cs)
+    );
+});
+
+
 builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
 
 builder.Services.AddApplicationServices();
@@ -13,7 +25,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    await app.InitialiseDatabaseAsync();
+    //await app.InitialiseDatabaseAsync();
 }
 else
 {
