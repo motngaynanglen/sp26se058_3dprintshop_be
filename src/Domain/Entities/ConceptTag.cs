@@ -6,6 +6,8 @@ public class ConceptTag : BaseAuditableEntity
 {
     public required string Name { get; set; }
     public string? Description { get; set; }
+    public bool IsMainTag { get; set; } = false;
+    public bool IsActive { get; set; } = true;
 
     public virtual ICollection<DesignTag> DesignTags { get; set; } = new List<DesignTag>();
 }
