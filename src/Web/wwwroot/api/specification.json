@@ -197,33 +197,40 @@
   "components": {
     "schemas": {
       "GetAccountsWithPaginationQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "search": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortDescending": {
+            "type": "boolean"
+          },
+          "includeDeleted": {
+            "type": "boolean"
+          },
+          "paging": {
+            "$ref": "#/components/schemas/PaginationData"
+          }
+        }
+      },
+      "PaginationData": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PaginationRequest"
           },
           {
             "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "role": {
-                "type": "string",
-                "nullable": true
-              },
-              "search": {
-                "type": "string",
-                "nullable": true
-              },
-              "sortBy": {
-                "type": "string",
-                "nullable": true
-              },
-              "sortDescending": {
-                "type": "boolean"
-              },
-              "includeDeleted": {
-                "type": "boolean"
-              }
-            }
+            "additionalProperties": false
           }
         ]
       },
