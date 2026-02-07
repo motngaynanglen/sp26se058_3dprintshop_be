@@ -192,6 +192,244 @@
           }
         }
       }
+    },
+    "/api/concept-tag/all": {
+      "get": {
+        "tags": [
+          "Concept Tag"
+        ],
+        "operationId": "GetApiConceptTagAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/add": {
+      "post": {
+        "tags": [
+          "Concept Tag"
+        ],
+        "operationId": "PostApiConceptTagAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConceptTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/update/{id}": {
+      "put": {
+        "tags": [
+          "Concept Tag"
+        ],
+        "operationId": "PutApiConceptTagUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConceptTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/delete": {
+      "delete": {
+        "tags": [
+          "Concept Tag"
+        ],
+        "operationId": "DeleteApiConceptTagDelete",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-tag/sync": {
+      "post": {
+        "tags": [
+          "Design Tag"
+        ],
+        "operationId": "PostApiDesignTagSync",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/query": {
+      "post": {
+        "tags": [
+          "Designtemplate"
+        ],
+        "operationId": "PostApiDesignTemplateQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignTemplatesWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/add": {
+      "post": {
+        "tags": [
+          "Designtemplate"
+        ],
+        "operationId": "PostApiDesignTemplateAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/detail/{id}": {
+      "get": {
+        "tags": [
+          "Designtemplate"
+        ],
+        "operationId": "GetApiDesignTemplateDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/{id}/tags": {
+      "get": {
+        "tags": [
+          "Designtemplate"
+        ],
+        "operationId": "GetApiDesignTemplateTags",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/update": {
+      "put": {
+        "tags": [
+          "Designtemplate"
+        ],
+        "operationId": "PutApiDesignTemplateUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -341,6 +579,139 @@
             "type": "string"
           },
           "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateConceptTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateConceptTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SyncDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncDesignTagItem"
+            }
+          }
+        }
+      },
+      "SyncDesignTagItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "conceptTagId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "isMainTag": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GetDesignTemplatesWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateDesignTemplateCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateDesignTemplateCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
             "type": "string",
             "nullable": true
           }
