@@ -27,7 +27,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
     {
         try
         {
-            var result = await sender.Send(new GetDesignTaskListQuery
+            var result = await sender.Send(new GetDesignTagsListQuery
             {
                 DesignTemplateId = id
             });
