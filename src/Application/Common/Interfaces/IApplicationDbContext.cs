@@ -1,4 +1,5 @@
-﻿using sp26se058_3dprintshop_be.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Common.Interfaces;
 
@@ -26,6 +27,8 @@ public interface IApplicationDbContext
     DbSet<DesignLog> DesignLogs { get; }
     DbSet<DesignVersionHistory> DesignVersionHistorys { get; }
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
+    //DatabaseFacade Database { get; }
+
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
