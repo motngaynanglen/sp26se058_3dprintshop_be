@@ -430,6 +430,81 @@
           }
         }
       }
+    },
+    "/api/design-variant/query": {
+      "post": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PostApiDesignVariantQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignVariantListQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/add": {
+      "post": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PostApiDesignVariantAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignVariantCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/update": {
+      "put": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PutApiDesignVariantUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignVariantCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -706,6 +781,131 @@
           },
           "thumbnailUrl": {
             "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GetDesignVariantListQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "designTemplateId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "materialId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "CreateDesignVariantCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sizeScale": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "isAllowPreOrder": {
+            "type": "boolean"
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "UpdateDesignVariantCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeScale": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "isAllowPreOrder": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal",
             "nullable": true
           }
         }
