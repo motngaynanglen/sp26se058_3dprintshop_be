@@ -41,7 +41,6 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             CustomerId = Guid.Parse(customerId!),
             OrderStatus = "Pending",
             Priority = 0,
-            Created = DateTime.UtcNow,
             TotalPrice = 0 // Sẽ cộng dồn sau
         };
         decimal totalAmount = 0;
