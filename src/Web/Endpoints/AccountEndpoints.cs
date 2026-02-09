@@ -89,8 +89,7 @@ public class AccountEndpoints : EndpointGroupBase
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 data: new { id = result },
                 message: "Cập nhật thành công",
-                                    code: ResponseCodeConstants.SUCCESS
-
+                code: ResponseCodeConstants.SUCCESS
                 ));
         }
         catch (Exception ex)
