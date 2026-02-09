@@ -47,12 +47,15 @@ jobs:
             # 1. Login vào Docker Hub trên Server (nếu cần cho Private Repo)
             # echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            # 2. Tải bản Image mới nhất về
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest
-
-            # 3. Dừng và xóa container cũ để tránh xung đột Port
+            # 2. Dừng và xóa container cũ + Xóa luôn Image cũ để giải phóng cache
             docker stop 3dprint-api || true
             docker rm 3dprint-api || true
+
+            # Xóa image cũ để đảm bảo lệnh pull tiếp theo lấy bản 'fresh' nhất
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest || true
+
+            # 3. Tải bản Image mới nhất về
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest
 
             # 4. Chạy container mới
             # -p 80:8080 nghĩa là truy cập web qua cổng 80 (HTTP bình thường) của VPS
