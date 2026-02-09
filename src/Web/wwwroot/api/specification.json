@@ -196,7 +196,7 @@
     "/api/concept-tag/all": {
       "get": {
         "tags": [
-          "Concept Tag"
+          "ConceptTag"
         ],
         "operationId": "GetApiConceptTagAll",
         "responses": {
@@ -209,7 +209,7 @@
     "/api/concept-tag/add": {
       "post": {
         "tags": [
-          "Concept Tag"
+          "ConceptTag"
         ],
         "operationId": "PostApiConceptTagAdd",
         "requestBody": {
@@ -234,7 +234,7 @@
     "/api/concept-tag/update/{id}": {
       "put": {
         "tags": [
-          "Concept Tag"
+          "ConceptTag"
         ],
         "operationId": "PutApiConceptTagUpdate",
         "parameters": [
@@ -271,7 +271,7 @@
     "/api/design-tag/sync": {
       "post": {
         "tags": [
-          "Design Tag"
+          "DesignTag"
         ],
         "operationId": "PostApiDesignTagSync",
         "requestBody": {
@@ -296,7 +296,7 @@
     "/api/design-template/query": {
       "post": {
         "tags": [
-          "Designtemplate"
+          "DesignTemplate"
         ],
         "operationId": "PostApiDesignTemplateQuery",
         "requestBody": {
@@ -321,7 +321,7 @@
     "/api/design-template/add": {
       "post": {
         "tags": [
-          "Designtemplate"
+          "DesignTemplate"
         ],
         "operationId": "PostApiDesignTemplateAdd",
         "requestBody": {
@@ -346,7 +346,7 @@
     "/api/design-template/detail/{id}": {
       "get": {
         "tags": [
-          "Designtemplate"
+          "DesignTemplate"
         ],
         "operationId": "GetApiDesignTemplateDetail",
         "parameters": [
@@ -371,7 +371,7 @@
     "/api/design-template/{id}/tags": {
       "get": {
         "tags": [
-          "Designtemplate"
+          "DesignTemplate"
         ],
         "operationId": "GetApiDesignTemplateTags",
         "parameters": [
@@ -396,7 +396,7 @@
     "/api/design-template/update": {
       "put": {
         "tags": [
-          "Designtemplate"
+          "DesignTemplate"
         ],
         "operationId": "PutApiDesignTemplateUpdate",
         "requestBody": {
