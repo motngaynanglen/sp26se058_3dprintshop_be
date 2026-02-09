@@ -11,7 +11,7 @@ public class DesignTagEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/design-tag")
-                       .WithTags("Design Tag")
+                       .WithTags("DesignTag")
                        .WithOpenApi();
         group.MapPost("/sync",SyncDesignTags);
     }
