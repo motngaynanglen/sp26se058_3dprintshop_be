@@ -15,7 +15,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
         group.MapGet("/all", Get);
         group.MapPost("/add", Add);
         group.MapPut("/update/{id}", Update);
-        group.MapDelete("/delete/{id}", Delete);
+        //group.MapDelete("/delete/{id}", Delete);
     }
 
     public async Task<IResult> Get(ISender sender)
@@ -80,9 +80,9 @@ public class ConceptTagEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Delete()
-    {
-        // Implementation for deleting a concept tag
-        return TypedResults.Ok();
-    }
+    //public async Task<IResult> Delete()
+    //{
+    //    // Implementation for deleting a concept tag
+    //    return TypedResults.Ok();
+    //}
 }
