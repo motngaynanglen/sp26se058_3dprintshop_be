@@ -4,7 +4,7 @@
 @Email=administrator@localhost
 @Password=Administrator1!
 @BearerToken=<YourToken>
-
+###
 # POST Users Register
 POST {{Web_HostAddress}}/api/Users/Register
 Content-Type: application/json
@@ -13,6 +13,7 @@ Content-Type: application/json
   "email": "{{Email}}",
   "password": "{{Password}}"
 }
+###
 
 ###
 
