@@ -117,6 +117,12 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsMainTag")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
@@ -309,6 +315,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("FileUrl")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
