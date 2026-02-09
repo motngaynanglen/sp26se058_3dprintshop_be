@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 [Authorize(Roles = Roles.ADMIN)]
-public class GetAccountsWithPaginationQuery : PaginationRequest,IRequest<PaginatedList<AccountDto>>
+public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>>
 {
     public string? Role { get; init; }
     public string? Search { get; init; }
@@ -21,9 +21,10 @@ public class GetAccountsWithPaginationQuery : PaginationRequest,IRequest<Paginat
     public bool SortDescending { get; init; } = false;
     // Có dữ liệu xóa mềm
     public bool IncludeDeleted { get; init; } = false;
-    // Sử dụng abtract class PaginationRequest để hỗ trợ
-    //public int PageNumber { get; init; } = 1;   
-    //public int PageSize { get; init; } = 10;
+    // Paging
+    public PaginationData Paging { get; init; } = new();
+    public class PaginationData : PaginationRequest { }
+
     public class GetAccountsWithPaginationQueryHandler : IRequestHandler<GetAccountsWithPaginationQuery, PaginatedList<AccountDto>>
     {
         private readonly IApplicationDbContext _context;
@@ -75,7 +76,7 @@ public class GetAccountsWithPaginationQuery : PaginationRequest,IRequest<Paginat
 
             return await query
                 .ProjectTo<AccountDto>(_mapper.ConfigurationProvider)
-                .PaginatedListAsync(request.PageNumber, request.PageSize);
+                .PaginatedListAsync(request.Paging.PageNumber, request.Paging.PageSize);
         }
     }
 }
