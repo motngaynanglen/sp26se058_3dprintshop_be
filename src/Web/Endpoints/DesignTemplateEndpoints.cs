@@ -14,7 +14,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/design-template")
-                       .WithTags("Designtemplate")
+                       .WithTags("DesignTemplate")
                        .WithOpenApi();
         group.MapPost("/query", Query);
         group.MapPost("/add", Create);
