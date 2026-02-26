@@ -6,6 +6,16 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/": {
+      "options": {
+        "operationId": "Options",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/query": {
       "post": {
         "tags": [
