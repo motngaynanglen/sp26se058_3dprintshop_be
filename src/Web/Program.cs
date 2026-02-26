@@ -3,6 +3,20 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+});
+
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -32,13 +46,25 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+app.UseCors("AllowFrontend");
+
 // Authen then Author
 app.UseAuthentication();
 app.UseAuthorization(); 
 
 app.UseHealthChecks("/health");
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+//app.UseHttpsRedirection();
+//app.UseStaticFiles();
+
+app.UseCors("AllowAll");
+
+// Authen then Author
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwaggerUi(settings =>
 {
@@ -57,6 +83,9 @@ app.MapFallbackToFile("index.html");
 app.UseExceptionHandler(options => { });
 
 app.Map("/", () => Results.Redirect("/api"));
+
+app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
+   .RequireCors("AllowFrontend");
 
 app.MapEndpoints();
 

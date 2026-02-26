@@ -24,7 +24,7 @@ public class AccountEndpoints : EndpointGroupBase
         group.MapPut("/update/{id}", UpdateAccount);
 
     }
-    public async Task<IResult> CreateAccount(ISender sender, CreateAccountCommand command)
+    public async Task<IResult> CreateAccount([FromServices] ISender sender,[FromBody] CreateAccountCommand command)
     {
         try
         {
@@ -43,7 +43,7 @@ public class AccountEndpoints : EndpointGroupBase
             ));
         }
     }
-    public async Task<IResult> QueryAccounts(ISender sender, GetAccountsWithPaginationQuery command)
+    public async Task<IResult> QueryAccounts([FromServices] ISender sender, [FromBody] GetAccountsWithPaginationQuery command)
     {
         try
         {
@@ -64,7 +64,7 @@ public class AccountEndpoints : EndpointGroupBase
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
-    public async Task<IResult> GetAccountDetail(ISender sender, Guid id)
+    public async Task<IResult> GetAccountDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
         try
         {
@@ -80,7 +80,7 @@ public class AccountEndpoints : EndpointGroupBase
             return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
         }
     }
-    public async Task<IResult> UpdateAccount(ISender sender, Guid id, UpdateAccountCommand command)
+    public async Task<IResult> UpdateAccount([FromServices] ISender sender,[FromRoute] Guid id, [FromBody] UpdateAccountCommand command)
     {
         try
         {
