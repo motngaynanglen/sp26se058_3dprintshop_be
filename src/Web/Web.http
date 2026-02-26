@@ -1,9 +1,8 @@
 ﻿# For more info on HTTP files go to https://aka.ms/vs/httpfile
-@Web_HostAddress = https://localhost:5001
-
+@Web_HostAddress = https://localhost:8080
 @Email=administrator@localhost
 @Password=Administrator1!
-@BearerToken=<YourToken>
+@BearerToken= Bearer thisisatestbearertoken
 
 # POST Users Register
 POST {{Web_HostAddress}}/api/Users/Register

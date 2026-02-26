@@ -6,13 +6,13 @@ namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class Customer : BaseAuditableEntity
 {
 
+    public Guid AccountId { get; init; }
+    public virtual Account Account { get; init; } = null!;
     public DateTime? DateOfBirth { get; set; }
+    // Sau này có thể thêm point / token AI các thứ
 
-    [MaxLength(255)]
-    public string? Address { get; set; }
-
-    public Guid AccountId { get; set; }
-
-    [ForeignKey(nameof(AccountId))]
-    public Account Account { get; set; } = null!;
+    //Nativigate
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+    //public virtual ICollection<ShippingAddress> ShippingAddresses { get; set; } = new List<ShippingAddress>();
+    public virtual ICollection<DesignWork> DesignWorks { get; set; } = new List<DesignWork>();
 }
