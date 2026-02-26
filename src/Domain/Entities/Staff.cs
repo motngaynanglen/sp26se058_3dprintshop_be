@@ -11,9 +11,8 @@ public class Staff : BaseAuditableEntity
 {
     public Guid AccountId { get; set; }
 
-    [MaxLength(255)]
-    public string Role { get; set; } = null!; // Vai trò riêng của nhân viên
-
-    [ForeignKey(nameof(AccountId))]
-    public Account Account { get; set; } = null!;
+    // Navigation hỗ trợ các bảng nghiệp vụ khác
+    public virtual Account Account { get; set; } = null!;
+    public virtual ICollection<Order> AssignedOrders { get; set; } = new List<Order>();
+    public virtual ICollection<DesignWork> AssignedDesignWorks { get; set; } = new List<DesignWork>();
 }

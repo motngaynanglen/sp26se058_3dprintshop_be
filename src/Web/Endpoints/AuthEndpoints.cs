@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32;
-using sp26se058_3dprintshop_be.Application.Auth.Commands.Login;
-using sp26se058_3dprintshop_be.Application.Auth.Commands.Register;
+using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
+using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Entities;
@@ -26,7 +27,7 @@ public class AuthEndpoints : EndpointGroupBase
         //    .MapPost(SystemLogin, "system-login") // URL: /api/auth/system-login
         //    .MapPost(Login, "login");             // URL: /api/auth/login
     }
-    public async Task<IResult> SystemLogin(ISender sender, SystemLoginCommand command)
+    public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
         try
         {
@@ -45,7 +46,7 @@ public class AuthEndpoints : EndpointGroupBase
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
-    public async Task<IResult> Login(ISender sender, LoginCommand command)
+    public async Task<IResult> Login([FromServices] ISender sender, [FromBody] LoginCommand command)
     {
         try
         {
@@ -64,7 +65,7 @@ public class AuthEndpoints : EndpointGroupBase
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
-    public async Task<IResult> Register(ISender sender, RegisterCommand command)
+    public async Task<IResult> Register([FromServices] ISender sender, [FromBody] RegisterCommand command)
     {
         // Gửi command tới RegisterCommandHandler
         var result = await sender.Send(command);

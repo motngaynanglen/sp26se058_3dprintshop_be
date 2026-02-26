@@ -42,15 +42,58 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
             {
                 var utcNow = _dateTime.GetUtcNow();
+                var user = GetCurrentUserId();
+
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedBy = _user.Id;
+                    entry.Entity.CreatedBy = user;
                     entry.Entity.Created = utcNow;
-                } 
-                entry.Entity.LastModifiedBy = _user.Id;
-                entry.Entity.LastModified = utcNow;
+
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
+                if (entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
+                {
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
+                if (entry.State == EntityState.Deleted)
+                {
+                    if (entry.Entity.DeletedBy == "HARD_DELETE_FLAG")
+                    {
+                        //Tiếp tục xóa
+                        continue;
+                    }
+                    // Thay đổi trạng thái từ Xóa sang Sửa (Modified) để EF Update thay vì Delete
+                    entry.State = EntityState.Modified;
+
+                    // Gán thông tin người xóa và ngày xóa
+                    entry.Entity.DeletedBy = user;
+                    entry.Entity.Deleted = utcNow;
+
+                    // Đồng thời cập nhật luôn thông tin Modified để đồng nhất
+                    entry.Entity.LastModifiedBy = user;
+                    entry.Entity.LastModified = utcNow;
+                }
             }
         }
+    }
+    private string GetCurrentUserId()
+    {
+        // 1. Nếu không có User (chưa đăng nhập - ví dụ: Register)
+        if (string.IsNullOrEmpty(_user.Id))
+        {
+            return "SYSTEM";
+        }
+
+        // 2. Nếu là Admin/Dev (Bạn có thể check dựa trên Claims hoặc Role)
+        //if (_user.IsAdmin)
+        //{
+        //    return "SYSTEM_ADMIN";
+        //}
+
+        // 3. Nếu là User bình thường đã đăng nhập
+        return _user.Id;
     }
 }
 

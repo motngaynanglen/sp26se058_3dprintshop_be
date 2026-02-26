@@ -6,9 +6,111 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/": {
-      "options": {
-        "operationId": "Options",
+    "/api/account/query": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PostApiAccountQuery",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetAccountsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/add": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PostApiAccountAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/detail/{id}": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "GetApiAccountDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/update/{id}": {
+      "put": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PutApiAccountUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -90,10 +192,577 @@
           }
         }
       }
+    },
+    "/api/concept-tag/all": {
+      "get": {
+        "tags": [
+          "ConceptTag"
+        ],
+        "operationId": "GetApiConceptTagAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/add": {
+      "post": {
+        "tags": [
+          "ConceptTag"
+        ],
+        "operationId": "PostApiConceptTagAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConceptTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/update/{id}": {
+      "put": {
+        "tags": [
+          "ConceptTag"
+        ],
+        "operationId": "PutApiConceptTagUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConceptTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-tag/all": {
+      "get": {
+        "tags": [
+          "DesignTag"
+        ],
+        "operationId": "GetApiDesignTagAll",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignTagsListQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-tag/sync": {
+      "post": {
+        "tags": [
+          "DesignTag"
+        ],
+        "operationId": "PostApiDesignTagSync",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/query": {
+      "post": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "PostApiDesignTemplateQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignTemplatesWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/add": {
+      "post": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "PostApiDesignTemplateAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/detail/{id}": {
+      "get": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "GetApiDesignTemplateDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/{id}/tags": {
+      "get": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "GetApiDesignTemplateTags",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/update": {
+      "put": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "PutApiDesignTemplateUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/all": {
+      "get": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "GetApiDesignVariantAll",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignVariantListQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/add": {
+      "post": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PostApiDesignVariantAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignVariantCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/update": {
+      "put": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PutApiDesignVariantUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignVariantCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/add": {
+      "post": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "PostApiMaterialAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/all": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "GetApiMaterialAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/detail/{id}": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "GetApiMaterialDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/update": {
+      "put": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "PutApiMaterialUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMateialCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/query": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "operationId": "PostApiOrderQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrdersWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/detail/{id}": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "operationId": "GetApiOrderDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "GetAccountsWithPaginationQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "search": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortDescending": {
+            "type": "boolean"
+          },
+          "includeDeleted": {
+            "type": "boolean"
+          },
+          "paging": {
+            "$ref": "#/components/schemas/PaginationData"
+          }
+        }
+      },
+      "PaginationData": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PaginationRequest": {
+        "type": "object",
+        "x-abstract": true,
+        "additionalProperties": false,
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CreateAccountCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "fullname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateAccountCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
       "SystemLoginCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -139,6 +808,353 @@
             "nullable": true
           }
         }
+      },
+      "CreateConceptTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateConceptTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GetDesignTagsListQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
+          }
+        }
+      },
+      "SyncDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncDesignTagItem"
+            }
+          }
+        }
+      },
+      "SyncDesignTagItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "conceptTagId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "isMainTag": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GetDesignTemplatesWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateDesignTemplateCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateDesignTemplateCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GetDesignVariantListQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "designTemplateId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "materialId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "CreateDesignVariantCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sizeScale": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "isAllowPreOrder": {
+            "type": "boolean"
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "UpdateDesignVariantCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeScale": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "isAllowPreOrder": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          }
+        }
+      },
+      "CreateMaterialCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "baseCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "totalServiceCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateMateialCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "baseCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "totalServiceCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GetOrdersWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {
