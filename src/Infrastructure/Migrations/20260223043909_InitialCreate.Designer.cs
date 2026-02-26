@@ -12,7 +12,7 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260204005145_InitialCreate")]
+    [Migration("20260223043909_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -844,6 +844,10 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
