@@ -842,6 +842,10 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
 
