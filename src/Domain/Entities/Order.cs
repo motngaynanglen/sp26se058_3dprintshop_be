@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class Order : BaseAuditableEntity
 {
+    public string Code { get; set; } = null!;
+    [Required]
     public Guid CustomerId { get; set; }
     public Guid? StaffId { get; set; }
     public decimal TotalPrice { get; set; }
@@ -19,7 +21,6 @@ public class Order : BaseAuditableEntity
     public virtual Staff? Staff { get; set; }
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
-    // 1-1 Relationship với Invoice
     public virtual Invoice? Invoice { get; set; }
 
 }

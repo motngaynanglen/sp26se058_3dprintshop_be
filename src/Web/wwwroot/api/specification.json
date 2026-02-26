@@ -6,6 +6,16 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/": {
+      "options": {
+        "operationId": "Options",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/query": {
       "post": {
         "tags": [
@@ -268,6 +278,31 @@
         }
       }
     },
+    "/api/design-tag/all": {
+      "get": {
+        "tags": [
+          "DesignTag"
+        ],
+        "operationId": "GetApiDesignTagAll",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetDesignTagsListQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-tag/sync": {
       "post": {
         "tags": [
@@ -418,12 +453,12 @@
         }
       }
     },
-    "/api/design-variant/query": {
-      "post": {
+    "/api/design-variant/all": {
+      "get": {
         "tags": [
           "Design Variant"
         ],
-        "operationId": "PostApiDesignVariantQuery",
+        "operationId": "GetApiDesignVariantAll",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -486,6 +521,144 @@
           "required": true,
           "x-position": 1
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/add": {
+      "post": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "PostApiMaterialAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/all": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "GetApiMaterialAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/detail/{id}": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "GetApiMaterialDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/update": {
+      "put": {
+        "tags": [
+          "Material"
+        ],
+        "operationId": "PutApiMaterialUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMateialCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/query": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "operationId": "PostApiOrderQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrdersWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/detail/{id}": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "operationId": "GetApiOrderDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -673,6 +846,16 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "GetDesignTagsListQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid"
           }
         }
       },
@@ -903,6 +1086,85 @@
             "nullable": true
           }
         }
+      },
+      "CreateMaterialCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "baseCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "totalServiceCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateMateialCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "baseCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "totalServiceCostPerGram": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GetOrdersWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {

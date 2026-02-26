@@ -1,4 +1,5 @@
-﻿using Mysqlx.Crud;
+﻿using Microsoft.AspNetCore.Mvc;
+using Mysqlx.Crud;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
@@ -16,13 +17,24 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
-        group.MapPost("/query", Query);
+        group.MapGet("/all", GetAll);
         group.MapPost("/add", Add);
         group.MapPut("/update/{id}", Update);
         //group.MapDelete("/delete/{id}", Delete);
+
+        /*
+        Của customer
+        group.MapGet("", GetByTemplateID)
+        group.MapGet("/detail/{id}", GetByID)
+        group.MapPatch("/price", UpdatePrice)
+        group.MapPatch("/stock-quantity", UpdateStockQuantity)
+         */
+
+
+
     }
 
-    public async Task<IResult> Add(ISender sender, CreateDesignVariantCommand command)
+    public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateDesignVariantCommand command)
     {
         try
         {
@@ -42,7 +54,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Update(ISender sender, UpdateDesignVariantCommand command)
+    public async Task<IResult> Update([FromServices] ISender sender,[FromBody] UpdateDesignVariantCommand command)
     {
         try
         {
@@ -62,7 +74,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Query(ISender sender, GetDesignVariantListQuery query)
+    public async Task<IResult> GetAll( [FromServices] ISender sender, [FromBody] GetDesignVariantListQuery query)
     {
         try
         {

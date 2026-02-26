@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
@@ -23,7 +24,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         group.MapPut("/update/{id}", Update);
     }
 
-    public async Task<IResult> GetTags(ISender sender, Guid id)
+    public async Task<IResult> GetTags([FromServices] ISender sender, [FromRoute] Guid id)
     {
         try
         {
@@ -46,7 +47,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Query(ISender sender,GetDesignTemplatesWithPaginationQuery query)
+    public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetDesignTemplatesWithPaginationQuery query)
     {
         try
         {
@@ -68,7 +69,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Create(ISender sender, CreateDesignTemplateCommand command)
+    public async Task<IResult> Create([FromServices] ISender sender, [FromBody] CreateDesignTemplateCommand command)
     {
         try
         {
@@ -87,7 +88,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> GetDetail(ISender sender, Guid id)
+    public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
         try
         {
@@ -107,7 +108,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Update(ISender sender, UpdateDesignTemplateCommand command)
+    public async Task<IResult> Update([FromServices] ISender sender, [FromBody] UpdateDesignTemplateCommand command)
     {
         try
         {
