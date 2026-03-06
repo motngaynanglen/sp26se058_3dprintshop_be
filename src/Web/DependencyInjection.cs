@@ -10,6 +10,8 @@ using NSwag.Generation.Processors.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using PayOS;
+using sp26se058_3dprintshop_be.Application.Common.Config;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -78,6 +80,17 @@ public static class DependencyInjection
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
         });
 
+        // --- CẤU HÌNH PAYOS ---
+        var payOsSection = configuration.GetSection("PayOS");
+
+        // Đăng ký PayOSClient với Singleton
+        services.AddSingleton(new PayOSClient(
+            payOsSection["ClientId"] ?? throw new InvalidOperationException("PayOS ClientId is missing"),
+            payOsSection["ApiKey"] ?? throw new InvalidOperationException("PayOS ApiKey is missing"),
+            payOsSection["ChecksumKey"] ?? throw new InvalidOperationException("PayOS ChecksumKey is missing")
+        ));
+        services.AddScoped<PayOsCodeGenerator>();
+        // --- HẾT CẤU HÌNH PAYOS ---
         return services;
     }
 

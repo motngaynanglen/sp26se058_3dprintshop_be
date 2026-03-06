@@ -15,7 +15,7 @@ public interface IApplicationDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
     DbSet<Invoice> Invoices { get; }
-    DbSet<Transaction> Transactions { get; }
+    DbSet<Domain.Entities.Transaction> Transactions { get; }
     DbSet<DesignTemplate> DesignTemplates { get; }
     DbSet<Domain.Entities.DesignVariant> DesignVariants { get; }
     DbSet<ConceptTag> ConceptTags { get; }
