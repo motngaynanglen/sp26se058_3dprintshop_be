@@ -1,0 +1,80 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using PayOS;
+using PayOS.Models.V2.PaymentRequests;
+using PayOS.Models.Webhooks;
+using sp26se058_3dprintshop_be.Application.Common.Config;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
+
+
+namespace sp26se058_3dprintshop_be.Infrastructure.Service;
+public class PayOsService : IPaymentService
+{
+    private readonly PayOSClient _payOsClient;
+    private readonly PayOsCodeGenerator _codeGenerator;
+
+    public PayOsService(PayOSClient payOsClient, PayOsCodeGenerator codeGenerator)
+    {
+        _payOsClient = payOsClient;
+        _codeGenerator = codeGenerator;
+    }
+    public async Task<PaymentResponse> CreatePaymentLink(Order order, string returnUrl, string cancelUrl)
+    {
+        // Tạo mã thanh toán duy nhất (số)
+        long orderCode = _codeGenerator.GenerateCode();
+        int expireInMinutes = 10;
+
+        DateTimeOffset expiryTime = DateTimeOffset.UtcNow.AddMinutes(expireInMinutes);
+
+        List<PaymentLinkItem> Items = order.OrderItems.Select(x => new PaymentLinkItem
+        {
+            Name = "a",
+            Quantity = x.QuantityOrdered,
+            Price = (int)x.UnitPrice
+        }).ToList();
+
+        var paymentData = new CreatePaymentLinkRequest
+        {
+            OrderCode = orderCode,
+            Amount = (int)order.TotalPrice,
+            Description = $"Thanh toán đơn hàng #{order.Id}",
+            Items = Items,
+            CancelUrl = cancelUrl,
+            ReturnUrl = returnUrl,
+            ExpiredAt = (int)expiryTime.ToUnixTimeSeconds()
+        };
+
+        // Gọi API PayOS
+        CreatePaymentLinkResponse paymentResult = await _payOsClient.PaymentRequests.CreateAsync(paymentData);
+
+        // Trả về object đầy đủ như bạn muốn
+        return new PaymentResponse
+        {
+            OrderId = order.Id.ToString(),
+            PaymentCode = orderCode,
+            PaymentLink = paymentResult.CheckoutUrl,
+            QrCode = paymentResult.QrCode,
+            ExpiredAt = expiryTime.UtcToOffsetSystemTime(),
+        };
+    }
+
+    public async Task<WebhookData> VerifyWebhookData(Webhook webhook)
+    {
+        try
+        {
+            WebhookData verifiedData = await _payOsClient.Webhooks.VerifyAsync(webhook);
+            return verifiedData;
+        }
+        catch (Exception)
+        {
+            // Nếu sai chữ ký, coi như dữ liệu không hợp lệ
+            throw new Exception("Chữ ký Webhook không hợp lệ!");
+        }
+    }
+}
