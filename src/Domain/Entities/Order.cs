@@ -16,6 +16,9 @@ public class Order : BaseAuditableEntity
     public decimal TotalPrice { get; set; }
     public required string OrderStatus { get; set; }= "PENDING";
     public int Priority { get; set; } = 0;
+    public DateTimeOffset? DepositedAt { get; set; }
+    public DateTimeOffset? DeliveredAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
 
     public virtual Customer Customer { get; set; } = null!;
     public virtual Staff? Staff { get; set; }
