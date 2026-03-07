@@ -17,7 +17,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
-        group.MapGet("/all", GetAll);
+        group.MapPost("/all", GetAll);
         group.MapPost("/add", Add);
         group.MapPut("/update/{id}", Update);
         //group.MapDelete("/delete/{id}", Delete);
