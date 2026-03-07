@@ -52,7 +52,7 @@ public static class DependencyInjection
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordService, PasswordService>();
-
+        services.AddScoped<IPaymentService, PayOsService>();
         return services;
     }
 }
