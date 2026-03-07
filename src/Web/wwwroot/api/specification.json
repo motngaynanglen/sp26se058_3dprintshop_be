@@ -454,11 +454,11 @@
       }
     },
     "/api/design-variant/all": {
-      "get": {
+      "post": {
         "tags": [
           "Design Variant"
         ],
-        "operationId": "GetApiDesignVariantAll",
+        "operationId": "PostApiDesignVariantAll",
         "requestBody": {
           "x-name": "query",
           "content": {
