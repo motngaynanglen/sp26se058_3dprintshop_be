@@ -7,6 +7,7 @@ using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Application.Transaction.Commands;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -22,18 +23,19 @@ public class TransactionEndpoints : EndpointGroupBase
                        .WithOpenApi()
                        .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
-        //group.MapPost("/system-login", SystemLogin);
-        //group.MapPost("/login", Login);
-        //group.MapPost("/register", Register);
+        group.MapPost("/payos-webhook", HandlePayOSWebhook);
+        group.MapPost("/perform-transaction", PerformTransaction);
+
     }
-    public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
+
+    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentCommand command)
     {
         try
         {
             var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
                     data: result,
-                    message: "Đăng nhập thành công!",
+                    message: "Xác nhực thanh toán thành công!",
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
@@ -45,14 +47,14 @@ public class TransactionEndpoints : EndpointGroupBase
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
-    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentCommand command)
+    public async Task<IResult> PerformTransaction([FromServices] ISender sender, [FromBody] PerformTransactionCommand command)
     {
         try
         {
             var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel.OkResponseModel(
                     data: result,
-                    message: "Đăng nhập thành công!",
+                    message: "Thanh toán thành công",
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }

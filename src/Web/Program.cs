@@ -79,7 +79,7 @@ app.MapFallbackToFile("index.html");
 
 app.UseExceptionHandler(options => { });
 
-app.Map("/", () => Results.Redirect("/api"));
+app.Map("/", () => "3D Print Shop API is running...");
 
 app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
    .RequireCors("AllowFrontend");
