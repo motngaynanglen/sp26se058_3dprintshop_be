@@ -665,6 +665,56 @@
           }
         }
       }
+    },
+    "/api/transaction/payos-webhook": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "PostApiTransactionPayosWebhook",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessOnlinePaymentCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/transaction/perform-transaction": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "operationId": "PostApiTransactionPerformTransaction",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerformTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1165,6 +1215,119 @@
             }
           }
         ]
+      },
+      "ProcessOnlinePaymentCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "webhookBody": {
+            "$ref": "#/components/schemas/Webhook"
+          }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "description": "Webhook data received from PayOS",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WebhookData"
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookData": {
+        "type": "object",
+        "description": "Webhook data payload",
+        "additionalProperties": false,
+        "properties": {
+          "orderCode": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string"
+          },
+          "accountNumber": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "transactionDateTime": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "paymentLinkId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "counterAccountBankId": {
+            "type": "string",
+            "nullable": true
+          },
+          "counterAccountBankName": {
+            "type": "string",
+            "nullable": true
+          },
+          "counterAccountName": {
+            "type": "string",
+            "nullable": true
+          },
+          "counterAccountNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "virtualAccountName": {
+            "type": "string",
+            "nullable": true
+          },
+          "virtualAccountNumber": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PerformTransactionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "orderId",
+          "type"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "guid",
+            "minLength": 1
+          },
+          "type": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     },
     "securitySchemes": {
