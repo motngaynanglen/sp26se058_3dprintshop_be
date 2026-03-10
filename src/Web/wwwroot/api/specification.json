@@ -641,6 +641,31 @@
         }
       }
     },
+    "/api/order/checkout": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "operationId": "PostApiOrderCheckout",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/order/detail/{id}": {
       "get": {
         "tags": [
@@ -1215,6 +1240,57 @@
             }
           }
         ]
+      },
+      "CheckoutCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shippingAddressId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "shippingMethodId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckoutItemRequest"
+            }
+          }
+        }
+      },
+      "CheckoutItemRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sourceType": {
+            "type": "string"
+          },
+          "designVariantId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "designWorkId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "ProcessOnlinePaymentCommand": {
         "type": "object",
