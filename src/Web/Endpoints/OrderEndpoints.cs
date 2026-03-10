@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Application.Orders.Commands;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -17,7 +18,7 @@ public class OrderEndpoints : EndpointGroupBase
                        .WithTags("Order")
                        .WithOpenApi();
         group.MapPost("/query", Query);
-        //group.MapPost("/add", Create);
+        group.MapPost("/checkout", CheckOut);
         group.MapGet("/detail/{id}", GetDetail);
         //group.MapPut("/update/{id}", Update);
 
@@ -74,15 +75,31 @@ public class OrderEndpoints : EndpointGroupBase
 
         }
     }
+    public async Task<IResult> CheckOut([FromServices] ISender sender, [FromBody] CheckoutCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Lấy chi tiết đơn hàng thành công"
+                ));
+        }
+        catch (Exception)
+        {
+            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
 
-        //public async Task<IResult> Create(ISender sender)
-        //{
-        //    return TypedResults.Ok();
-        //}
-
-        //public async Task<IResult> Update(ISender sender)
-        //{
-        //    var order = await sender.Send(sender);
-        //    return TypedResults.Ok();
-        //}
+        }
     }
+    //public async Task<IResult> Create(ISender sender)
+    //{
+    //    return TypedResults.Ok();
+    //}
+
+    //public async Task<IResult> Update(ISender sender)
+    //{
+    //    var order = await sender.Send(sender);
+    //    return TypedResults.Ok();
+    //}
+}
