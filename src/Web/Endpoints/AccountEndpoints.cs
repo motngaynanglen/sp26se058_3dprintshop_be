@@ -15,16 +15,27 @@ public class AccountEndpoints : EndpointGroupBase
     {
         var group = app.MapGroup("/api/account")
                        .WithTags("Account")
-                       //.RequireAuthorization(Roles.ADMIN)
-                       .WithOpenApi(); // Ép Swagger phải nhận diện group này
+                       .WithOpenApi();
 
-        group.MapPost("/query", QueryAccounts);
-        group.MapPost("/add", CreateAccount);
-        group.MapGet("/detail/{id}", GetAccountDetail);
-        group.MapPut("/update/{id}", UpdateAccount);
+        group.MapPost("/query", QueryAccounts)
+            .WithSummary("Truy vấn danh sách tài khoản")
+            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống.");
+        group.MapPost("/add", CreateAccount)
+            .WithSummary("Tạo tài khoản mới")
+            .WithDescription("Tạo một tài khoản người dùng mới với các thông tin cung cấp.");
+        group.MapGet("/{id}/detail", GetAccountDetail)
+            .WithSummary("Lấy thông tin chi tiết tài khoản")
+            .WithDescription("Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.");
+        group.MapPut("/{id}/update", UpdateAccount)
+              .WithSummary("Lấy thông tin chi tiết tài khoản")
+            .WithDescription("Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.");
+        group.MapDelete("/{id}/deactive", Deactive);
+        group.MapPost("/{id}/active", Active);
+        group.MapDelete("/{id}/delete", Delete);
+        group.MapPut("/change-password", ChangePassword);
 
     }
-    public async Task<IResult> CreateAccount([FromServices] ISender sender,[FromBody] CreateAccountCommand command)
+    public async Task<IResult> CreateAccount([FromServices] ISender sender, [FromBody] CreateAccountCommand command)
     {
         try
         {
@@ -80,7 +91,7 @@ public class AccountEndpoints : EndpointGroupBase
             return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
         }
     }
-    public async Task<IResult> UpdateAccount([FromServices] ISender sender,[FromRoute] Guid id, [FromBody] UpdateAccountCommand command)
+    public async Task<IResult> UpdateAccount([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateAccountCommand command)
     {
         try
         {
@@ -88,6 +99,85 @@ public class AccountEndpoints : EndpointGroupBase
             var result = await sender.Send(finalCommand);
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 data: new { id = result },
+                message: "Cập nhật thành công",
+                code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lỗi trong quá trình cập nhật"
+            ));
+        }
+    }
+    public async Task<IResult> ChangePassword([FromServices] ISender sender, [FromBody] ChangePasswordAccountCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: true,
+                message: "Cập nhật thành công",
+                code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lỗi trong quá trình cập nhật"
+            ));
+        }
+    }
+    public async Task<IResult> Deactive([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeactiveAccountCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data:  result ,
+                message: "Cập nhật thành công",
+                code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lỗi trong quá trình cập nhật"
+            ));
+        }
+    }
+    public async Task<IResult> Active([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ActiveAccountCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data:  result ,
+                message: "Cập nhật thành công",
+                code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lỗi trong quá trình cập nhật"
+            ));
+        }
+    }
+    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteAccountCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
                 message: "Cập nhật thành công",
                 code: ResponseCodeConstants.SUCCESS
                 ));
