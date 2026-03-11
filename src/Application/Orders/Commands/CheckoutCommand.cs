@@ -39,7 +39,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             Id = Guid.NewGuid(),
             //Code = $"ORD-{DateTime.Now.Ticks}", Chưa impliment code
             CustomerId = Guid.Parse(customerId!),
-            OrderStatus = "Pending",
+            OrderStatus = "PENDING",
             Priority = 0,
             TotalPrice = 0 // Sẽ cộng dồn sau
         };
@@ -113,7 +113,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
                 OrderId = order.Id,
                 InvoiceCode = $"INV-{order.Id}",
                 TotalAmount = order.TotalPrice,
-                PaymentStatus = "Unpaid",
+                PaymentStatus = "UNPAID",
             };
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync(cancellationToken);
