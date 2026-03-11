@@ -74,6 +74,8 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
                 var customer = new Customer { Account = newAccount };
                 _context.Customers.Add(customer);
                 break;
+            default:
+                throw new Exception("Vài trò không tồn tại trong hệ thống.");
         }
 
         _context.Accounts.Add(newAccount);

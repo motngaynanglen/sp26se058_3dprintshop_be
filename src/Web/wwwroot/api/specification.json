@@ -21,6 +21,8 @@
         "tags": [
           "Account"
         ],
+        "summary": "Truy vấn danh sách tài khoản",
+        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
           "x-name": "command",
@@ -46,6 +48,8 @@
         "tags": [
           "Account"
         ],
+        "summary": "Tạo tài khoản mới",
+        "description": "Tạo một tài khoản người dùng mới với các thông tin cung cấp.",
         "operationId": "PostApiAccountAdd",
         "requestBody": {
           "x-name": "command",
@@ -66,11 +70,13 @@
         }
       }
     },
-    "/api/account/detail/{id}": {
+    "/api/account/{id}/detail": {
       "get": {
         "tags": [
           "Account"
         ],
+        "summary": "Lấy thông tin chi tiết tài khoản",
+        "description": "Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.",
         "operationId": "GetApiAccountDetail",
         "parameters": [
           {
@@ -91,11 +97,13 @@
         }
       }
     },
-    "/api/account/update/{id}": {
+    "/api/account/{id}/update": {
       "put": {
         "tags": [
           "Account"
         ],
+        "summary": "Lấy thông tin chi tiết tài khoản",
+        "description": "Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.",
         "operationId": "PutApiAccountUpdate",
         "parameters": [
           {
@@ -120,6 +128,142 @@
           },
           "required": true,
           "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/{id}/deactive": {
+      "delete": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "DeleteApiAccountDeactive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactiveAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/{id}/active": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PostApiAccountActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/{id}/delete": {
+      "delete": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "DeleteApiAccountDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/change-password": {
+      "put": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "PutApiAccountChangePassword",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
         },
         "responses": {
           "200": {
@@ -845,6 +989,33 @@
           "isActive": {
             "type": "boolean",
             "nullable": true
+          }
+        }
+      },
+      "DeactiveAccountCommand": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "ActiveAccountCommand": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DeleteAccountCommand": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "ChangePasswordAccountCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "oldPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          },
+          "confirmNewPassword": {
+            "type": "string"
           }
         }
       },
