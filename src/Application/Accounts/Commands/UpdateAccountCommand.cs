@@ -29,11 +29,12 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
 {
     private readonly IApplicationDbContext _context;
     private readonly IPasswordService _passwordService;
-
-    public UpdateAccountCommandHandler(IApplicationDbContext context, IPasswordService passwordService)
+    private readonly IUser _user;
+    public UpdateAccountCommandHandler(IApplicationDbContext context, IPasswordService passwordService, IUser user)
     {
         _context = context;
         _passwordService = passwordService;
+        _user = user;
     }
     public async Task<Guid> Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
     {
@@ -68,7 +69,8 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
                 throw new Exception("Lỗi tạo pass");
             }
         }
-
+        entity.LastModified = DateTimeOffset.UtcNow;
+        entity.LastModifiedBy = _user.Username;
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         return entity.Id;
