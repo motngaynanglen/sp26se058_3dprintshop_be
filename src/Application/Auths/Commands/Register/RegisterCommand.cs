@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,10 +10,15 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 public record RegisterCommand : IRequest<bool>
 {
+    [DefaultValue("Username@123")]
     public string Username { get; init; } = null!;
+    [DefaultValue("Password@123")]
     public string Password { get; init; } = null!;
+    [DefaultValue("Nguyen van A")]
     public string Fullname { get; init; } = null!;
+    [DefaultValue("VanA@gmail.com")]
     public string Email { get; init; } = null!;
+    [DefaultValue("0777777777")]
     public string? PhoneNumber { get; init; }
 }
 
