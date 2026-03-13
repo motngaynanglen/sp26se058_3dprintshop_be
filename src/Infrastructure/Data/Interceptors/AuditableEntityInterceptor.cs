@@ -39,10 +39,9 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
 
         foreach (var entry in context.ChangeTracker.Entries<BaseAuditableEntity>())
         {
-            if (entry.State is EntityState.Added or EntityState.Modified || entry.HasChangedOwnedEntities())
-            {
-                var utcNow = _dateTime.GetUtcNow();
-                var user = GetCurrentUserId();
+            var utcNow = _dateTime.GetUtcNow();
+            var user = GetCurrentUserId();
+         
 
                 if (entry.State == EntityState.Added)
                 {
@@ -75,7 +74,7 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
                     entry.Entity.LastModifiedBy = user;
                     entry.Entity.LastModified = utcNow;
                 }
-            }
+            
         }
     }
     private string GetCurrentUserId()

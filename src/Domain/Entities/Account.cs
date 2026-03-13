@@ -17,6 +17,8 @@ public class Account : BaseAuditableEntity // Kế thừa để có CreatedBy, L
     public string? ZaloPhone { get; set; }
     public required string PasswordHash { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? PasswordResetToken { get; set; }
+    public DateTimeOffset? ResetTokenExpires { get; set; }
     // Navigation properties (Mối quan hệ 1:1)
     public virtual Staff? Staff { get; set; }
     public virtual Customer? Customer { get; set; }
