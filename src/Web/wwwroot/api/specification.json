@@ -323,6 +323,7 @@
         "tags": [
           "Auth"
         ],
+        "summary": "[Admin] Đăng nhập hệ thống.",
         "operationId": "PostApiAuthSystemLogin",
         "requestBody": {
           "x-name": "command",
@@ -348,6 +349,7 @@
         "tags": [
           "Auth"
         ],
+        "summary": "[Customer/Staff/Manager] Đăng nhập hệ thống.",
         "operationId": "PostApiAuthLogin",
         "requestBody": {
           "x-name": "command",
@@ -373,6 +375,7 @@
         "tags": [
           "Auth"
         ],
+        "summary": "[Guest] Đăng kí tài khoản.",
         "operationId": "PostApiAuthRegister",
         "requestBody": {
           "x-name": "command",
@@ -380,6 +383,58 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RegisterCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Guest] Đăng kí tài khoản.",
+        "operationId": "PostApiAuthForgotPassword",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgetPasswordCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "[Guest] Đăng kí tài khoản.",
+        "operationId": "PostApiAuthResetPassword",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordCommand"
               }
             }
           },
@@ -1104,10 +1159,12 @@
         "additionalProperties": false,
         "properties": {
           "username": {
-            "type": "string"
+            "type": "string",
+            "default": "AdminUsername@123"
           },
           "password": {
-            "type": "string"
+            "type": "string",
+            "default": "AdminPassword@123"
           }
         }
       },
@@ -1116,10 +1173,12 @@
         "additionalProperties": false,
         "properties": {
           "username": {
-            "type": "string"
+            "type": "string",
+            "default": "Username@123"
           },
           "password": {
-            "type": "string"
+            "type": "string",
+            "default": "Password@123"
           }
         }
       },
@@ -1128,20 +1187,49 @@
         "additionalProperties": false,
         "properties": {
           "username": {
-            "type": "string"
+            "type": "string",
+            "default": "Username@123"
           },
           "password": {
-            "type": "string"
+            "type": "string",
+            "default": "Password@123"
           },
           "fullname": {
-            "type": "string"
+            "type": "string",
+            "default": "Nguyen van A"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "default": "VanA@gmail.com"
           },
           "phoneNumber": {
             "type": "string",
+            "default": "0777777777",
             "nullable": true
+          }
+        }
+      },
+      "ForgetPasswordCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "ResetPasswordCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "default": "00000000-0000-0000-0000-000000000000"
+          },
+          "newPassword": {
+            "type": "string",
+            "default": "NewPassword@123"
           }
         }
       },

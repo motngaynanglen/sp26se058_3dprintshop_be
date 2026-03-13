@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,7 +13,9 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 public record LoginCommand : IRequest<ResponseLoginModel>
 {
+    [DefaultValue("Username@123")]
     public string Username { get; init; } = null!;
+    [DefaultValue("Password@123")]
     public string Password { get; init; } = null!;
 }
 
@@ -50,7 +53,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, ResponseLoginMo
             .Include(a => a.Manager)
             .Include(a => a.Staff)
             .Include(a => a.Customer)
-            .AsNoTracking().FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
+            .AsNoTracking().FirstOrDefaultAsync(u => u.Username.ToLower() == request.Username.ToLower(), cancellationToken);
 
         // Sử dụng BCrypt để kiểm tra mật khẩu đã hash
         if (account == null || !_passwordService.VerifyPassword(request.Password, account.PasswordHash))

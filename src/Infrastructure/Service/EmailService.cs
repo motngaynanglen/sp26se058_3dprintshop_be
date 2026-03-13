@@ -28,6 +28,7 @@ public class EmailService : IEmailService
         email.Body = builder.ToMessageBody();
 
         using var smtp = new SmtpClient();
+
         await smtp.ConnectAsync(_emailSettings.SmtpServer, _emailSettings.Port, MailKit.Security.SecureSocketOptions.StartTls);
         await smtp.AuthenticateAsync(_emailSettings.FromEmail, _emailSettings.AppPassword);
         await smtp.SendAsync(email);
