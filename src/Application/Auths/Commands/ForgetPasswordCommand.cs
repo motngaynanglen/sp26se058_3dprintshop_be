@@ -32,7 +32,11 @@ public class ForgetPasswordCommandHandler : IRequestHandler<ForgetPasswordComman
         var account = await _context.Accounts
              .FirstOrDefaultAsync(a => a.Email == request.Email, cancellationToken);
 
-        if (account == null) return true; 
+        if (account == null)
+        {
+            throw new Exception("Email của bạn không tồn tại trong hệ thống.");
+        }
+        
 
         account.PasswordResetToken = Guid.NewGuid().ToString();
         account.ResetTokenExpires = DateTimeOffset.UtcNow.AddMinutes(15); // Hết hạn sau 15p

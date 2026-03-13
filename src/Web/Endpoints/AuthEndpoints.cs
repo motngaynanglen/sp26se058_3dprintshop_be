@@ -20,9 +20,16 @@ public class AuthEndpoints : EndpointGroupBase
                        .WithOpenApi()
                        .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
-        group.MapPost("/system-login", SystemLogin);
-        group.MapPost("/login", Login);
-        group.MapPost("/register", Register);
+        group.MapPost("/system-login", SystemLogin)
+                .WithSummary("[Admin] Đăng nhập hệ thống.");
+        group.MapPost("/login", Login)
+                .WithSummary("[Customer/Staff/Manager] Đăng nhập hệ thống.");
+        group.MapPost("/register", Register)
+                .WithSummary("[Guest] Đăng kí tài khoản.");
+        group.MapPost("/forgot-password", ForgetPassword)
+                .WithSummary("[Guest] Xin mã tạo lại mật khẩu mới.");
+        group.MapPost("/reset-password", ResetPassword)
+                .WithSummary("[Guest] Tạo lại mật khẩu mới.");
         //app.MapGroup(this)
         //    .MapPost(SystemLogin, "system-login") // URL: /api/auth/system-login
         //    .MapPost(Login, "login");             // URL: /api/auth/login
@@ -40,7 +47,7 @@ public class AuthEndpoints : EndpointGroupBase
         }
         catch (UnauthorizedAccessException)
         {
-            // Trả về 401 Unauthorized
+            // Trả về 401 
             return TypedResults.Json(
                 BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
                 statusCode: StatusCodes.Status401Unauthorized);
@@ -59,7 +66,45 @@ public class AuthEndpoints : EndpointGroupBase
         }
         catch (UnauthorizedAccessException)
         {
-            // Trả về 401 Unauthorized
+            // Trả về 401 
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+    }
+    public async Task<IResult> ForgetPassword([FromServices] ISender sender, [FromBody] ForgetPasswordCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    data: result,
+                    message: "Đăng nhập thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Trả về 401 
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+    }
+    public async Task<IResult> ResetPassword([FromServices] ISender sender, [FromBody] ResetPasswordCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    data: result,
+                    message: "Đăng nhập thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Trả về 401 
             return TypedResults.Json(
                 BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
                 statusCode: StatusCodes.Status401Unauthorized);
