@@ -26,10 +26,10 @@ public class AuthEndpoints : EndpointGroupBase
                 .WithSummary("[Customer/Staff/Manager] Đăng nhập hệ thống.");
         group.MapPost("/register", Register)
                 .WithSummary("[Guest] Đăng kí tài khoản.");
-        group.MapPost("/forgot-password", ForgetPassword)
-                .WithSummary("[Guest] Xin mã tạo lại mật khẩu mới.");
-        group.MapPost("/reset-password", ResetPassword)
-                .WithSummary("[Guest] Tạo lại mật khẩu mới.");
+        group.MapPatch("/forgot-password", ForgetPassword)
+                .WithSummary("[Guest] Xin mã để đặt lại mật khẩu.");
+        group.MapPatch("/reset-password", ResetPassword)
+                .WithSummary("[Guest] Đặt lại mật khẩu.");
     }
     public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
@@ -76,7 +76,7 @@ public class AuthEndpoints : EndpointGroupBase
             var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     data: result,
-                    message: "Đăng nhập thành công!",
+                    message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
@@ -95,7 +95,7 @@ public class AuthEndpoints : EndpointGroupBase
             var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     data: result,
-                    message: "Đăng nhập thành công!",
+                    message: "Đặt lại mật khẩu thành công.",
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
