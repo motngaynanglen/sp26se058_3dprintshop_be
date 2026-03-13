@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,10 +14,13 @@ namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithP
 [Authorize(Roles = Roles.ADMIN)]
 public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>>
 {
+    [DefaultValue("CUSTOMER")]
     public string? Role { get; init; }
+    [DefaultValue("Nguyen van a")]
     public string? Search { get; init; }
-    
+
     // Sắp xếp
+    [DefaultValue("Name")]
     public string? SortBy { get; init; } // "Name", "Phone", "Created", "Deleted"
     public bool SortDescending { get; init; } = false;
     // Có dữ liệu xóa mềm

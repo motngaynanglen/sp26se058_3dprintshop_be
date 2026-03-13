@@ -22,7 +22,7 @@
           "Account"
         ],
         "summary": "[Admin] Truy vấn danh sách tài khoản.",
-        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống.",
+        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
           "x-name": "command",
@@ -98,12 +98,12 @@
       }
     },
     "/api/account/{id}/update": {
-      "put": {
+      "patch": {
         "tags": [
           "Account"
         ],
         "summary": "[Admin] Cập nhật thông tin tài khoản với ID.",
-        "operationId": "PutApiAccountUpdate",
+        "operationId": "PatchApiAccountUpdate",
         "parameters": [
           {
             "name": "id",
@@ -136,13 +136,13 @@
       }
     },
     "/api/account/{id}/active": {
-      "post": {
+      "patch": {
         "tags": [
           "Account"
         ],
         "summary": "[Admin] Kích hoạt tài khoản có ID.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
-        "operationId": "PostApiAccountActive",
+        "operationId": "PatchApiAccountActive",
         "parameters": [
           {
             "name": "id",
@@ -175,13 +175,13 @@
       }
     },
     "/api/account/{id}/deactive": {
-      "delete": {
+      "patch": {
         "tags": [
           "Account"
         ],
         "summary": "[Admin] Tạm ngưng hoạt động tài khoản có ID.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
-        "operationId": "DeleteApiAccountDeactive",
+        "operationId": "PatchApiAccountDeactive",
         "parameters": [
           {
             "name": "id",
@@ -267,12 +267,24 @@
       }
     },
     "/api/account/me/update": {
-      "get": {
+      "patch": {
         "tags": [
           "Account"
         ],
         "summary": "[Customer] Cập nhật thông tin chi tiết của tài khoản hiển tại.",
-        "operationId": "GetApiAccountMeUpdate",
+        "operationId": "PatchApiAccountMeUpdate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountMineCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -281,12 +293,12 @@
       }
     },
     "/api/account/change-password": {
-      "put": {
+      "patch": {
         "tags": [
           "Account"
         ],
         "summary": "[Customer] Đổi mật khẩu của tài khoản hiện tại.",
-        "operationId": "PutApiAccountChangePassword",
+        "operationId": "PatchApiAccountChangePassword",
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -928,14 +940,17 @@
         "properties": {
           "role": {
             "type": "string",
+            "default": "CUSTOMER",
             "nullable": true
           },
           "search": {
             "type": "string",
+            "default": "Nguyen van a",
             "nullable": true
           },
           "sortBy": {
             "type": "string",
+            "default": "Name",
             "nullable": true
           },
           "sortDescending": {
@@ -967,11 +982,13 @@
         "properties": {
           "pageNumber": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "default": 1
           },
           "pageSize": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "default": 10
           }
         }
       },
@@ -1048,18 +1065,37 @@
         "type": "object",
         "additionalProperties": false
       },
+      "UpdateAccountMineCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "default": "newFullname",
+            "nullable": true
+          },
+          "contactPhone": {
+            "type": "string",
+            "default": "0777777777",
+            "nullable": true
+          }
+        }
+      },
       "ChangePasswordAccountCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "oldPassword": {
-            "type": "string"
+            "type": "string",
+            "default": "Matkhaucu123"
           },
           "newPassword": {
-            "type": "string"
+            "type": "string",
+            "default": "Matkhaumoi123456"
           },
           "confirmNewPassword": {
-            "type": "string"
+            "type": "string",
+            "default": "Matkhaumoi123456"
           }
         }
       },

@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using sp26se058_3dprintshop_be.Infrastructure.Service;
+using sp26se058_3dprintshop_be.Application.Common.Config;
+using Microsoft.Extensions.Options;
+using PayOS;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +19,6 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-
         Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
         services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
@@ -53,6 +55,18 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IPaymentService, PayOsService>();
+        services.AddTransient<IEmailService, EmailService>();
+
+        // Cấu hình Email
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.AddTransient<IEmailService, EmailService>();
+        // Cấu hình PayOS
+
+        services.Configure<PayOsSettings>(configuration.GetSection(PayOsSettings.SectionName));
+        services.AddSingleton(sp => {
+            var settings = sp.GetRequiredService<IOptions<PayOsSettings>>().Value;
+            return new PayOSClient(settings.ClientId, settings.ApiKey, settings.ChecksumKey);
+        });
         return services;
     }
 }

@@ -19,12 +19,13 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
         {
             private readonly IApplicationDbContext _context;
             private readonly IPaymentService _paymentService;
-            private readonly IConfiguration _configuration;
-            public PerformTransactionCommandHandler(IApplicationDbContext context, IPaymentService paymentService, IConfiguration configuration)
+            private readonly PayOsSettings _payOsSettings;
+
+            public PerformTransactionCommandHandler(IApplicationDbContext context, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings)
             {
                 _context = context;
                 _paymentService = paymentService;
-                _configuration = configuration;
+                _payOsSettings = payOsSettings.Value;
             }
 
             public async Task<object> Handle(PerformTransactionCommand request, CancellationToken cancellationToken)
@@ -84,8 +85,8 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 }
 
                 // --- TIẾN HÀNH TẠO TRANSACTION MỚI (Dùng cho cả TH 2 hết hạn và TH 3 mới hoàn toàn) ---
-                string returnUrl = _configuration["PayOS:ReturnUrl"] ?? "https://yourfe.com/success";
-                string cancelUrl = _configuration["PayOS:CancelUrl"] ?? "https://yourfe.com/cancel";
+                string returnUrl = _payOsSettings.ReturnUrl;
+                string cancelUrl = _payOsSettings.CancelUrl;
 
                 var paymentResponse = await _paymentService.CreatePaymentLink(order, returnUrl, cancelUrl);
 
