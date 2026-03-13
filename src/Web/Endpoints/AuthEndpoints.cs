@@ -30,9 +30,6 @@ public class AuthEndpoints : EndpointGroupBase
                 .WithSummary("[Guest] Xin mã tạo lại mật khẩu mới.");
         group.MapPost("/reset-password", ResetPassword)
                 .WithSummary("[Guest] Tạo lại mật khẩu mới.");
-        //app.MapGroup(this)
-        //    .MapPost(SystemLogin, "system-login") // URL: /api/auth/system-login
-        //    .MapPost(Login, "login");             // URL: /api/auth/login
     }
     public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
