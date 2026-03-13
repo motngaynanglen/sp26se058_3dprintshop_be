@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -14,8 +15,11 @@ namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 [Authorize(Roles = Roles.ADMIN)]
 public record ChangePasswordAccountCommand : IRequest<bool>
 {
+    [DefaultValue("Matkhaucu123")]
     public string OldPassword { get; init; } = null!;
+    [DefaultValue("Matkhaumoi123456")]
     public string NewPassword { get; init; } = null!;
+    [DefaultValue("Matkhaumoi123456")]
     public string ConfirmNewPassword { get; init; } = null!;
 }
 public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswordAccountCommand, bool>
