@@ -15,6 +15,8 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 public record ResetPasswordCommand : IRequest<bool>
 {
+    [DefaultValue("Username@123")]
+    public string Username { get; set; } = null!;
     [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public string Token { get; init; } = string.Empty;
     [DefaultValue("NewPassword@123")]
@@ -34,7 +36,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     public async Task<bool> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
         var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.PasswordResetToken == request.Token, cancellationToken);
+            .FirstOrDefaultAsync(a => a.Username.ToLower() == request.Username.ToLower() && a.PasswordResetToken == request.Token, cancellationToken);
 
         if (account == null || account.ResetTokenExpires < DateTimeOffset.UtcNow)
         {
