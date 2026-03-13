@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -14,11 +15,17 @@ namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 [Authorize(Roles = Roles.ADMIN)]
 public record CreateAccountCommand : IRequest<Guid>
 {
+    [DefaultValue("daylausername")]
     public string Username { get; init; } = null!;
+    [DefaultValue("123456")]
     public string Password { get; init; } = null!;
+    [DefaultValue("daylafullname")]
     public string Fullname { get; init; } = null!;
+    [DefaultValue("Email@gmail.com")]
     public string Email { get; init; } = null!;
+    [DefaultValue("0777777777")]
     public string? ContactPhone { get; init; }
+    [DefaultValue("CUSTOMER")]
     public string Role { get; init; } = Roles.CUSTOMER; // Mặc định là Customer
 }
 public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
@@ -35,7 +42,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
     {
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
         var isExisted = await _context.Accounts.AnyAsync(a =>
-            a.Username == request.Username || a.Email == request.Email, cancellationToken);
+            a.Username.ToLower() == request.Username.ToLower() || a.Email.ToLower() == request.Email.ToLower(), cancellationToken);
 
         if (isExisted)
         {
@@ -51,10 +58,10 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         }
         var newAccount = new Account
         {
-            Username = request.Username,
+            Username = request.Username.ToLower(),
             PasswordHash = passwordHash, // Lưu ý: Nên Hash password ở đây
             Fullname = request.Fullname,
-            Email = request.Email,
+            Email = request.Email.ToLower(),
             ContactPhone = request.ContactPhone,
             IsActive = true
         };
