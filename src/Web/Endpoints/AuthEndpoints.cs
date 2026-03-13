@@ -42,7 +42,7 @@ public class AuthEndpoints : EndpointGroupBase
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
@@ -61,7 +61,7 @@ public class AuthEndpoints : EndpointGroupBase
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
                 statusCode: StatusCodes.Status401Unauthorized);
         }
     }
