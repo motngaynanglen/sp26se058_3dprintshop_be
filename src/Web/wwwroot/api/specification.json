@@ -21,7 +21,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Truy vấn danh sách tài khoản",
+        "summary": "[Admin] Truy vấn danh sách tài khoản.",
         "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
@@ -48,7 +48,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Tạo tài khoản mới",
+        "summary": "[Admin] Tạo tài khoản mới.",
         "description": "Tạo một tài khoản người dùng mới với các thông tin cung cấp.",
         "operationId": "PostApiAccountAdd",
         "requestBody": {
@@ -75,7 +75,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Lấy thông tin chi tiết tài khoản",
+        "summary": "[Admin] Lấy thông tin chi tiết tài khoản.",
         "description": "Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.",
         "operationId": "GetApiAccountDetail",
         "parameters": [
@@ -102,8 +102,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Lấy thông tin chi tiết tài khoản",
-        "description": "Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.",
+        "summary": "[Admin] Cập nhật thông tin tài khoản với ID.",
         "operationId": "PutApiAccountUpdate",
         "parameters": [
           {
@@ -136,48 +135,13 @@
         }
       }
     },
-    "/api/account/{id}/deactive": {
-      "delete": {
-        "tags": [
-          "Account"
-        ],
-        "operationId": "DeleteApiAccountDeactive",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeactiveAccountCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/account/{id}/active": {
       "post": {
         "tags": [
           "Account"
         ],
+        "summary": "[Admin] Kích hoạt tài khoản có ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PostApiAccountActive",
         "parameters": [
           {
@@ -210,11 +174,52 @@
         }
       }
     },
+    "/api/account/{id}/deactive": {
+      "delete": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "[Admin] Tạm ngưng hoạt động tài khoản có ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
+        "operationId": "DeleteApiAccountDeactive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactiveAccountCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/{id}/delete": {
       "delete": {
         "tags": [
           "Account"
         ],
+        "summary": "[Admin] Xóa mềm tài khoản có ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "DeleteApiAccountDelete",
         "parameters": [
           {
@@ -247,11 +252,40 @@
         }
       }
     },
+    "/api/account/me": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "[Customer] Lấy thông tin chi tiết của tài khoản hiển tại.",
+        "operationId": "GetApiAccountMe",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/me/update": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "[Customer] Cập nhật thông tin chi tiết của tài khoản hiển tại.",
+        "operationId": "GetApiAccountMeUpdate",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/change-password": {
       "put": {
         "tags": [
           "Account"
         ],
+        "summary": "[Customer] Đổi mật khẩu của tài khoản hiện tại.",
         "operationId": "PutApiAccountChangePassword",
         "requestBody": {
           "x-name": "command",
@@ -946,23 +980,29 @@
         "additionalProperties": false,
         "properties": {
           "username": {
-            "type": "string"
+            "type": "string",
+            "default": "daylausername"
           },
           "password": {
-            "type": "string"
+            "type": "string",
+            "default": "123456"
           },
           "fullname": {
-            "type": "string"
+            "type": "string",
+            "default": "daylafullname"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "default": "Email@gmail.com"
           },
           "contactPhone": {
             "type": "string",
+            "default": "0777777777",
             "nullable": true
           },
           "role": {
-            "type": "string"
+            "type": "string",
+            "default": "CUSTOMER"
           }
         }
       },
@@ -972,18 +1012,22 @@
         "properties": {
           "fullname": {
             "type": "string",
+            "default": "newFullname",
             "nullable": true
           },
           "email": {
             "type": "string",
+            "default": "newemail123@gmail.com",
             "nullable": true
           },
           "password": {
             "type": "string",
+            "default": "newPassword123",
             "nullable": true
           },
           "contactPhone": {
             "type": "string",
+            "default": "0777777777",
             "nullable": true
           },
           "isActive": {
@@ -992,11 +1036,11 @@
           }
         }
       },
-      "DeactiveAccountCommand": {
+      "ActiveAccountCommand": {
         "type": "object",
         "additionalProperties": false
       },
-      "ActiveAccountCommand": {
+      "DeactiveAccountCommand": {
         "type": "object",
         "additionalProperties": false
       },

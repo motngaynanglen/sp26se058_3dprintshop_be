@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Principal;
 using System.Text;
@@ -16,11 +17,16 @@ namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 public record UpdateAccountCommand : IRequest<Guid>
 {
     [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
     // Dữ liệu cần update
+    [DefaultValue("newFullname")]
     public string? Fullname { get; init; }
+    [DefaultValue("newemail123@gmail.com")]
     public string? Email { get; init; }
+    [DefaultValue("newPassword123")]
     public string? Password { get; init; }
+    [DefaultValue("0777777777")]
     public string? ContactPhone { get; init; }
     //public Roles? NewRole { get; init; } // "MANAGER", "STAFF", "CUSTOMER"
     public bool? IsActive { get; init; }
