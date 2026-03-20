@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -12,6 +13,7 @@ namespace sp26se058_3dprintshop_be.Application.DesignTags.Commands;
 public class SyncDesignTagItem
 {
     public Guid ConceptTagId { get; set; }
+    [DefaultValue(false)]
     public bool IsMainTag { get; set; }
 }
 

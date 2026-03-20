@@ -20,6 +20,10 @@ public class DesignTemplateDTO
         public Mapping()
         {
             CreateMap<DesignTemplate, DesignTemplateDTO>();
-        }
+        }   
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }
