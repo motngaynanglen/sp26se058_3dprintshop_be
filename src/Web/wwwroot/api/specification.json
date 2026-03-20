@@ -22,7 +22,7 @@
           "Account"
         ],
         "summary": "[Admin] Truy vấn danh sách tài khoản.",
-        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết.",
+        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Name', 'Email', 'Phone', 'Created', 'Deleted' ",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
           "x-name": "command",
@@ -397,12 +397,12 @@
       }
     },
     "/api/auth/forgot-password": {
-      "post": {
+      "patch": {
         "tags": [
           "Auth"
         ],
-        "summary": "[Guest] Đăng kí tài khoản.",
-        "operationId": "PostApiAuthForgotPassword",
+        "summary": "[Guest] Xin mã để đặt lại mật khẩu.",
+        "operationId": "PatchApiAuthForgotPassword",
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -423,12 +423,12 @@
       }
     },
     "/api/auth/reset-password": {
-      "post": {
+      "patch": {
         "tags": [
           "Auth"
         ],
-        "summary": "[Guest] Đăng kí tài khoản.",
-        "operationId": "PostApiAuthResetPassword",
+        "summary": "[Guest] Đặt lại mật khẩu.",
+        "operationId": "PatchApiAuthResetPassword",
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -453,7 +453,34 @@
         "tags": [
           "ConceptTag"
         ],
+        "summary": "[All] Truy vấn danh sách tag.",
         "operationId": "GetApiConceptTagAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/concept-tag/query": {
+      "post": {
+        "tags": [
+          "ConceptTag"
+        ],
+        "summary": "[All] Truy vấn danh sách với search và paging.",
+        "operationId": "PostApiConceptTagQuery",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetConceptTagsByNameQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -466,6 +493,7 @@
         "tags": [
           "ConceptTag"
         ],
+        "summary": "[Manager] Thêm Tag.",
         "operationId": "PostApiConceptTagAdd",
         "requestBody": {
           "x-name": "command",
@@ -491,6 +519,7 @@
         "tags": [
           "ConceptTag"
         ],
+        "summary": "[Manager] Cập nhật nội dung tag.",
         "operationId": "PutApiConceptTagUpdate",
         "parameters": [
           {
@@ -523,24 +552,25 @@
         }
       }
     },
-    "/api/design-tag/all": {
+    "/api/design-tag/{templateId}/tags": {
       "get": {
         "tags": [
           "DesignTag"
         ],
-        "operationId": "GetApiDesignTagAll",
-        "requestBody": {
-          "x-name": "query",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetDesignTagsListQuery"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
+        "summary": "[Manager] Lấy tất cả tag của một Template với TemplateID.",
+        "operationId": "GetApiDesignTagTags",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -553,6 +583,7 @@
         "tags": [
           "DesignTag"
         ],
+        "summary": "[Manager] Cập nhật tất cả tags của một Template với TemplateID và danh sách TagId.",
         "operationId": "PostApiDesignTagSync",
         "requestBody": {
           "x-name": "command",
@@ -1223,6 +1254,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "username": {
+            "type": "string",
+            "default": "Username@123"
+          },
           "token": {
             "type": "string",
             "default": "00000000-0000-0000-0000-000000000000"
@@ -1233,15 +1268,41 @@
           }
         }
       },
+      "GetConceptTagsByNameQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "search": {
+            "type": "string",
+            "default": "Resin"
+          },
+          "paging": {
+            "$ref": "#/components/schemas/PaginationData2"
+          }
+        }
+      },
+      "PaginationData2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
       "CreateConceptTagCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "Resin"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Sản phẩm được in từ Resin"
           },
           "isActive": {
             "type": "boolean"
@@ -1253,23 +1314,15 @@
         "additionalProperties": false,
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "Resin"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Sản phẩm được in từ Resin"
           },
           "isActive": {
             "type": "boolean"
-          }
-        }
-      },
-      "GetDesignTagsListQuery": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "designTemplateId": {
-            "type": "string",
-            "format": "guid"
           }
         }
       },
@@ -1298,7 +1351,8 @@
             "format": "guid"
           },
           "isMainTag": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           }
         }
       },

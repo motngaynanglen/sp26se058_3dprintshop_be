@@ -20,7 +20,7 @@ public class AccountEndpoints : EndpointGroupBase
 
         group.MapPost("/query", QueryAccounts)
             .WithSummary("[Admin] Truy vấn danh sách tài khoản.")
-            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết.");
+            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Name', 'Email', 'Phone', 'Created', 'Deleted' ");
         group.MapPost("/add", CreateAccount)
             .WithSummary("[Admin] Tạo tài khoản mới.")
             .WithDescription("Tạo một tài khoản người dùng mới với các thông tin cung cấp.");

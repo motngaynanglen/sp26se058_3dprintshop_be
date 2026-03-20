@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -12,8 +13,9 @@ public record UpdateConceptTagCommand : IRequest<Guid>
 {
     [JsonIgnore]
     public Guid Id { get; init; }
-
+    [DefaultValue("Resin")]
     public string Name { get; init; } = null!;
+    [DefaultValue("Sản phẩm được in từ Resin")]
     public string Description { get; init; } = null!;
     public bool IsActive { get; init; } = false;
 }
