@@ -7,7 +7,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-public class AccountDto
+public class AccountDTO
 {
     public Guid Id { get; set; }
     public string Username { get; set; } = null!;
@@ -30,7 +30,7 @@ public class AccountDto
     {
         public Mapping()
         {
-            CreateMap<Account, AccountDto>()
+            CreateMap<Account, AccountDTO>()
                 .ForMember(d => d.Role, opt => opt.MapFrom(s =>
                     s.Manager != null ? Roles.MANAGER :
                     s.Staff != null ? Roles.STAFF :
@@ -40,4 +40,8 @@ public class AccountDto
             // bạn có thể map ưu tiên tại đây.
         }
     }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
+    } // Bản cũ gặp lỗi bảo mật, đổi lên 15 nên phải làm thủ công, nhớ add vào để đăng kí mapp
 }
