@@ -26,5 +26,10 @@ public class MaterialDTO
     .ForMember(dest => dest.EffectiveDate,
         opt => opt.MapFrom(src => src.PriceHistories.FirstOrDefault(p => p.IsCurrent)!.EffectiveDate));
         }
+        
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }

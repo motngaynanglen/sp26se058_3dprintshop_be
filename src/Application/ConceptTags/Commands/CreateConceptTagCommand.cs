@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,9 @@ namespace sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 
 public class CreateConceptTagCommand : IRequest<Guid>
 {
+    [DefaultValue("Resin")]
     public string Name { get; init; } = null!;
+    [DefaultValue("Sản phẩm được in từ Resin")]
     public string Description { get; init; } = null!;
     public bool IsActive { get; init; } = false;
 }

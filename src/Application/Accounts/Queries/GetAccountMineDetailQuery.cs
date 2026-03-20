@@ -9,9 +9,9 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-public class GetAccountMineDetailQuery : IRequest<AccountDto>
+public class GetAccountMineDetailQuery : IRequest<AccountDTO>
 {
-    public class GetAccountMineDetailQueryHandler : IRequestHandler<GetAccountMineDetailQuery, AccountDto>
+    public class GetAccountMineDetailQueryHandler : IRequestHandler<GetAccountMineDetailQuery, AccountDTO>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -23,7 +23,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDto>
             _mapper = mapper;
             _user = user;
         }
-        public async Task<AccountDto> Handle(GetAccountMineDetailQuery request, CancellationToken cancellationToken)
+        public async Task<AccountDTO> Handle(GetAccountMineDetailQuery request, CancellationToken cancellationToken)
         {
             var userId = _user.Id.ToGuid();
             if (userId == Guid.Empty)
@@ -33,7 +33,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDto>
             
             var query = _context.Accounts.AsNoTracking();
                
-            var account = await query.ProjectTo<AccountDto>(_mapper.ConfigurationProvider) //Mapper tự tính toán field Role
+            var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper tự tính toán field Role
                 .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
             if (account == null) throw new Exception("Tài khoản không tồn tại");

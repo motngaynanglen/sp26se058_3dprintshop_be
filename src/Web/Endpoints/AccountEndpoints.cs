@@ -20,7 +20,7 @@ public class AccountEndpoints : EndpointGroupBase
 
         group.MapPost("/query", QueryAccounts)
             .WithSummary("[Admin] Truy vấn danh sách tài khoản.")
-            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết.");
+            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Name', 'Email', 'Phone', 'Created', 'Deleted' ");
         group.MapPost("/add", CreateAccount)
             .WithSummary("[Admin] Tạo tài khoản mới.")
             .WithDescription("Tạo một tài khoản người dùng mới với các thông tin cung cấp.");
@@ -75,7 +75,7 @@ public class AccountEndpoints : EndpointGroupBase
         {
             var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDto>>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result.Items,
                     additionalData: new { paging = result.Metadata },
@@ -95,7 +95,7 @@ public class AccountEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(new GetAccountDetailQuery { Id = id });
-            return TypedResults.Ok(BaseResponseModel<AccountDto>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
                     data: result,
                     message: "Lấy thông tin chi tiết thành công",
                     code: ResponseCodeConstants.SUCCESS
@@ -111,7 +111,7 @@ public class AccountEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(new GetAccountMineDetailQuery());
-            return TypedResults.Ok(BaseResponseModel<AccountDto>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
                     data: result,
                     message: "Lấy thông tin chi tiết thành công",
                     code: ResponseCodeConstants.SUCCESS

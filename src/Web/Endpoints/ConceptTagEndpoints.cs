@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 using sp26se058_3dprintshop_be.Application.ConceptTags.Queries;
@@ -14,12 +15,18 @@ public class ConceptTagEndpoints : EndpointGroupBase
                        .WithTags("ConceptTag")
                        .WithOpenApi();
 
-        group.MapGet("/all", Get);
-        group.MapPost("/add", Add);
-        group.MapPut("/update/{id}", Update);
+        group.MapGet("/all", GetAll)
+                .WithSummary("[All] Truy vấn danh sách tag.");
+        group.MapPost("/query", GetQuery)
+                .WithSummary("[All] Truy vấn danh sách với search và paging.");
+        group.MapPost("/add", Add)
+                .WithSummary("[Manager] Thêm Tag.");
+        group.MapPut("/update/{id}", Update)
+                .WithSummary("[Manager] Cập nhật nội dung tag.");
+
     }
 
-    public async Task<IResult> Get(
+    public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
         var result = await sender.Send(new GetConceptTagsListQuery());
@@ -30,7 +37,16 @@ public class ConceptTagEndpoints : EndpointGroupBase
                 message: "Lấy danh sách concept tag thành công",
                 code: ResponseCodeConstants.SUCCESS));
     }
+    public async Task<IResult> GetQuery([FromServices] ISender sender, [FromBody] GetConceptTagsByNameQuery command)
+    {
+        var result = await sender.Send(command);
 
+        return TypedResults.Ok(
+            BaseResponseModel<PaginatedList<ConceptTagDTO>>.OkResponseModel(
+                data: result,
+                message: "Lấy danh sách concept tag thành công",
+                code: ResponseCodeConstants.SUCCESS));
+    }
     public async Task<IResult> Update(
         [FromServices] ISender sender,
         [FromRoute] Guid id,

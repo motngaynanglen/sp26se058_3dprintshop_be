@@ -15,7 +15,12 @@ public class DesignTagDTO
     {
         public Mapping()
         {
-            CreateMap<Domain.Entities.DesignTag, DesignTagDTO>();
+            CreateMap<Domain.Entities.DesignTag, DesignTagDTO>()
+                .ForMember(t => t.Name, opt => opt.MapFrom(m => m.ConceptTag != null ? m.ConceptTag.Name : string.Empty));
         }
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }
