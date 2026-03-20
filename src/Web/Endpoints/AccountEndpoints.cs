@@ -75,7 +75,7 @@ public class AccountEndpoints : EndpointGroupBase
         {
             var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDto>>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result.Items,
                     additionalData: new { paging = result.Metadata },
@@ -95,7 +95,7 @@ public class AccountEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(new GetAccountDetailQuery { Id = id });
-            return TypedResults.Ok(BaseResponseModel<AccountDto>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
                     data: result,
                     message: "Lấy thông tin chi tiết thành công",
                     code: ResponseCodeConstants.SUCCESS
@@ -111,7 +111,7 @@ public class AccountEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(new GetAccountMineDetailQuery());
-            return TypedResults.Ok(BaseResponseModel<AccountDto>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
                     data: result,
                     message: "Lấy thông tin chi tiết thành công",
                     code: ResponseCodeConstants.SUCCESS

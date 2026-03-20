@@ -12,7 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 [Authorize(Roles = Roles.ADMIN)]
-public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>>
+public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>>
 {
     [DefaultValue("CUSTOMER")]
     public string? Role { get; init; }
@@ -29,7 +29,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>
     public PaginationData Paging { get; init; } = new();
     public class PaginationData : PaginationRequest { }
 
-    public class GetAccountsWithPaginationQueryHandler : IRequestHandler<GetAccountsWithPaginationQuery, PaginatedList<AccountDto>>
+    public class GetAccountsWithPaginationQueryHandler : IRequestHandler<GetAccountsWithPaginationQuery, PaginatedList<AccountDTO>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
@@ -40,7 +40,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>
             _mapper = mapper;
         }
 
-        public async Task<PaginatedList<AccountDto>> Handle(GetAccountsWithPaginationQuery request, CancellationToken cancellationToken)
+        public async Task<PaginatedList<AccountDTO>> Handle(GetAccountsWithPaginationQuery request, CancellationToken cancellationToken)
         {
             var query = _context.Accounts.AsNoTracking();
             if (request.IncludeDeleted)
@@ -79,7 +79,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDto>
             };
 
             return await query
-                .ProjectTo<AccountDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<AccountDTO>(_mapper.ConfigurationProvider)
                 .PaginatedListAsync(request.Paging.PageNumber, request.Paging.PageSize);
         }
     }
