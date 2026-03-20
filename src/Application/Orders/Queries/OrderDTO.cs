@@ -26,6 +26,11 @@ public class OrderDTO
                 .ForMember(dest => dest.Items,
                     opt => opt.MapFrom(src => src.OrderItems));
         }
+        
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }
 
@@ -52,5 +57,9 @@ public class OrderItemDTO
                 .ForMember(dest => dest.FulfillmentStatus,
                     opt => opt.MapFrom(src => src.FulfillmentStatus.ToString()));
         }
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }

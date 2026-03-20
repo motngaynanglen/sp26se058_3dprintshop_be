@@ -20,5 +20,10 @@ public class DesignVariantDTO
         {
             CreateMap<Domain.Entities.DesignVariant, DesignVariantDTO>();
         }
+        
+    }
+    public static void Register(IMapperConfigurationExpression cfg)
+    {
+        cfg.AddProfile<Mapping>();
     }
 }
