@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace sp26se058_3dprintshop_be.Application.Orders.Queries;
 
 public class GetOrderDetailQuery : IRequest<OrderDTO>
 {
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; set; }
 
     public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, OrderDTO>

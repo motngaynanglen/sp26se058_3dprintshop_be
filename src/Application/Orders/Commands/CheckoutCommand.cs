@@ -15,10 +15,11 @@ namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 [Authorize(Roles = Roles.CUSTOMER)]
 public record CheckoutCommand : IRequest<Guid>
 {
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid ShippingAddressId { get; init; }
     //public Guid ShippingMethodId { get; init; }
-    [DefaultValue("PAYOS")]
-    public string? PaymentMethod { get; init; } // MoMo, BankTransfer
+    //[DefaultValue("ONLINE")]
+    //public string? PaymentMethod { get; init; } // MoMo, BankTransfer
     public string? Note { get; init; }
     public List<CheckoutItemRequest> Items { get; init; } = new();
 }
@@ -34,13 +35,13 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
     }
     public async Task<Guid> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
-        var customerId = _user.Id; // Lấy ID từ Token
+        var customerId = _user.Id.ToGuid(); // Lấy ID từ Token
         //using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         var order = new Order
         {
             Id = Guid.NewGuid(),
             Code = $"ORD-{DateTime.Now.Ticks}",// Chưa impliment code
-            CustomerId = Guid.Parse(customerId!),
+            CustomerId = customerId,
             OrderStatus = "PENDING",
             Priority = 0,
             TotalPrice = 0 // Sẽ cộng dồn sau
@@ -62,12 +63,12 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
 
                 unitPrice = variant.Price;
             }
-            else if (itemReq.SourceType == "DesignService" && itemReq.DesignWorkId.HasValue)
-            {
-                // Logic lấy giá từ gói thiết kế (ServicePackage) liên quan
-                var designWork = await _context.DesignWorks.FindAsync(itemReq.DesignWorkId.Value);
-                // Giả sử unitPrice lấy từ gói dịch vụ...
-            }
+            //else if (itemReq.SourceType == "DesignService" && itemReq.DesignWorkId.HasValue)
+            //{
+            //    // Logic lấy giá từ gói thiết kế (ServicePackage) liên quan
+            //    var designWork = await _context.DesignWorks.FindAsync(itemReq.DesignWorkId.Value);
+            //    // Giả sử unitPrice lấy từ gói dịch vụ...
+            //}
 
             var orderItem = new OrderItem
             {
@@ -75,7 +76,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
                 //OrderId = order.Id,
                 SourceType = itemReq.SourceType,
                 DesignVariantId = itemReq.DesignVariantId,
-                DesignWorkId = itemReq.DesignWorkId,
+                //DesignWorkId = itemReq.DesignWorkId,
                 QuantityOrdered = itemReq.Quantity,
                 UnitPrice = unitPrice,
                 TotalPrice = unitPrice * itemReq.Quantity,
@@ -129,7 +130,8 @@ public record CheckoutItemRequest
 {
     [DefaultValue("ORDER")]
     public string SourceType { get; init; } = null!;
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid? DesignVariantId { get; init; }
-    public Guid? DesignWorkId { get; init; }
+    //public Guid? DesignWorkId { get; init; }
     public int Quantity { get; init; }
 }
