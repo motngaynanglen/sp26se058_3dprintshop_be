@@ -7,6 +7,8 @@ using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemp
 using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Application.Shipments.Queries;
+using sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -24,7 +26,8 @@ public static class DependencyInjection
             MaterialDTO.Register(cfg);
             OrderDTO.Register(cfg);
             OrderItemDTO.Register(cfg);
-
+            ShippingAddressDTO.Register(cfg);
+            ShipmentDTO.Register(cfg);
         });
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
