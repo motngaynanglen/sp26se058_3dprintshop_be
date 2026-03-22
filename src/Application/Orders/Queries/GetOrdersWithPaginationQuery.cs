@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<Paginate
     public string Status { get; init; } = string.Empty;
     public int Priority { get; init; }
     public bool SortDescending { get; init; } = false;
+    [DefaultValue("created")]
     public string? SortBy { get; init; }
 
     public class GetOrdersWithPaginationQueryHandler : IRequestHandler<GetOrdersWithPaginationQuery, PaginatedList<OrderDTO>>

@@ -27,6 +27,9 @@ public interface IApplicationDbContext
     DbSet<DesignLog> DesignLogs { get; }
     DbSet<DesignVersionHistory> DesignVersionHistorys { get; }
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
+    DbSet<Domain.Entities.ShippingAddress> ShippingAddresses { get; }
+    DbSet<Shipment> Shipments { get; }
+
     //DatabaseFacade Database { get; }
 
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
