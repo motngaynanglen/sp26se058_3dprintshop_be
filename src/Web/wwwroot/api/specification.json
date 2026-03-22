@@ -897,6 +897,7 @@
         "tags": [
           "Order"
         ],
+        "summary": "[All] Truy vấn danh sách đơn hàng.",
         "operationId": "PostApiOrderQuery",
         "requestBody": {
           "x-name": "query",
@@ -922,6 +923,8 @@
         "tags": [
           "Order"
         ],
+        "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
+        "description": "Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -947,6 +950,7 @@
         "tags": [
           "Order"
         ],
+        "summary": "[All] lấy thông tin chi tiết đơn hàng có ID.",
         "operationId": "GetApiOrderDetail",
         "parameters": [
           {
@@ -1032,13 +1036,13 @@
         }
       }
     },
-    "/api/shipment/get-by-order-id/{orderId}": {
+    "/api/shipment/detail-by-order-id/{orderId}": {
       "get": {
         "tags": [
           "Shipment"
         ],
         "summary": "[All] Lấy thông tin đơn vận có đơn hàng ID.",
-        "operationId": "GetApiShipmentGetByOrderId",
+        "operationId": "GetApiShipmentDetailByOrderId",
         "parameters": [
           {
             "name": "orderId",
@@ -1058,14 +1062,14 @@
         }
       }
     },
-    "/api/shipment/get-by-id/{id}": {
+    "/api/shipment/detail/{id}": {
       "get": {
         "tags": [
           "Shipment"
         ],
         "summary": "[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.",
         "description": "Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn",
-        "operationId": "GetApiShipmentGetById",
+        "operationId": "GetApiShipmentDetail",
         "parameters": [
           {
             "name": "id",
@@ -1863,6 +1867,7 @@
               },
               "sortBy": {
                 "type": "string",
+                "default": "created",
                 "nullable": true
               }
             }
@@ -1875,14 +1880,12 @@
         "properties": {
           "shippingAddressId": {
             "type": "string",
-            "format": "guid"
-          },
-          "shippingMethodId": {
-            "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
           },
           "paymentMethod": {
             "type": "string",
+            "default": "PAYOS",
             "nullable": true
           },
           "note": {
@@ -1902,16 +1905,13 @@
         "additionalProperties": false,
         "properties": {
           "sourceType": {
-            "type": "string"
+            "type": "string",
+            "default": "ORDER"
           },
           "designVariantId": {
             "type": "string",
             "format": "guid",
-            "nullable": true
-          },
-          "designWorkId": {
-            "type": "string",
-            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000",
             "nullable": true
           },
           "quantity": {
