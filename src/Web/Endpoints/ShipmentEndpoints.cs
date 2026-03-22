@@ -32,9 +32,9 @@ public class ShipmentEndpoints : EndpointGroupBase
         group.MapPatch("/update/{id}", Update)
                 .WithSummary("[Staff/Manager] Cập nhật thông tin đơn vận có ID.");
 
-        group.MapGet("/get-by-order-id/{orderId}", GetByOrderId)
+        group.MapGet("/detail-by-order-id/{orderId}", GetByOrderId)
                 .WithSummary("[All] Lấy thông tin đơn vận có đơn hàng ID.");
-        group.MapGet("/get-by-id/{id}", GetById)
+        group.MapGet("/detail/{id}", GetById)
                 .WithSummary("[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.")
                 .WithDescription("Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn");
 
