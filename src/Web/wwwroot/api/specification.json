@@ -897,6 +897,7 @@
         "tags": [
           "Order"
         ],
+        "summary": "[All] Truy vấn danh sách đơn hàng.",
         "operationId": "PostApiOrderQuery",
         "requestBody": {
           "x-name": "query",
@@ -922,6 +923,8 @@
         "tags": [
           "Order"
         ],
+        "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
+        "description": "Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -947,6 +950,7 @@
         "tags": [
           "Order"
         ],
+        "summary": "[All] lấy thông tin chi tiết đơn hàng có ID.",
         "operationId": "GetApiOrderDetail",
         "parameters": [
           {
@@ -960,6 +964,241 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/query": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Truy vấn danh sách tài khoản.",
+        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered' ",
+        "operationId": "PostApiShipmentQuery",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetShipmentsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/update/{id}": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin đơn vận có ID.",
+        "operationId": "PatchApiShipmentUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShipmentCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/detail-by-order-id/{orderId}": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[All] Lấy thông tin đơn vận có đơn hàng ID.",
+        "operationId": "GetApiShipmentDetailByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/detail/{id}": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.",
+        "description": "Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn",
+        "operationId": "GetApiShipmentDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipping-address/add": {
+      "post": {
+        "tags": [
+          "ShippingAddress"
+        ],
+        "summary": "[Customer] Thêm địa chỉ nhận hàng mới.",
+        "operationId": "PostApiShippingAddressAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShippingAddressCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipping-address/my": {
+      "get": {
+        "tags": [
+          "ShippingAddress"
+        ],
+        "summary": "[Customer] Lấy danh sách địa chỉ.",
+        "operationId": "GetApiShippingAddressMy",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipping-address/update/{id}": {
+      "patch": {
+        "tags": [
+          "ShippingAddress"
+        ],
+        "summary": "[Customer] Cập nhật địa chỉ của bản thân có ID.",
+        "operationId": "PatchApiShippingAddressUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShippingAddressCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipping-address/remove/{id}": {
+      "delete": {
+        "tags": [
+          "ShippingAddress"
+        ],
+        "summary": "[Customer] Xóa địa chỉ có ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
+        "operationId": "DeleteApiShippingAddressRemove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteShippingAddressCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1628,6 +1867,7 @@
               },
               "sortBy": {
                 "type": "string",
+                "default": "created",
                 "nullable": true
               }
             }
@@ -1640,14 +1880,12 @@
         "properties": {
           "shippingAddressId": {
             "type": "string",
-            "format": "guid"
-          },
-          "shippingMethodId": {
-            "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
           },
           "paymentMethod": {
             "type": "string",
+            "default": "PAYOS",
             "nullable": true
           },
           "note": {
@@ -1667,16 +1905,13 @@
         "additionalProperties": false,
         "properties": {
           "sourceType": {
-            "type": "string"
+            "type": "string",
+            "default": "ORDER"
           },
           "designVariantId": {
             "type": "string",
             "format": "guid",
-            "nullable": true
-          },
-          "designWorkId": {
-            "type": "string",
-            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000",
             "nullable": true
           },
           "quantity": {
@@ -1684,6 +1919,166 @@
             "format": "int32"
           }
         }
+      },
+      "GetShipmentsWithPaginationQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "default": "PENDING",
+            "nullable": true
+          },
+          "search": {
+            "type": "string",
+            "default": "SPX123",
+            "nullable": true
+          },
+          "sortBy": {
+            "type": "string",
+            "default": "Created",
+            "nullable": true
+          },
+          "sortDescending": {
+            "type": "boolean"
+          },
+          "paging": {
+            "$ref": "#/components/schemas/PaginationData3"
+          }
+        }
+      },
+      "PaginationData3": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "UpdateShipmentCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "trackingNumber": {
+            "type": "string",
+            "default": "SPX123456789",
+            "nullable": true
+          },
+          "shipmentStatus": {
+            "type": "string",
+            "default": "SHIPPED",
+            "nullable": true
+          },
+          "estimatedDeliveryTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "CreateShippingAddressCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receiverName",
+          "phone",
+          "addressLine"
+        ],
+        "properties": {
+          "receiverName": {
+            "type": "string",
+            "default": "Nguyễn Văn A",
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string",
+            "default": "0901234567",
+            "minLength": 1
+          },
+          "addressLine": {
+            "type": "string",
+            "default": "123 Đường ABC, Phường 5",
+            "minLength": 1
+          },
+          "ward": {
+            "type": "string",
+            "default": "Phường Bến Nghé"
+          },
+          "district": {
+            "type": "string",
+            "default": "Quận 1"
+          },
+          "city": {
+            "type": "string",
+            "default": "Hồ Chí Minh"
+          },
+          "province": {
+            "type": "string",
+            "default": "Việt Nam"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "UpdateShippingAddressCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receiverName",
+          "phone",
+          "addressLine"
+        ],
+        "properties": {
+          "receiverName": {
+            "type": "string",
+            "default": "Nguyễn Văn A",
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string",
+            "default": "0901234567",
+            "minLength": 1
+          },
+          "addressLine": {
+            "type": "string",
+            "default": "123 Đường ABC, Phường 5",
+            "minLength": 1
+          },
+          "ward": {
+            "type": "string",
+            "default": "Phường Bến Nghé",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "default": "Quận 1",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "default": "Hồ Chí Minh",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "default": "Việt Nam",
+            "nullable": true
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": true,
+            "nullable": true
+          }
+        }
+      },
+      "DeleteShippingAddressCommand": {
+        "type": "object",
+        "additionalProperties": false
       },
       "ProcessOnlinePaymentCommand": {
         "type": "object",

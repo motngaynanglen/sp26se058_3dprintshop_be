@@ -13,6 +13,6 @@ public class Customer : BaseAuditableEntity
 
     //Nativigate
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
-    //public virtual ICollection<ShippingAddress> ShippingAddresses { get; set; } = new List<ShippingAddress>();
+    public virtual ICollection<ShippingAddress> ShippingAddresses { get; set; } = new List<ShippingAddress>();
     public virtual ICollection<DesignWork> DesignWorks { get; set; } = new List<DesignWork>();
 }
