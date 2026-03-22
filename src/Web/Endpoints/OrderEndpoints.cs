@@ -17,9 +17,15 @@ public class OrderEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/order")
                        .WithTags("Order")
                        .WithOpenApi();
-        group.MapPost("/query", Query);
-        group.MapPost("/checkout", CheckOut);
-        group.MapGet("/detail/{id}", GetDetail);
+        group.MapPost("/query", Query)
+                    .WithSummary("[All] Truy vấn danh sách đơn hàng.");
+
+        group.MapPost("/checkout", CheckOut)
+                .WithSummary("[Customer] Tạo đơn hàng với thông tin giỏ hàng.")
+                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.");
+
+        group.MapGet("/detail/{id}", GetDetail)
+                .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
         //group.MapPut("/update/{id}", Update);
 
         /*
