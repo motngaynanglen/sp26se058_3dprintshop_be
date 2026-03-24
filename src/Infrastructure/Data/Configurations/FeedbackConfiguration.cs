@@ -40,9 +40,6 @@ public class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
             .HasForeignKey(f => f.DesignTemplateId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(f => f.FeedbackImages)
-            .WithOne(fi => fi.Feedback)
-            .HasForeignKey(fi => fi.FeedbackId)
-            .OnDelete(DeleteBehavior.Cascade);
+        
     }
 }
