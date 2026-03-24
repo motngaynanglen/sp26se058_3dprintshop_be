@@ -1406,6 +1406,7 @@
         "tags": [
           "Transaction"
         ],
+        "summary": "[PayOS] Đây là api để payos gọi để xác thực đã thanh toán",
         "operationId": "PostApiTransactionPayosWebhook",
         "requestBody": {
           "x-name": "command",
@@ -1431,6 +1432,7 @@
         "tags": [
           "Transaction"
         ],
+        "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
         "operationId": "PostApiTransactionPerformTransaction",
         "requestBody": {
           "x-name": "command",
@@ -2464,18 +2466,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "orderId",
-          "type"
+          "orderId"
         ],
         "properties": {
           "orderId": {
             "type": "string",
             "format": "guid",
             "minLength": 1
-          },
-          "type": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       }
