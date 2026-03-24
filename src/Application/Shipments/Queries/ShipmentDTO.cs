@@ -45,8 +45,4 @@ public class ShipmentDTO
             .ForMember(dest => dest.ShippingAddress, opt => opt.MapFrom(src => src.ShippingAddress));
         }  
     }
-    public static void Register(IMapperConfigurationExpression cfg)
-    {
-        cfg.AddProfile<Mapping>();
-    }
 }

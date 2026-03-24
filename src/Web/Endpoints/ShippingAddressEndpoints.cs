@@ -24,10 +24,10 @@ public class ShippingAddressEndpoints : EndpointGroupBase
         group.MapGet("/my", GetMy)
                 .WithSummary("[Customer] Lấy danh sách địa chỉ.");
         
-        group.MapPatch("/update/{id}", Update)
+        group.MapPatch("/{id}/update", Update)
                 .WithSummary("[Customer] Cập nhật địa chỉ của bản thân có ID.");
       
-        group.MapDelete("/remove/{id}", Remove)
+        group.MapDelete("/{id}/remove", Remove)
                 .WithSummary("[Customer] Xóa địa chỉ có ID.")
                 .WithDescription("Để trống dữ liệu Request BODY khi gọi");
 

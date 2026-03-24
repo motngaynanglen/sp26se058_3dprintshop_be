@@ -28,8 +28,4 @@ public class ShippingAddressDTO
         }
        
     }
-    public static void Register(IMapperConfigurationExpression cfg)
-    {
-        cfg.AddProfile<Mapping>();
-    }
 }
