@@ -17,9 +17,6 @@ public class FeedbackConfiguration : IEntityTypeConfiguration<Feedback>
         builder.Property(f => f.Rating)
             .IsRequired();
 
-        // Thêm Check Constraint cho Rating (1-5) ở mức Database
-        builder.ToTable(t => t.HasCheckConstraint("CK_Feedback_Rating", "[Rating] >= 1 AND [Rating] <= 5"));
-
         builder.Property(f => f.Comment)
             .HasMaxLength(2000);
 

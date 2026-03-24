@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class FeedbackImage : BaseEntity
 {
-    public Guid FeedbackId { get; set; }
+    public Guid? FeedbackId { get; set; }
     public string ImageUrl { get; set; } = null!;
 
     // Navigation Property
-    public required virtual Feedback Feedback { get; set; }
+    public virtual Feedback? Feedback { get; set; }
 }

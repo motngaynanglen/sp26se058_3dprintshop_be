@@ -17,7 +17,7 @@ public class FeedbackImageConfiguration : IEntityTypeConfiguration<FeedbackImage
         builder.HasOne(f => f.Feedback)
             .WithMany(fi => fi.FeedbackImages)
             .HasForeignKey(fi => fi.FeedbackId)
-            .IsRequired()
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
