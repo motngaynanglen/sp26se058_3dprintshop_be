@@ -21,7 +21,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
                 .WithSummary("[All] Truy vấn danh sách với search và paging.");
         group.MapPost("/add", Add)
                 .WithSummary("[Manager] Thêm Tag.");
-        group.MapPut("/update/{id}", Update)
+        group.MapPut("/{id}/update", Update)
                 .WithSummary("[Manager] Cập nhật nội dung tag.");
 
     }
@@ -42,8 +42,9 @@ public class ConceptTagEndpoints : EndpointGroupBase
         var result = await sender.Send(command);
 
         return TypedResults.Ok(
-            BaseResponseModel<PaginatedList<ConceptTagDTO>>.OkResponseModel(
-                data: result,
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
                 message: "Lấy danh sách concept tag thành công",
                 code: ResponseCodeConstants.SUCCESS));
     }

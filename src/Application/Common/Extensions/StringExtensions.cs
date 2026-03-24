@@ -19,4 +19,12 @@ public static class StringExtensions
 
         return Guid.TryParse(value, out var result) ? result : Guid.Empty;
     }
+    public static long ToLong(this string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return 0;
+        }
+        return long.TryParse(value, out var result) ? result : 0;
+    }
 }
