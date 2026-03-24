@@ -14,7 +14,7 @@ public class OrderItem : BaseAuditableEntity
     public Guid? DesignWorkId { get; set; }
     public Guid? DesignVariantId { get; set; }
     public Guid? TechnicalDraftId { get; set; }
-
+    public string? ItemName { get; set; }
 
     public required int QuantityOrdered { get; set; }
     public required decimal UnitPrice { get; set; }

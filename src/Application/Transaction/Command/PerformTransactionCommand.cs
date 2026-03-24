@@ -5,6 +5,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using System.ComponentModel.DataAnnotations;
 using PayOS;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using System.ComponentModel;
 
 namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
 {
@@ -12,8 +13,9 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
     {
         [Required]
         public Guid OrderId { get; set; }
-        [Required]
-        public int Type { get; set; }
+        //[Required]
+        //[DefaultValue(1)]
+        //public int Type { get; set; }
 
         public class PerformTransactionCommandHandler : IRequestHandler<PerformTransactionCommand, object>
         {
@@ -41,7 +43,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     return new { StatusCode = "404", Message = "Không tìm thấy đơn hàng" };
 
                 // --- TRƯỜNG HỢP 1: Đơn hàng đã được xử lý thanh toán trước đó ---
-                if (order.OrderStatus != "PENDING" || (order.Invoice != null && order.Invoice.PaymentStatus == "Paid"))
+                if (order.OrderStatus != "PENDING" || (order.Invoice != null && order.Invoice.PaymentStatus == "PAID"))
                 {
                     return new { StatusCode = "400", Message = "Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ" };
                 }
@@ -68,13 +70,17 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 if (pendingTransaction != null)
                 {
                     // Kiểm tra thời hạn 10 phút của link PayOS
-                    if (pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow)
+                    if ( pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow
+                        && pendingTransaction.InternalCode != null 
+                        && pendingTransaction.PaymentLink != null 
+                        && pendingTransaction.QrCode != null
+                        )
                     {
-                        return new
+                        // Message = "Sử dụng lại link thanh toán còn hiệu lực",
+                        return new PaymentResponse
                         {
-                            Message = "Sử dụng lại link thanh toán còn hiệu lực",
-                            PaymentCode = pendingTransaction.InternalCode,
-                            CheckoutUrl = pendingTransaction.PaymentLink,
+                            PaymentCode = pendingTransaction.InternalCode.ToLong(),
+                            PaymentLink = pendingTransaction.PaymentLink,
                             QrCode = pendingTransaction.QrCode
                         };
                     }
