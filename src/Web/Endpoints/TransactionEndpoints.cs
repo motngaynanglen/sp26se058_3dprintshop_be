@@ -42,12 +42,12 @@ public class TransactionEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> PerformTransaction([FromServices] ISender sender, [FromBody] PerformTransactionCommand command)
@@ -61,12 +61,12 @@ public class TransactionEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
 }
