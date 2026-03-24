@@ -11,5 +11,5 @@ public class FeedbackImage : BaseEntity
     public string ImageUrl { get; set; } = null!;
 
     // Navigation Property
-    public virtual Feedback Feedback { get; set; } = null!;
+    public required virtual Feedback Feedback { get; set; }
 }

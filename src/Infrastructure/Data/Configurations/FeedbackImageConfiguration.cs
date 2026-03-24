@@ -14,5 +14,10 @@ public class FeedbackImageConfiguration : IEntityTypeConfiguration<FeedbackImage
     {
         builder.HasKey(fi => fi.Id);
         builder.Property(fi => fi.ImageUrl).IsRequired().HasMaxLength(500);
+        builder.HasOne(f => f.Feedback)
+            .WithMany(fi => fi.FeedbackImages)
+            .HasForeignKey(fi => fi.FeedbackId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
