@@ -23,8 +23,11 @@ public class TransactionEndpoints : EndpointGroupBase
                        .WithOpenApi()
                        .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
-        group.MapPost("/payos-webhook", HandlePayOSWebhook);
-        group.MapPost("/perform-transaction", PerformTransaction);
+        group.MapPost("/payos-webhook", HandlePayOSWebhook)
+                    .WithSummary("[PayOS] Đây là api để payos gọi để xác thực đã thanh toán");
+
+        group.MapPost("/perform-transaction", PerformTransaction)
+                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
 
     }
 

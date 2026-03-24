@@ -863,6 +863,18 @@
         ],
         "summary": "[Customer] Xem lại các đánh giá đã gửi.",
         "operationId": "GetApiFeedbackMyHistory",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetMyFeedbackHistoryQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -903,6 +915,18 @@
         ],
         "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
         "operationId": "GetApiFeedbackQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetFeedbacksWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -929,6 +953,18 @@
             "x-position": 1
           }
         ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyFeedbackCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1985,6 +2021,17 @@
           }
         }
       },
+      "GetMyFeedbackHistoryQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
       "GetFeedbacksByTemplateWithPaginationQuery": {
         "allOf": [
           {
@@ -2008,6 +2055,42 @@
             }
           }
         ]
+      },
+      "GetFeedbacksWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rating": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "isHidden": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "isDeleted": {
+                "type": "boolean",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReplyFeedbackCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "staffReply": {
+            "type": "string",
+            "default": "Cảm ơn đã ủng hộ!"
+          }
+        }
       },
       "CreateMaterialCommand": {
         "type": "object",
