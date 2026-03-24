@@ -11,12 +11,10 @@ using sp26se058_3dprintshop_be.Application.Common.Models;
 
 namespace sp26se058_3dprintshop_be.Application.ConceptTags.Queries;
 
-public class GetConceptTagsByNameQuery : IRequest<PaginatedList<ConceptTagDTO>>
+public class GetConceptTagsByNameQuery : PaginationRequest,IRequest<PaginatedList<ConceptTagDTO>>
 {
     [DefaultValue("Resin")]
     public string Search { get; set; } = string.Empty;
-    public PaginationData Paging { get; init; } = new();
-    public class PaginationData : PaginationRequest { }
     public class GetConceptTagsListQueryHandler : IRequestHandler<GetConceptTagsByNameQuery, PaginatedList<ConceptTagDTO>>
     {
         private readonly IApplicationDbContext _context;
@@ -41,7 +39,7 @@ public class GetConceptTagsByNameQuery : IRequest<PaginatedList<ConceptTagDTO>>
             } 
             return await query
                 .ProjectTo<ConceptTagDTO>(_mapper.ConfigurationProvider)
-                .PaginatedListAsync(request.Paging.PageNumber, request.Paging.PageSize);
+                .PaginatedListAsync(request.PageNumber, request.PageSize);
         }
 
     }

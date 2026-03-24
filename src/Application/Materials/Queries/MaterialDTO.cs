@@ -28,8 +28,4 @@ public class MaterialDTO
         }
         
     }
-    public static void Register(IMapperConfigurationExpression cfg)
-    {
-        cfg.AddProfile<Mapping>();
-    }
 }

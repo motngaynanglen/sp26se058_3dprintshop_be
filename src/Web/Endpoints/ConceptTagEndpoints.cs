@@ -42,8 +42,9 @@ public class ConceptTagEndpoints : EndpointGroupBase
         var result = await sender.Send(command);
 
         return TypedResults.Ok(
-            BaseResponseModel<PaginatedList<ConceptTagDTO>>.OkResponseModel(
-                data: result,
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
                 message: "Lấy danh sách concept tag thành công",
                 code: ResponseCodeConstants.SUCCESS));
     }
