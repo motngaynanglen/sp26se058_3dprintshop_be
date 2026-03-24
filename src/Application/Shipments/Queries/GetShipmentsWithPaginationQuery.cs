@@ -10,7 +10,7 @@ using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
-public class GetShipmentsWithPaginationQuery : IRequest<PaginatedList<ShipmentDTO>>
+public class GetShipmentsWithPaginationQuery : PaginationRequest,IRequest<PaginatedList<ShipmentDTO>>
 {
     [DefaultValue("PENDING")]
     public string? Status { get; init; }
@@ -23,8 +23,6 @@ public class GetShipmentsWithPaginationQuery : IRequest<PaginatedList<ShipmentDT
     public string? SortBy { get; init; } // "Tracking", "Fee", "Created", "Shipped"
     public bool SortDescending { get; init; } = false;
 
-    public PaginationData Paging { get; init; } = new();
-    public class PaginationData : PaginationRequest { }
     public class GetShipmentsWithPaginationQueryHandler : IRequestHandler<GetShipmentsWithPaginationQuery, PaginatedList<ShipmentDTO>>
     {
         private readonly IApplicationDbContext _context;
@@ -60,7 +58,7 @@ public class GetShipmentsWithPaginationQuery : IRequest<PaginatedList<ShipmentDT
             // 4. Projection và Pagination
             return await query
                 .ProjectTo<ShipmentDTO>(_mapper.ConfigurationProvider)
-                .PaginatedListAsync(request.Paging.PageNumber, request.Paging.PageSize);
+                .PaginatedListAsync(request.PageNumber, request.PageSize);
 
         }
     }
