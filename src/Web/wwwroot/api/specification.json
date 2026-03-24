@@ -804,6 +804,31 @@
         }
       }
     },
+    "/api/design-variant/quantity": {
+      "put": {
+        "tags": [
+          "Design Variant"
+        ],
+        "operationId": "PutApiDesignVariantQuantity",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignVariantQuantityCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/add": {
       "post": {
         "tags": [
@@ -1794,6 +1819,20 @@
           }
         }
       },
+      "UpdateDesignVariantQuantityCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "additionalQuantity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "CreateMaterialCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -1882,11 +1921,6 @@
             "type": "string",
             "format": "guid",
             "default": "00000000-0000-0000-0000-000000000000"
-          },
-          "paymentMethod": {
-            "type": "string",
-            "default": "PAYOS",
-            "nullable": true
           },
           "note": {
             "type": "string",

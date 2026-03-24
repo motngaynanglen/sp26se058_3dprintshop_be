@@ -5,6 +5,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Application.DesignVariant.Commands;
 using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
+using sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -20,6 +21,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         group.MapPost("/all", GetAll);
         group.MapPost("/add", Add);
         group.MapPut("/update/{id}", Update);
+        group.MapPut("/quantity/{id}", UpdateQuantity);
         //group.MapDelete("/delete/{id}", Delete);
 
         /*
@@ -33,6 +35,8 @@ public class DesignVariantEndpoints : EndpointGroupBase
 
 
     }
+
+    
 
     public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateDesignVariantCommand command)
     {
@@ -70,6 +74,26 @@ public class DesignVariantEndpoints : EndpointGroupBase
             return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
                     data: ex.Message,
                     message: "Cập nhật biến thể thất bại!"
+                ));
+        }
+    }
+
+    public async Task<IResult> UpdateQuantity(ISender sender, UpdateDesignVariantQuantityCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                    data: result,
+                    message: "Nhập kho thành công",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        { 
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Nhập kho thất bại"
                 ));
         }
     }
