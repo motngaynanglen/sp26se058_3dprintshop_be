@@ -805,12 +805,24 @@
       }
     },
     "/api/feedback/my-pending": {
-      "get": {
+      "post": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Customer] Lấy danh sách các món hàng (OrderItem) đã nhận nhưng chưa đánh giá.",
-        "operationId": "GetApiFeedbackMyPending",
+        "operationId": "PostApiFeedbackMyPending",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPendingFeedbacksQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -821,10 +833,22 @@
     "/api/feedback/send": {
       "post": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Customer] Gửi đánh giá mới (kèm tối đa 5 ảnh).",
         "operationId": "PostApiFeedbackSend",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -835,7 +859,7 @@
     "/api/feedback/my-history": {
       "get": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Customer] Xem lại các đánh giá đã gửi.",
         "operationId": "GetApiFeedbackMyHistory",
@@ -849,10 +873,22 @@
     "/api/feedback/template": {
       "get": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).",
         "operationId": "GetApiFeedbackTemplate",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetFeedbacksByTemplateWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -863,7 +899,7 @@
     "/api/feedback/query": {
       "get": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
         "operationId": "GetApiFeedbackQuery",
@@ -874,13 +910,25 @@
         }
       }
     },
-    "/api/feedback/reply": {
+    "/api/feedback/{id}/reply": {
       "patch": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Staff/Manager] Nhân viên phản hồi đánh giá của khách.",
         "operationId": "PatchApiFeedbackReply",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -888,13 +936,26 @@
         }
       }
     },
-    "/api/feedback/toggle-status": {
+    "/api/feedback/{id}/toggle-status": {
       "patch": {
         "tags": [
-          "Feedbacks"
+          "Feedback"
         ],
         "summary": "[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiFeedbackToggleStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1884,6 +1945,69 @@
             "nullable": true
           }
         }
+      },
+      "GetPendingFeedbacksQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "CreateFeedbackCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "default": 5
+          },
+          "comment": {
+            "type": "string",
+            "default": "Sản phẩm ổn đấy chứ!!!",
+            "nullable": true
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GetFeedbacksByTemplateWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "templateId": {
+                "type": "string",
+                "format": "guid",
+                "default": "00000000-0000-0000-0000-000000000000"
+              },
+              "rating": {
+                "type": "integer",
+                "format": "int32",
+                "default": 5,
+                "nullable": true
+              }
+            }
+          }
+        ]
       },
       "CreateMaterialCommand": {
         "type": "object",

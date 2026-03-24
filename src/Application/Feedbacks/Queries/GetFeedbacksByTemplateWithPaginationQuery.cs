@@ -10,8 +10,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models;
 namespace sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
 public class GetFeedbacksByTemplateWithPaginationQuery : PaginationRequest, IRequest<PaginatedList<FeedbackDTO>>
 {
-    //[DefaultValue("00000000-0000-0000-0000-000000000000")]
-    [DefaultValue(typeof(Guid))]
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid TemplateId { get; init; }
     [DefaultValue(5)]
     public int? Rating { get; init; } // Filter theo số sao (1-5)
