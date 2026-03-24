@@ -809,7 +809,7 @@
         "tags": [
           "Feedbacks"
         ],
-        "summary": "[All] Truy vấn danh sách tag.",
+        "summary": "[Customer] Lấy danh sách các món hàng (OrderItem) đã nhận nhưng chưa đánh giá.",
         "operationId": "GetApiFeedbackMyPending",
         "responses": {
           "200": {
@@ -823,6 +823,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[Customer] Gửi đánh giá mới (kèm tối đa 5 ảnh).",
         "operationId": "PostApiFeedbackSend",
         "responses": {
           "200": {
@@ -836,6 +837,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[Customer] Xem lại các đánh giá đã gửi.",
         "operationId": "GetApiFeedbackMyHistory",
         "responses": {
           "200": {
@@ -849,6 +851,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).",
         "operationId": "GetApiFeedbackTemplate",
         "responses": {
           "200": {
@@ -862,6 +865,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
         "operationId": "GetApiFeedbackQuery",
         "responses": {
           "200": {
@@ -875,6 +879,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[Staff/Manager] Nhân viên phản hồi đánh giá của khách.",
         "operationId": "PatchApiFeedbackReply",
         "responses": {
           "200": {
@@ -888,6 +893,7 @@
         "tags": [
           "Feedbacks"
         ],
+        "summary": "[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).",
         "operationId": "PatchApiFeedbackToggleStatus",
         "responses": {
           "200": {
@@ -1600,26 +1606,19 @@
         }
       },
       "GetConceptTagsByNameQuery": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "search": {
-            "type": "string",
-            "default": "Resin"
-          },
-          "paging": {
-            "$ref": "#/components/schemas/PaginationData2"
-          }
-        }
-      },
-      "PaginationData2": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PaginationRequest"
           },
           {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "default": "Resin"
+              }
+            }
           }
         ]
       },
@@ -2008,40 +2007,33 @@
         }
       },
       "GetShipmentsWithPaginationQuery": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "status": {
-            "type": "string",
-            "default": "PENDING",
-            "nullable": true
-          },
-          "search": {
-            "type": "string",
-            "default": "SPX123",
-            "nullable": true
-          },
-          "sortBy": {
-            "type": "string",
-            "default": "Created",
-            "nullable": true
-          },
-          "sortDescending": {
-            "type": "boolean"
-          },
-          "paging": {
-            "$ref": "#/components/schemas/PaginationData3"
-          }
-        }
-      },
-      "PaginationData3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PaginationRequest"
           },
           {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": "PENDING",
+                "nullable": true
+              },
+              "search": {
+                "type": "string",
+                "default": "SPX123",
+                "nullable": true
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "Created",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean"
+              }
+            }
           }
         ]
       },
