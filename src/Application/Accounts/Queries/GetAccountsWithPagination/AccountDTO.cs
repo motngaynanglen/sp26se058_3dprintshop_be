@@ -40,8 +40,4 @@ public class AccountDTO
             // bạn có thể map ưu tiên tại đây.
         }
     }
-    public static void Register(IMapperConfigurationExpression cfg)
-    {
-        cfg.AddProfile<Mapping>();
-    } // Bản cũ gặp lỗi bảo mật, đổi lên 15 nên phải làm thủ công, nhớ add vào để đăng kí mapp
 }

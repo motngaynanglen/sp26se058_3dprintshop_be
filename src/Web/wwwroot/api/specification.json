@@ -514,7 +514,7 @@
         }
       }
     },
-    "/api/concept-tag/update/{id}": {
+    "/api/concept-tag/{id}/update": {
       "put": {
         "tags": [
           "ConceptTag"
@@ -804,6 +804,201 @@
         }
       }
     },
+    "/api/feedback/my-pending": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer] Lấy danh sách các món hàng (OrderItem) đã nhận nhưng chưa đánh giá.",
+        "operationId": "PostApiFeedbackMyPending",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPendingFeedbacksQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/send": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer] Gửi đánh giá mới (kèm tối đa 5 ảnh).",
+        "operationId": "PostApiFeedbackSend",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/my-history": {
+      "get": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer] Xem lại các đánh giá đã gửi.",
+        "operationId": "GetApiFeedbackMyHistory",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetMyFeedbackHistoryQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/template": {
+      "get": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).",
+        "operationId": "GetApiFeedbackTemplate",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetFeedbacksByTemplateWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/query": {
+      "get": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
+        "operationId": "GetApiFeedbackQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetFeedbacksWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/{id}/reply": {
+      "patch": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Staff/Manager] Nhân viên phản hồi đánh giá của khách.",
+        "operationId": "PatchApiFeedbackReply",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyFeedbackCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/{id}/toggle-status": {
+      "patch": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).",
+        "description": "Để trống dữ liệu Request BODY khi gọi",
+        "operationId": "PatchApiFeedbackToggleStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/add": {
       "post": {
         "tags": [
@@ -945,7 +1140,7 @@
         }
       }
     },
-    "/api/order/detail/{id}": {
+    "/api/order/{id}/detail": {
       "get": {
         "tags": [
           "Order"
@@ -998,7 +1193,7 @@
         }
       }
     },
-    "/api/shipment/update/{id}": {
+    "/api/shipment/{id}/update": {
       "patch": {
         "tags": [
           "Shipment"
@@ -1036,7 +1231,7 @@
         }
       }
     },
-    "/api/shipment/detail-by-order-id/{orderId}": {
+    "/api/shipment/{orderId}/detail-by-order-id": {
       "get": {
         "tags": [
           "Shipment"
@@ -1062,7 +1257,7 @@
         }
       }
     },
-    "/api/shipment/detail/{id}": {
+    "/api/shipment/{id}/detail": {
       "get": {
         "tags": [
           "Shipment"
@@ -1129,7 +1324,7 @@
         }
       }
     },
-    "/api/shipping-address/update/{id}": {
+    "/api/shipping-address/{id}/update": {
       "patch": {
         "tags": [
           "ShippingAddress"
@@ -1167,7 +1362,7 @@
         }
       }
     },
-    "/api/shipping-address/remove/{id}": {
+    "/api/shipping-address/{id}/remove": {
       "delete": {
         "tags": [
           "ShippingAddress"
@@ -1211,6 +1406,7 @@
         "tags": [
           "Transaction"
         ],
+        "summary": "[PayOS] Đây là api để payos gọi để xác thực đã thanh toán",
         "operationId": "PostApiTransactionPayosWebhook",
         "requestBody": {
           "x-name": "command",
@@ -1236,6 +1432,7 @@
         "tags": [
           "Transaction"
         ],
+        "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
         "operationId": "PostApiTransactionPerformTransaction",
         "requestBody": {
           "x-name": "command",
@@ -1508,26 +1705,19 @@
         }
       },
       "GetConceptTagsByNameQuery": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "search": {
-            "type": "string",
-            "default": "Resin"
-          },
-          "paging": {
-            "$ref": "#/components/schemas/PaginationData2"
-          }
-        }
-      },
-      "PaginationData2": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PaginationRequest"
           },
           {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "default": "Resin"
+              }
+            }
           }
         ]
       },
@@ -1794,6 +1984,116 @@
           }
         }
       },
+      "GetPendingFeedbacksQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "CreateFeedbackCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
+          },
+          "rating": {
+            "type": "integer",
+            "format": "int32",
+            "default": 5
+          },
+          "comment": {
+            "type": "string",
+            "default": "Sản phẩm ổn đấy chứ!!!",
+            "nullable": true
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GetMyFeedbackHistoryQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false
+          }
+        ]
+      },
+      "GetFeedbacksByTemplateWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "templateId": {
+                "type": "string",
+                "format": "guid",
+                "default": "00000000-0000-0000-0000-000000000000"
+              },
+              "rating": {
+                "type": "integer",
+                "format": "int32",
+                "default": 5,
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "GetFeedbacksWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rating": {
+                "type": "integer",
+                "format": "int32",
+                "nullable": true
+              },
+              "isHidden": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "isDeleted": {
+                "type": "boolean",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ReplyFeedbackCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "staffReply": {
+            "type": "string",
+            "default": "Cảm ơn đã ủng hộ!"
+          }
+        }
+      },
       "CreateMaterialCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -1883,11 +2183,6 @@
             "format": "guid",
             "default": "00000000-0000-0000-0000-000000000000"
           },
-          "paymentMethod": {
-            "type": "string",
-            "default": "PAYOS",
-            "nullable": true
-          },
           "note": {
             "type": "string",
             "nullable": true
@@ -1921,40 +2216,33 @@
         }
       },
       "GetShipmentsWithPaginationQuery": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "status": {
-            "type": "string",
-            "default": "PENDING",
-            "nullable": true
-          },
-          "search": {
-            "type": "string",
-            "default": "SPX123",
-            "nullable": true
-          },
-          "sortBy": {
-            "type": "string",
-            "default": "Created",
-            "nullable": true
-          },
-          "sortDescending": {
-            "type": "boolean"
-          },
-          "paging": {
-            "$ref": "#/components/schemas/PaginationData3"
-          }
-        }
-      },
-      "PaginationData3": {
         "allOf": [
           {
             "$ref": "#/components/schemas/PaginationRequest"
           },
           {
             "type": "object",
-            "additionalProperties": false
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "default": "PENDING",
+                "nullable": true
+              },
+              "search": {
+                "type": "string",
+                "default": "SPX123",
+                "nullable": true
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "Created",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean"
+              }
+            }
           }
         ]
       },
@@ -2178,18 +2466,13 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "orderId",
-          "type"
+          "orderId"
         ],
         "properties": {
           "orderId": {
             "type": "string",
             "format": "guid",
             "minLength": 1
-          },
-          "type": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       }
