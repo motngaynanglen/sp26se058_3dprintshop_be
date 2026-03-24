@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260324182826_SyncShipmentTableName")]
+    partial class SyncShipmentTableName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,7 +102,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ConceptTag", b =>
@@ -147,7 +150,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("ConceptTags", (string)null);
+                    b.ToTable("ConceptTags");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Customer", b =>
@@ -187,7 +190,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignLog", b =>
@@ -242,7 +245,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("DesignWorkId");
 
-                    b.ToTable("DesignLogs", (string)null);
+                    b.ToTable("DesignLogs");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignTag", b =>
@@ -289,7 +292,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("DesignTemplateId");
 
-                    b.ToTable("DesignTags", (string)null);
+                    b.ToTable("DesignTags");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignTemplate", b =>
@@ -346,7 +349,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("DesignTemplates", (string)null);
+                    b.ToTable("DesignTemplates");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignVariant", b =>
@@ -447,7 +450,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("DesignVariants", (string)null);
+                    b.ToTable("DesignVariants");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignVersionHistory", b =>
@@ -509,7 +512,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("UploaderId");
 
-                    b.ToTable("DesignVersionHistorys", (string)null);
+                    b.ToTable("DesignVersionHistorys");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", b =>
@@ -579,7 +582,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("TemplateId");
 
-                    b.ToTable("DesignWorks", (string)null);
+                    b.ToTable("DesignWorks");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Feedback", b =>
@@ -640,7 +643,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("OrderItemId")
                         .IsUnique();
 
-                    b.ToTable("Feedbacks", (string)null);
+                    b.ToTable("Feedbacks");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.FeedbackImage", b =>
@@ -661,7 +664,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("FeedbackId");
 
-                    b.ToTable("FeedbackImages", (string)null);
+                    b.ToTable("FeedbackImages");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.InventoryTransaction", b =>
@@ -721,7 +724,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("StaffId");
 
-                    b.ToTable("InventoryTransactions", (string)null);
+                    b.ToTable("InventoryTransactions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Invoice", b =>
@@ -792,7 +795,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Invoices", (string)null);
+                    b.ToTable("Invoices");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Manager", b =>
@@ -829,7 +832,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("Managers", (string)null);
+                    b.ToTable("Managers");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Material", b =>
@@ -871,7 +874,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("Materials", (string)null);
+                    b.ToTable("Materials");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialPriceHistory", b =>
@@ -921,7 +924,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("MaterialPriceHistories", (string)null);
+                    b.ToTable("MaterialPriceHistories");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Order", b =>
@@ -989,7 +992,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("StaffId");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.OrderItem", b =>
@@ -1061,7 +1064,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("TechnicalDraftId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", b =>
@@ -1117,7 +1120,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("ServicePackage", (string)null);
+                    b.ToTable("ServicePackage");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Shipment", b =>
@@ -1187,7 +1190,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("ShippingAddressId");
 
-                    b.ToTable("Shipments", (string)null);
+                    b.ToTable("Shipments");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ShippingAddress", b =>
@@ -1263,7 +1266,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("ShippingAddresses", (string)null);
+                    b.ToTable("ShippingAddresses");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Staff", b =>
@@ -1300,7 +1303,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("Deleted");
 
-                    b.ToTable("Staffs", (string)null);
+                    b.ToTable("Staffs");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.TechnicalDraft", b =>
@@ -1373,7 +1376,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.ToTable("TechnicalDrafts", (string)null);
+                    b.ToTable("TechnicalDrafts");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Transaction", b =>
@@ -1448,7 +1451,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("InvoiceId");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Customer", b =>

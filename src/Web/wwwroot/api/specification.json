@@ -1883,11 +1883,6 @@
             "format": "guid",
             "default": "00000000-0000-0000-0000-000000000000"
           },
-          "paymentMethod": {
-            "type": "string",
-            "default": "PAYOS",
-            "nullable": true
-          },
           "note": {
             "type": "string",
             "nullable": true
