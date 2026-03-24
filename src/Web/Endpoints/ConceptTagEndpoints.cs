@@ -21,7 +21,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
                 .WithSummary("[All] Truy vấn danh sách với search và paging.");
         group.MapPost("/add", Add)
                 .WithSummary("[Manager] Thêm Tag.");
-        group.MapPut("/update/{id}", Update)
+        group.MapPut("/{id}/update", Update)
                 .WithSummary("[Manager] Cập nhật nội dung tag.");
 
     }

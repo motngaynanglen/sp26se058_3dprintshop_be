@@ -22,8 +22,5 @@ public class DesignVariantDTO
         }
         
     }
-    public static void Register(IMapperConfigurationExpression cfg)
-    {
-        cfg.AddProfile<Mapping>();
-    }
+    
 }

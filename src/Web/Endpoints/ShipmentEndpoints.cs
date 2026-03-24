@@ -29,12 +29,12 @@ public class ShipmentEndpoints : EndpointGroupBase
             .WithSummary("[Staff/Manager] Truy vấn danh sách tài khoản.")
             .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered' ");
 
-        group.MapPatch("/update/{id}", Update)
+        group.MapPatch("/{id}/update", Update)
                 .WithSummary("[Staff/Manager] Cập nhật thông tin đơn vận có ID.");
 
-        group.MapGet("/detail-by-order-id/{orderId}", GetByOrderId)
+        group.MapGet("/{orderId}/detail-by-order-id", GetByOrderId)
                 .WithSummary("[All] Lấy thông tin đơn vận có đơn hàng ID.");
-        group.MapGet("/detail/{id}", GetById)
+        group.MapGet("/{id}/detail", GetById)
                 .WithSummary("[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.")
                 .WithDescription("Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn");
 

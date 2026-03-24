@@ -24,7 +24,7 @@ public class OrderEndpoints : EndpointGroupBase
                 .WithSummary("[Customer] Tạo đơn hàng với thông tin giỏ hàng.")
                 .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.");
 
-        group.MapGet("/detail/{id}", GetDetail)
+        group.MapGet("/{id}/detail", GetDetail)
                 .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
         //group.MapPut("/update/{id}", Update);
 

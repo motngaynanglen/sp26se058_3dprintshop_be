@@ -514,7 +514,7 @@
         }
       }
     },
-    "/api/concept-tag/update/{id}": {
+    "/api/concept-tag/{id}/update": {
       "put": {
         "tags": [
           "ConceptTag"
@@ -804,6 +804,98 @@
         }
       }
     },
+    "/api/feedback/my-pending": {
+      "get": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "summary": "[All] Truy vấn danh sách tag.",
+        "operationId": "GetApiFeedbackMyPending",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/send": {
+      "post": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "PostApiFeedbackSend",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/my-history": {
+      "get": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "GetApiFeedbackMyHistory",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/template": {
+      "get": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "GetApiFeedbackTemplate",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/query": {
+      "get": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "GetApiFeedbackQuery",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/reply": {
+      "patch": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "PatchApiFeedbackReply",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/toggle-status": {
+      "patch": {
+        "tags": [
+          "Feedbacks"
+        ],
+        "operationId": "PatchApiFeedbackToggleStatus",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/add": {
       "post": {
         "tags": [
@@ -945,7 +1037,7 @@
         }
       }
     },
-    "/api/order/detail/{id}": {
+    "/api/order/{id}/detail": {
       "get": {
         "tags": [
           "Order"
@@ -998,7 +1090,7 @@
         }
       }
     },
-    "/api/shipment/update/{id}": {
+    "/api/shipment/{id}/update": {
       "patch": {
         "tags": [
           "Shipment"
@@ -1036,7 +1128,7 @@
         }
       }
     },
-    "/api/shipment/detail-by-order-id/{orderId}": {
+    "/api/shipment/{orderId}/detail-by-order-id": {
       "get": {
         "tags": [
           "Shipment"
@@ -1062,7 +1154,7 @@
         }
       }
     },
-    "/api/shipment/detail/{id}": {
+    "/api/shipment/{id}/detail": {
       "get": {
         "tags": [
           "Shipment"
@@ -1129,7 +1221,7 @@
         }
       }
     },
-    "/api/shipping-address/update/{id}": {
+    "/api/shipping-address/{id}/update": {
       "patch": {
         "tags": [
           "ShippingAddress"
@@ -1167,7 +1259,7 @@
         }
       }
     },
-    "/api/shipping-address/remove/{id}": {
+    "/api/shipping-address/{id}/remove": {
       "delete": {
         "tags": [
           "ShippingAddress"
