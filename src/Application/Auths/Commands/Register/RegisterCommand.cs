@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,7 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(v => v.Password).NotEmpty().MinimumLength(6).WithMessage("Mật khẩu tối thiểu 6 ký tự.");
         RuleFor(v => v.Fullname).NotEmpty().MaximumLength(100);
         RuleFor(v => v.Email).NotEmpty().EmailAddress().WithMessage("Định dạng email không hợp lệ.");
+        RuleFor(v => v.PhoneNumber).NotEmpty();
     }
 }
 

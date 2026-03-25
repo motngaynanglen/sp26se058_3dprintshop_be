@@ -20,13 +20,13 @@ public class ShippingAddressEndpoints : EndpointGroupBase
 
         group.MapPost("/add", Add)
                 .WithSummary("[Customer] Thêm địa chỉ nhận hàng mới.");
-        
+
         group.MapGet("/my", GetMy)
                 .WithSummary("[Customer] Lấy danh sách địa chỉ.");
-        
+
         group.MapPatch("/{id}/update", Update)
                 .WithSummary("[Customer] Cập nhật địa chỉ của bản thân có ID.");
-      
+
         group.MapDelete("/{id}/remove", Remove)
                 .WithSummary("[Customer] Xóa địa chỉ có ID.")
                 .WithDescription("Để trống dữ liệu Request BODY khi gọi");
@@ -35,12 +35,21 @@ public class ShippingAddressEndpoints : EndpointGroupBase
 
     public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateShippingAddressCommand command)
     {
-        var result = await sender.Send(command);
+        try
+        {
+            var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-            data: result,
-            message: "Thêm địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                data: result,
+                message: "Thêm địa chỉ thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
 
     public async Task<IResult> GetMy([FromServices] ISender sender)
@@ -53,7 +62,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
             code: ResponseCodeConstants.SUCCESS));
     }
 
-    public async Task<IResult> Remove([FromServices] ISender sender,[FromRoute] Guid id, [FromBody] DeleteShippingAddressCommand command)
+    public async Task<IResult> Remove([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteShippingAddressCommand command)
     {
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
@@ -63,7 +72,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
             code: ResponseCodeConstants.SUCCESS));
     }
 
-    public async Task<IResult> Update([FromServices] ISender sender,[FromRoute] Guid id, [FromBody] UpdateShippingAddressCommand command)
+    public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateShippingAddressCommand command)
     {
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
