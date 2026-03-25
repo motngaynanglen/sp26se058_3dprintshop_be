@@ -29,6 +29,9 @@ public interface IApplicationDbContext
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
     DbSet<Domain.Entities.ShippingAddress> ShippingAddresses { get; }
     DbSet<Shipment> Shipments { get; }
+    DbSet<Feedback> Feedbacks { get; }
+    DbSet<FeedbackImage> FeedbackImages { get; }
+
 
     //DatabaseFacade Database { get; }
 

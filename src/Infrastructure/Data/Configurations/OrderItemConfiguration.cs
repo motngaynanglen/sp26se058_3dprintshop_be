@@ -17,6 +17,8 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.Property(oi => oi.TotalPrice).HasPrecision(18, 2).IsRequired();
         //builder.Property(oi => oi.TotalServiceCostPerGram).HasPrecision(18, 4);
         builder.Property(oi => oi.SourceType).IsRequired().HasMaxLength(50);
+        builder.Property(oi => oi.ItemName).IsRequired().HasMaxLength(255);
+
         builder.Property(oi => oi.FulfillmentStatus).IsRequired().HasMaxLength(50);
 
         builder.HasOne(oi => oi.Order)
