@@ -34,7 +34,7 @@ public class PayOsService : IPaymentService
 
         List<PaymentLinkItem> Items = order.OrderItems.Select(x => new PaymentLinkItem
         {
-            Name = "a",
+            Name = x.ItemName ?? "Sản phẩm.",
             Quantity = x.QuantityOrdered,
             Price = (int)x.UnitPrice
         }).ToList();

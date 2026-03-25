@@ -23,8 +23,11 @@ public class TransactionEndpoints : EndpointGroupBase
                        .WithOpenApi()
                        .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
-        group.MapPost("/payos-webhook", HandlePayOSWebhook);
-        group.MapPost("/perform-transaction", PerformTransaction);
+        group.MapPost("/payos-webhook", HandlePayOSWebhook)
+                    .WithSummary("[PayOS] Đây là api để payos gọi để xác thực đã thanh toán");
+
+        group.MapPost("/perform-transaction", PerformTransaction)
+                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
 
     }
 
@@ -39,12 +42,12 @@ public class TransactionEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> PerformTransaction([FromServices] ISender sender, [FromBody] PerformTransactionCommand command)
@@ -58,12 +61,12 @@ public class TransactionEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
 }
