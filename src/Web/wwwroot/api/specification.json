@@ -804,7 +804,6 @@
         }
       }
     },
-<<<<<<< HEAD
     "/api/design-variant/quantity": {
       "put": {
         "tags": [
@@ -817,21 +816,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDesignVariantQuantityCommand"
-=======
-    "/api/feedback/my-pending": {
-      "post": {
-        "tags": [
-          "Feedback"
-        ],
-        "summary": "[Customer] Lấy danh sách các món hàng (OrderItem) đã nhận nhưng chưa đánh giá.",
-        "operationId": "PostApiFeedbackMyPending",
-        "requestBody": {
-          "x-name": "query",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GetPendingFeedbacksQuery"
->>>>>>> main
               }
             }
           },
@@ -845,8 +829,32 @@
         }
       }
     },
-<<<<<<< HEAD
-=======
+    "/api/feedback/my-pending": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer] Lấy danh sách các món hàng (OrderItem) đã nhận nhưng chưa đánh giá.",
+        "operationId": "PostApiFeedbackMyPending",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPendingFeedbacksQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feedback/send": {
       "post": {
         "tags": [
@@ -1016,7 +1024,6 @@
         }
       }
     },
->>>>>>> main
     "/api/material/add": {
       "post": {
         "tags": [
@@ -2002,7 +2009,6 @@
           }
         }
       },
-<<<<<<< HEAD
       "UpdateDesignVariantQuantityCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -2014,7 +2020,9 @@
           "additionalQuantity": {
             "type": "integer",
             "format": "int32"
-=======
+          }
+        }
+      },
       "GetPendingFeedbacksQuery": {
         "allOf": [
           {
@@ -2122,7 +2130,6 @@
           "staffReply": {
             "type": "string",
             "default": "Cảm ơn đã ủng hộ!"
->>>>>>> main
           }
         }
       },
