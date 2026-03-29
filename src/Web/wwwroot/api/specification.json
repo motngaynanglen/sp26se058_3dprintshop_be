@@ -604,6 +604,94 @@
         }
       }
     },
+    "/api/design-tag": {
+      "post": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Thêm một tag mới cho Template.",
+        "operationId": "PostApiDesignTag",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-tag/{id}": {
+      "put": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Cập nhật trạng thái MainTag cho một Tag cụ thể.",
+        "operationId": "PutApiDesignTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Xóa một tag khỏi Template.",
+        "operationId": "DeleteApiDesignTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-template/query": {
       "post": {
         "tags": [
@@ -980,6 +1068,33 @@
         "summary": "[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiFeedbackToggleStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/{id}/delete": {
+      "patch": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer/Staff/Manager] Xóa đánh giá với ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi; Customer sẽ xóa được feedback của bản thân. Staff, Manager có thể xóa mọi feedback",
+        "operationId": "PatchApiFeedbackDelete",
         "parameters": [
           {
             "name": "id",
@@ -1693,12 +1808,10 @@
           },
           "email": {
             "type": "string",
-            "format": "email",
             "default": "VanA@gmail.com"
           },
-          "phoneNumber": {
+          "contactPhone": {
             "type": "string",
-            "format": "phone",
             "default": "0777777777",
             "nullable": true
           }
@@ -1806,6 +1919,41 @@
           "conceptTagId": {
             "type": "string",
             "format": "guid"
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "CreateDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "conceptTagId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "UpdateDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "isMainTag": {
             "type": "boolean",
