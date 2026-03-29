@@ -35,6 +35,9 @@ public class FeedbackEndpoints : EndpointGroupBase
         group.MapPatch("/{id}/toggle-status", SwitchStatus)
                 .WithSummary("[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).")
                 .WithDescription("Để trống dữ liệu Request BODY khi gọi");
+        group.MapPatch("/{id}/delete", DeleteFeedback)
+                .WithSummary("[Customer/Staff/Manager] Xóa đánh giá với ID.")
+                .WithDescription("Để trống dữ liệu Request BODY khi gọi; Customer sẽ xóa được feedback của bản thân. Staff, Manager có thể xóa mọi feedback");
 
 
     }
@@ -164,6 +167,26 @@ public class FeedbackEndpoints : EndpointGroupBase
         }
     }
     public async Task<IResult> SwitchStatus([FromServices] ISender sender, [FromRoute] Guid id )
+    {
+        try
+        {
+            var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
+
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Đổi trạng thái thành công"
+                ));
+
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+    }
+    public async Task<IResult> DeleteFeedback([FromServices] ISender sender, [FromRoute] Guid id)
     {
         try
         {

@@ -13,9 +13,10 @@ namespace sp26se058_3dprintshop_be.Application.Orders.Queries;
 public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<PaginatedList<OrderDTO>>
 {
     public string? Search { get; init; }
-    public string Status { get; init; } = string.Empty;
-    public int Priority { get; init; }
-    public bool SortDescending { get; init; } = false;
+    public string? Status { get; init; }
+    public int? Priority { get; init; }
+    [DefaultValue(false)]
+    public bool? SortDescending { get; init; }
     [DefaultValue("created")]
     public string? SortBy { get; init; }
 
@@ -44,7 +45,7 @@ public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<Paginate
                 query = query.Where(o => o.Priority == request.Priority);
             }
             // Sắp xếp
-            if (request.SortDescending)
+            if (request.SortDescending.HasValue)
             {
                 query = request.SortBy?.ToLower() switch
                 {
