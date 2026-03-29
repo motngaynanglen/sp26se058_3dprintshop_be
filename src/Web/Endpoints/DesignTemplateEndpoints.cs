@@ -17,11 +17,17 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-template")
                        .WithTags("DesignTemplate")
                        .WithOpenApi();
-        group.MapPost("/query", Query);
-        group.MapPost("/add", Create);
-        group.MapGet("/detail/{id}", GetDetail);
-        group.MapGet("/{id}/tags", GetTags);
-        group.MapPut("/update/{id}", Update);
+        group.MapPost("/query", Query)
+            .WithSummary("Lấy danh sách Thiết kế theo Filter có phân trang");
+        group.MapPost("/add", Create)
+            .WithSummary("Tạo mới Thiết kế");
+        group.MapGet("/{id}/detail", GetDetail)
+            .WithSummary("Xem chi tiết mẫu thiết kế");
+        group.MapGet("/tags/{id}", GetTags)
+            .WithSummary("Lấy danh sách Thiết kế theo Tag");
+        group.MapPut("/{id}/update", Update)
+            .WithSummary("Cập nhật thiết kế");
+        group.MapDelete("/{id}/delete", Delete);
     }
 
     public async Task<IResult> GetTags([FromServices] ISender sender, [FromRoute] Guid id)
@@ -108,11 +114,12 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         }
     }
 
-    public async Task<IResult> Update([FromServices] ISender sender, [FromBody] UpdateDesignTemplateCommand command)
+    public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignTemplateCommand command)
     {
         try
         {
-            var result = await sender.Send(command);
+            var finalCmd = command with { Id = id };
+            var result = await sender.Send(finalCmd);
             return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
                     data: result,
                     message: "Cập nhật mẫu thiết kế thành công!",
@@ -124,6 +131,26 @@ public class DesignTemplateEndpoints : EndpointGroupBase
             return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
                     data: ex.Message,
                     message: "Cập nhật mẫu thiết kế thất bại!"
+                ));
+        }
+    }
+
+    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteDesignTemplateCommand command) {
+        try
+        {
+            var finalCmd = command with { Id = id };
+            var result = await sender.Send(finalCmd);
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                    data: result,
+                    message: "Xoá mềm mẫu thiết kế thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Xoá mềm mẫu thiết kế thất bại!"
                 ));
         }
     }
