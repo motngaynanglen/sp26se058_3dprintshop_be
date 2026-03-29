@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ public record RegisterCommand : IRequest<bool>
     [DefaultValue("VanA@gmail.com")]
     public string Email { get; init; } = null!;
     [DefaultValue("0777777777")]
-    public string? PhoneNumber { get; init; }
+    public string? ContactPhone { get; init; }
 }
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
@@ -30,6 +31,7 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         RuleFor(v => v.Password).NotEmpty().MinimumLength(6).WithMessage("Mật khẩu tối thiểu 6 ký tự.");
         RuleFor(v => v.Fullname).NotEmpty().MaximumLength(100);
         RuleFor(v => v.Email).NotEmpty().EmailAddress().WithMessage("Định dạng email không hợp lệ.");
+        RuleFor(v => v.ContactPhone).NotEmpty();
     }
 }
 
@@ -69,6 +71,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
             PasswordHash = passwordHash,
             Fullname = request.Fullname,
             Email = request.Email,
+            ContactPhone = request.ContactPhone,
         };
 
         // 4. Khởi tạo thông tin Customer liên kết với Account

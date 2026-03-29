@@ -1477,6 +1477,32 @@
           }
         }
       }
+    },
+    "/api/transaction/{orderId}/detail-by-order-id": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[All] Tìm chi tiết giao dịch bằng ID hàng hóa.",
+        "operationId": "GetApiTransactionDetailByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1692,10 +1718,12 @@
           },
           "email": {
             "type": "string",
+            "format": "email",
             "default": "VanA@gmail.com"
           },
           "phoneNumber": {
             "type": "string",
+            "format": "phone",
             "default": "0777777777",
             "nullable": true
           }
@@ -2195,14 +2223,18 @@
                 "nullable": true
               },
               "status": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "priority": {
                 "type": "integer",
-                "format": "int32"
+                "format": "int32",
+                "nullable": true
               },
               "sortDescending": {
-                "type": "boolean"
+                "type": "boolean",
+                "default": false,
+                "nullable": true
               },
               "sortBy": {
                 "type": "string",

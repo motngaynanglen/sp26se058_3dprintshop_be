@@ -17,6 +17,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 { typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
                 { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+                { typeof(BadHttpRequestException), HandleBadHttpRequestException }, // Xử lý lỗi Binding/Guid sai
             };
     }
 
@@ -37,15 +38,36 @@ public class CustomExceptionHandler : IExceptionHandler
     {
         var exception = (ValidationException)ex;
 
-        httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+        //httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+        httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
 
+        //await httpContext.Response.WriteAsJsonAsync(new ValidationProblemDetails(exception.Errors)
+        //{
+        //    Status = StatusCodes.Status400BadRequest,
+        //    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+        //});
+        // Trả về cấu hình liệt kê chi tiết các lỗi
         await httpContext.Response.WriteAsJsonAsync(new ValidationProblemDetails(exception.Errors)
         {
+            Status = StatusCodes.Status422UnprocessableEntity,
+            Title = "Dữ liệu không hợp lệ",
+            Detail = "Một hoặc nhiều lỗi validation đã xảy ra.",
+            Type = "https://tools.ietf.org/html/rfc4918#section-11.2"
+        });
+    }
+    private async Task HandleBadHttpRequestException(HttpContext httpContext, Exception ex)
+    {
+        // Đây là nơi xử lý lỗi "Failed to bind parameter" (Guid sai format)
+        httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        {
             Status = StatusCodes.Status400BadRequest,
+            Title = "Yêu cầu không hợp lệ",
+            Detail = "Định dạng dữ liệu gửi lên không đúng.",
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
         });
     }
-
     private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
     {
         var exception = (NotFoundException)ex;

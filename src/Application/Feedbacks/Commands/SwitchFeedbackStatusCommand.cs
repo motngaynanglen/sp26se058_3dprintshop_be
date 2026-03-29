@@ -21,10 +21,9 @@ public class SwitchFeedbackStatusCommandHandler : IRequestHandler<SwitchFeedback
 
     public async Task<Guid> Handle(SwitchFeedbackStatusCommand request, CancellationToken ct)
     {
-        var entity = await _context.Feedbacks.AsNoTracking().FirstOrDefaultAsync(f => f.Id == request.Id, ct);
+        var entity = await _context.Feedbacks.FirstOrDefaultAsync(f => f.Id == request.Id, ct);
         if (entity == null) throw new Exception(nameof(Feedback) +" not found "+ request.Id.ToString());
 
-        // Giả sử bạn có thuộc tính IsHidden trong Entity
         entity.IsHidden = !entity.IsHidden;
 
         await _context.SaveChangesAsync(ct);
