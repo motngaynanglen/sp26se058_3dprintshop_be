@@ -18,11 +18,16 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
-        group.MapPost("/all", GetAll);
-        group.MapPost("/add", Add);
-        group.MapPut("/update/{id}", Update);
-        group.MapPut("/quantity/{id}", UpdateQuantity);
-        //group.MapDelete("/delete/{id}", Delete);
+        group.MapPost("/all", GetAll)
+            .WithSummary("Lấy danh sách Biến thể");
+        group.MapPost("/add", Add)
+            .WithSummary("Thêm mới biến thể");
+        group.MapPut("/{id}/update", Update)
+            .WithSummary("Cập nhật biến thể");
+        group.MapPut("/{id}/quantity", UpdateQuantity)
+            .WithSummary("Cộng số lượng biến thể vào kho");
+        group.MapDelete("/{id}/delete", Delete)
+            .WithSummary("Xoá biến thể");
 
         /*
         Của customer
@@ -116,6 +121,26 @@ public class DesignVariantEndpoints : EndpointGroupBase
             return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
                     data: ex.Message,
                     message: "Truy vấn biến thể thất bại!"
+                ));
+        }
+    }
+
+    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        try
+        {
+            var result = await sender.Send(new DeleteDesignVariantCommand { Id = id });
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                    data: result,
+                    message: "Xoá biến thể thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Xoá biến thể thất bại!"
                 ));
         }
     }

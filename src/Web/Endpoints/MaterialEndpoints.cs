@@ -15,10 +15,17 @@ public class MaterialEndpoints : EndpointGroupBase
                        .WithTags("Material")
                        .WithOpenApi();
 
-        group.MapPost("/add", Add);
-        group.MapGet("/all", GetAll);
-        group.MapGet("/detail/{id}", GetByID);
-        group.MapPut("/update/{id}", Update);
+        group.MapPost("/add", Add)
+            .WithSummary("[Manager] Tạo mới vật liệu")
+            .WithDescription("Tạo vật liệu mới với các thông tin: giá, mô tả, ...");
+        group.MapGet("/all", GetAll)
+            .WithSummary("[Manager] Lấy danh sách vật liệu");
+        group.MapGet("/{id}/detail", GetByID)
+            .WithSummary("[Manager] Xem chi tiết vật liệu");
+        group.MapPut("/{id}/update", Update)
+            .WithSummary("[Manager] Cập nhật vật liệu");
+        group.MapDelete("/{id}/delete", Delete)
+            .WithSummary("Xoá vật liệu");
     }
 
     public async Task<IResult> Add(
@@ -58,7 +65,7 @@ public class MaterialEndpoints : EndpointGroupBase
 
     public async Task<IResult> Update(
         [FromServices] ISender sender,
-        //[FromRoute] Guid id,
+        [FromRoute] Guid id,
         [FromBody] UpdateMateialCommand command)
     {
         //command.Id = id;
@@ -69,5 +76,25 @@ public class MaterialEndpoints : EndpointGroupBase
             data: result,
             message: "Cập nhật chất liệu thành công!",
             code: ResponseCodeConstants.SUCCESS));
+    }
+
+    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteMaterialCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: result,
+                message: "Cập nhật chất liệu thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lỗi trong quá trình cập nhật"
+            ));
+        }
     }
 }

@@ -609,6 +609,7 @@
         "tags": [
           "DesignTemplate"
         ],
+        "summary": "Lấy danh sách Thiết kế theo Filter có phân trang",
         "operationId": "PostApiDesignTemplateQuery",
         "requestBody": {
           "x-name": "query",
@@ -634,6 +635,7 @@
         "tags": [
           "DesignTemplate"
         ],
+        "summary": "Tạo mới Thiết kế",
         "operationId": "PostApiDesignTemplateAdd",
         "requestBody": {
           "x-name": "command",
@@ -654,11 +656,12 @@
         }
       }
     },
-    "/api/design-template/detail/{id}": {
+    "/api/design-template/{id}/detail": {
       "get": {
         "tags": [
           "DesignTemplate"
         ],
+        "summary": "Xem chi tiết mẫu thiết kế",
         "operationId": "GetApiDesignTemplateDetail",
         "parameters": [
           {
@@ -679,11 +682,12 @@
         }
       }
     },
-    "/api/design-template/{id}/tags": {
+    "/api/design-template/tags/{id}": {
       "get": {
         "tags": [
           "DesignTemplate"
         ],
+        "summary": "Lấy danh sách Thiết kế theo Tag",
         "operationId": "GetApiDesignTemplateTags",
         "parameters": [
           {
@@ -704,12 +708,25 @@
         }
       }
     },
-    "/api/design-template/update": {
+    "/api/design-template/{id}/update": {
       "put": {
         "tags": [
           "DesignTemplate"
         ],
+        "summary": "Cập nhật thiết kế",
         "operationId": "PutApiDesignTemplateUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -720,7 +737,44 @@
             }
           },
           "required": true,
-          "x-position": 1
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/{id}/delete": {
+      "delete": {
+        "tags": [
+          "DesignTemplate"
+        ],
+        "operationId": "DeleteApiDesignTemplateDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
         },
         "responses": {
           "200": {
@@ -734,6 +788,7 @@
         "tags": [
           "Design Variant"
         ],
+        "summary": "Lấy danh sách Biến thể",
         "operationId": "PostApiDesignVariantAll",
         "requestBody": {
           "x-name": "query",
@@ -759,6 +814,7 @@
         "tags": [
           "Design Variant"
         ],
+        "summary": "Thêm mới biến thể",
         "operationId": "PostApiDesignVariantAdd",
         "requestBody": {
           "x-name": "command",
@@ -784,6 +840,7 @@
         "tags": [
           "Design Variant"
         ],
+        "summary": "Cập nhật biến thể",
         "operationId": "PutApiDesignVariantUpdate",
         "requestBody": {
           "x-name": "command",
@@ -809,6 +866,7 @@
         "tags": [
           "Design Variant"
         ],
+        "summary": "Cộng số lượng biến thể vào kho",
         "operationId": "PutApiDesignVariantQuantity",
         "requestBody": {
           "x-name": "command",
@@ -822,6 +880,32 @@
           "required": true,
           "x-position": 1
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-variant/{id}/delete": {
+      "delete": {
+        "tags": [
+          "Design Variant"
+        ],
+        "summary": "Xoá biến thể",
+        "operationId": "DeleteApiDesignVariantDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -1029,6 +1113,8 @@
         "tags": [
           "Material"
         ],
+        "summary": "[Manager] Tạo mới vật liệu",
+        "description": "Tạo vật liệu mới với các thông tin: giá, mô tả, ...",
         "operationId": "PostApiMaterialAdd",
         "requestBody": {
           "x-name": "command",
@@ -1054,6 +1140,7 @@
         "tags": [
           "Material"
         ],
+        "summary": "[Manager] Lấy danh sách vật liệu",
         "operationId": "GetApiMaterialAll",
         "responses": {
           "200": {
@@ -1062,11 +1149,12 @@
         }
       }
     },
-    "/api/material/detail/{id}": {
+    "/api/material/{id}/detail": {
       "get": {
         "tags": [
           "Material"
         ],
+        "summary": "[Manager] Xem chi tiết vật liệu",
         "operationId": "GetApiMaterialDetail",
         "parameters": [
           {
@@ -1087,12 +1175,25 @@
         }
       }
     },
-    "/api/material/update": {
+    "/api/material/{id}/update": {
       "put": {
         "tags": [
           "Material"
         ],
+        "summary": "[Manager] Cập nhật vật liệu",
         "operationId": "PutApiMaterialUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -1103,7 +1204,45 @@
             }
           },
           "required": true,
-          "x-position": 1
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/{id}/delete": {
+      "delete": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "Xoá vật liệu",
+        "operationId": "DeleteApiMaterialDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteMaterialCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
         },
         "responses": {
           "200": {
@@ -1912,6 +2051,10 @@
           }
         }
       },
+      "DeleteDesignTemplateCommand": {
+        "type": "object",
+        "additionalProperties": false
+      },
       "GetDesignVariantListQuery": {
         "allOf": [
           {
@@ -2208,6 +2351,10 @@
             "format": "date-time"
           }
         }
+      },
+      "DeleteMaterialCommand": {
+        "type": "object",
+        "additionalProperties": false
       },
       "GetOrdersWithPaginationQuery": {
         "allOf": [
