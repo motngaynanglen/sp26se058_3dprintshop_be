@@ -11,9 +11,6 @@ namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
 public record UpdateAccountMineCommand : IRequest<Guid>
 {
-    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
-    [DefaultValue("00000000-0000-0000-0000-000000000000")]
-    public Guid Id { get; init; }
     // Dữ liệu cần update
     [DefaultValue("newFullname")]
     public string? Fullname { get; init; }
@@ -39,7 +36,7 @@ public class UpdateAccountMineCommandHandler : IRequestHandler<UpdateAccountMine
             throw new Exception("Hãy đăng nhập.");
         }
         var entity = await _context.Accounts
-              .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+              .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken);
 
         if (entity == null) throw new Exception("Không tìm thấy tài khoản");
 
