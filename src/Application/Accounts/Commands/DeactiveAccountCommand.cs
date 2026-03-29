@@ -12,7 +12,6 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.ADMIN)]
 public record DeactiveAccountCommand : IRequest<bool>
 {
     [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
@@ -32,11 +31,8 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
     }
     public async Task<bool> Handle(DeactiveAccountCommand request, CancellationToken cancellationToken)
     {
-        var userId = _user.Id;
-        if (string.IsNullOrEmpty(userId))
-        {
-            throw new UnauthorizedAccessException("Tài khoản chưa được đăng nhập.");
-        }
+        var userId = _user.Id.ToGuid();
+     
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
         var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
