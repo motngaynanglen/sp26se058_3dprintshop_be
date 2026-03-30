@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
 public record DeleteShippingAddressCommand : IRequest<bool>
@@ -33,8 +34,10 @@ public class DeleteShippingAddressHandler : IRequestHandler<DeleteShippingAddres
 
         if (entity == null) throw new Exception("Không tìm thấy địa chỉ để xóa!");
 
+        entity.Deleted = CoreHelper.SystemTimeNow;
+        entity.DeletedBy = _user.Username;
         // Nếu xóa địa chỉ mặc định, bạn có thể chọn địa chỉ khác làm mặc định hoặc để trống
-        _context.ShippingAddresses.Remove(entity);
+        //_context.ShippingAddresses.Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
