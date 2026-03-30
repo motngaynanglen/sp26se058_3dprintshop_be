@@ -945,12 +945,12 @@
       }
     },
     "/api/feedback/my-history": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[Customer] Xem lại các đánh giá đã gửi.",
-        "operationId": "GetApiFeedbackMyHistory",
+        "operationId": "PostApiFeedbackMyHistory",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -971,12 +971,12 @@
       }
     },
     "/api/feedback/template": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).",
-        "operationId": "GetApiFeedbackTemplate",
+        "operationId": "PostApiFeedbackTemplate",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -997,12 +997,12 @@
       }
     },
     "/api/feedback/query": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
-        "operationId": "GetApiFeedbackQuery",
+        "operationId": "PostApiFeedbackQuery",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -1107,6 +1107,84 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/query": {
+      "post": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Lấy danh sách lịch sử biến động kho (Paging, Filter).",
+        "operationId": "PostApiInventoryTransactionQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetInventoryTransactionsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/reference/{orderId}": {
+      "get": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Truy vết lịch sử kho theo ReferenceId (ví dụ OrderId).",
+        "operationId": "GetApiInventoryTransactionReference",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/create": {
+      "post": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Tạo mới một giao dịch kho (Nhập/Xuất/Điều chỉnh).",
+        "operationId": "PostApiInventoryTransactionCreate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -2267,6 +2345,57 @@
           "staffReply": {
             "type": "string",
             "default": "Cảm ơn đã ủng hộ!"
+          }
+        }
+      },
+      "GetInventoryTransactionsWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "designVariantId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "type": {
+                "type": "string",
+                "default": "ADJUSTMENT",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateInventoryTransactionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designVariantId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "type": {
+            "type": "string",
+            "default": "ADJUSTMENT"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
           }
         }
       },

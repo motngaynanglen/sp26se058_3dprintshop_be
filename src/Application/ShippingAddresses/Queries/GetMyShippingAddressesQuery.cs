@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
 {
 
@@ -25,7 +25,7 @@ public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
         public async Task<List<ShippingAddressDTO>> Handle(GetMyShippingAddressesQuery request, CancellationToken cancellationToken)
         {
             var userId = _user.Id.ToGuid();
-            return await _context.ShippingAddresses.Include(s=>s.Customer)
+            return await _context.ShippingAddresses.Include(s=>s.Customer).IgnoreQueryFilters()
                 .Where(s => s.Customer.AccountId == userId)
                 .ProjectTo<ShippingAddressDTO>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);

@@ -4,9 +4,10 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
-using sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 using sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -39,7 +40,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
         {
             var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<CreateShippingAddressCommand>.OkResponseModel(
                 data: result,
                 message: "Thêm địa chỉ thành công!",
                 code: ResponseCodeConstants.SUCCESS));
