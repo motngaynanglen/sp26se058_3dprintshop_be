@@ -25,8 +25,8 @@ public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
         public async Task<List<ShippingAddressDTO>> Handle(GetMyShippingAddressesQuery request, CancellationToken cancellationToken)
         {
             var userId = _user.Id.ToGuid();
-            return await _context.ShippingAddresses
-                .Where(s => s.CustomerId == userId)
+            return await _context.ShippingAddresses.Include(s=>s.Customer)
+                .Where(s => s.Customer.AccountId == userId)
                 .ProjectTo<ShippingAddressDTO>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }
