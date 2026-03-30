@@ -6,7 +6,7 @@ using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Shipments.Commands;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
-using sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 using sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 

@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
-namespace sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 public class ShippingAddressDTO
 {
-    public Guid Guid { get; set; }
+    public Guid Id { get; set; }
     public Guid CustomerId { get; set; }
     public string? ReceiverName { get; set; }
     public string? Phone { get; set; }
@@ -24,7 +24,7 @@ public class ShippingAddressDTO
     {
         public Mapping()
         {
-            CreateMap<Domain.Entities.ShippingAddress, ShippingAddressDTO>();
+            CreateMap<ShippingAddress, ShippingAddressDTO>();
         }
        
     }

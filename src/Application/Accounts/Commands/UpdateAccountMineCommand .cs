@@ -30,7 +30,7 @@ public class UpdateAccountMineCommandHandler : IRequestHandler<UpdateAccountMine
     }
     public async Task<Guid> Handle(UpdateAccountMineCommand request, CancellationToken cancellationToken)
     {
-        var currentUserId = _user.Id.ToGuid();
+            var currentUserId = _user.Id.ToGuid();
         if (currentUserId == Guid.Empty)
         {
             throw new Exception("Hãy đăng nhập.");

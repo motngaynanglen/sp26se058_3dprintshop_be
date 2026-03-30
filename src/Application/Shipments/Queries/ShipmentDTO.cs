@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
-using sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
