@@ -23,11 +23,11 @@ public class FeedbackEndpoints : EndpointGroupBase
         group.MapPost("/send", SendFeedback)
                 .WithSummary("[Customer] Gửi đánh giá mới (kèm tối đa 5 ảnh).");
 
-        group.MapGet("/my-history", GetMyHistory)
+        group.MapPost("/my-history", GetMyHistory)
                 .WithSummary("[Customer] Xem lại các đánh giá đã gửi.");
-        group.MapGet("/template/{templateId}", GetFeedbackByTemplateId)
+        group.MapPost("/template/{templateId}", GetFeedbackByTemplateId)
                 .WithSummary("[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).");
-        group.MapGet("/query", QueryFeedbacks)
+        group.MapPost("/query", QueryFeedbacks)
                 .WithSummary("[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).");
         group.MapPatch("/{id}/reply", ReplyFeedback)
                 .WithSummary("[Staff/Manager] Nhân viên phản hồi đánh giá của khách.");
