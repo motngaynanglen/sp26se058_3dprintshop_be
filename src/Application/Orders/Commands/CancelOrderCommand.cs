@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PayOS.Models.V1.Payouts;
 using sp26se058_3dprintshop_be.Domain.Constants;
@@ -13,7 +15,9 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 public record CancelOrderCommand : IRequest<bool>
 {
+    [JsonIgnore]
     public Guid OrderId { get; init; }
+    [DefaultValue("Tôi thích thì tôi hủy đơn thôi.")]
     public string? Reason { get; init; } // Lý do hủy đơn
 }
 public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, bool>
