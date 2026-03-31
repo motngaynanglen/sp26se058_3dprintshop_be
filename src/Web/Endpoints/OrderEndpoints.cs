@@ -27,7 +27,7 @@ public class OrderEndpoints : EndpointGroupBase
 
         group.MapGet("/{id}/detail", GetDetail)
                 .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
-        group.MapGet("/{id}/cancel", CancelOrder)
+        group.MapPatch("/{id}/cancel", CancelOrder)
                 .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng có ID.")
                 .WithDescription("Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.");
 
@@ -112,7 +112,7 @@ public class OrderEndpoints : EndpointGroupBase
         try
         {
             var finalCommand = command with { OrderId = id };
-            var result = await sender.Send(command);
+            var result = await sender.Send(finalCommand);
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,

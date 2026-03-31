@@ -12,7 +12,10 @@ public class OrderDTO
     public int TotalItem { get; set; }
     public string OrderStatus { get; set; } = string.Empty;
     public int Priority { get; set; }
-    public DateTime Created { get; set; }
+    public DateTimeOffset? DepositedAt { get; set; }
+    public DateTimeOffset? DeliveredAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public DateTimeOffset? Created { get; set; }
 
     public List<OrderItemDTO> Items { get; set; } = new();
 
