@@ -116,7 +116,7 @@ public class OrderEndpoints : EndpointGroupBase
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,
-                    message: "Lấy chi tiết đơn hàng thành công"
+                    message: "Hủy đơn hàng thành công"
                 ));
         }
         catch (Exception ex)

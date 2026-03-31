@@ -40,12 +40,12 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
 
                 if (order == null)
-                    return new { StatusCode = "404", Message = "Không tìm thấy đơn hàng" };
+                    throw new Exception("Không tìm thấy đơn hàng");
 
                 // --- TRƯỜNG HỢP 1: Đơn hàng đã được xử lý thanh toán trước đó ---
                 if (order.OrderStatus != "PENDING" || (order.Invoice != null && order.Invoice.PaymentStatus == "PAID"))
                 {
-                    return new { StatusCode = "400", Message = "Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ" };
+                    throw new Exception("Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ");
                 }
 
                 // --- TRƯỜNG HỢP 3 (Bổ sung): Đảm bảo luôn có Invoice trước khi tạo Transaction ---
@@ -70,9 +70,9 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 if (pendingTransaction != null)
                 {
                     // Kiểm tra thời hạn 10 phút của link PayOS
-                    if ( pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow
-                        && pendingTransaction.InternalCode != null 
-                        && pendingTransaction.PaymentLink != null 
+                    if (pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow
+                        && pendingTransaction.InternalCode != null
+                        && pendingTransaction.PaymentLink != null
                         && pendingTransaction.QrCode != null
                         )
                     {
@@ -97,7 +97,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 var paymentResponse = await _paymentService.CreatePaymentLink(order, returnUrl, cancelUrl);
 
                 if (paymentResponse == null)
-                    return new { StatusCode = "500", Message = "Lỗi kết nối cổng thanh toán" };
+                    throw new Exception("Lỗi kết nối cổng thanh toán");
 
                 var newTransaction = new Domain.Entities.Transaction
                 {
