@@ -36,7 +36,7 @@ public class OrderItemDTO
 {
     public Guid Id { get; set; }
     public string SourceType { get; set; } = string.Empty;
-    public string ProductName { get; set; } = string.Empty;
+    public string ItemName { get; set; } = string.Empty;
     public Guid? DesignVariantId { get; set; }
     public int QuantityOrdered { get; set; }
     public decimal UnitPrice { get; set; }
@@ -48,8 +48,6 @@ public class OrderItemDTO
         public Mapping()
         {
             CreateMap<OrderItem, OrderItemDTO>()
-                .ForMember(dest => dest.ProductName,
-                    opt => opt.MapFrom(src => src.DesignVariant)) // join DesignVariant
                 .ForMember(dest => dest.SourceType,
                     opt => opt.MapFrom(src => src.SourceType.ToString()))
                 .ForMember(dest => dest.FulfillmentStatus,
