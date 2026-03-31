@@ -2,6 +2,7 @@
 using System.Text;
 using PayOS.Models.Webhooks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace BG_IMPACT.Business.Command.Transaction.Commands
@@ -47,9 +48,9 @@ namespace BG_IMPACT.Business.Command.Transaction.Commands
 
                 //if (totalPaid >= invoice.TotalAmount)
                 //{
-                    invoice.PaymentStatus = "PAID";
+                    invoice.PaymentStatus = InvoiceStatuses.Paid;
                     var order = invoice.Order;
-                    order.OrderStatus = "PROCESSING";
+                    order.OrderStatus = OrderStatuses.Processing;
                     order.DeliveredAt = DateTimeOffset.UtcNow;
                 //}
                 //else

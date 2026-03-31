@@ -6,6 +6,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Orders.Commands;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
@@ -22,10 +23,14 @@ public class OrderEndpoints : EndpointGroupBase
 
         group.MapPost("/checkout", CheckOut)
                 .WithSummary("[Customer] Tạo đơn hàng với thông tin giỏ hàng.")
-                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.");
+                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. " + SourceTypes.ListString);
 
         group.MapGet("/{id}/detail", GetDetail)
                 .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
+        group.MapPatch("/{id}/cancel", CancelOrder)
+                .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng có ID.")
+                .WithDescription("Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.");
+
         //group.MapPut("/update/{id}", Update);
 
         /*
@@ -34,7 +39,6 @@ public class OrderEndpoints : EndpointGroupBase
         group.MapPost("/invoice", CreateInvoice); // Tạo hóa đơn cho đơn hàng
         group.MapPut("/query", Query); // Truy vấn đơn hàng với phân trang
         group.MapGet("/detail/{id}", GetById); // Lấy chi tiết đơn hàng
-        group.MapPost("/cancel", CancelOrder); // Hủy đơn hàng
 
         của staff
         group.MapPost("/confirm", ConfirmOrder); // Xác nhận đơn hàng
@@ -56,11 +60,12 @@ public class OrderEndpoints : EndpointGroupBase
                 ));
 
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+
         }
     }
 
@@ -75,9 +80,11 @@ public class OrderEndpoints : EndpointGroupBase
                     message: "Lấy chi tiết đơn hàng thành công"
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
 
         }
     }
@@ -89,12 +96,34 @@ public class OrderEndpoints : EndpointGroupBase
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,
-                    message: "Lấy chi tiết đơn hàng thành công"
+                    message: "Tạo đơn hàng thành công"
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+
+        }
+    }
+    public async Task<IResult> CancelOrder([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelOrderCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { OrderId = id };
+            var result = await sender.Send(finalCommand);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Hủy đơn hàng thành công"
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
 
         }
     }
