@@ -13,11 +13,11 @@ public class InventoryTransactionDTO
     public string? VariantName { get; init; } // Tên sản phẩm để hiển thị
     public int Quantity { get; init; }
     public string? Type { get; init; }
-    public string? TypeLabel { get; init; } // Lấy từ Constant/Extension "Nhập mua", "Xuất bán"
-    public string? TypeColor { get; init; } // #4CAF50...
+    //public string? TypeLabel { get; init; } // Lấy từ Constant/Extension "Nhập mua", "Xuất bán"
+    //public string? TypeColor { get; init; } // #4CAF50...
     public string? StaffName { get; init; } // Tên người thực hiện
     public string? Note { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public DateTimeOffset Created { get; init; }
     private class Mapping : Profile
     {
         public Mapping()
@@ -28,13 +28,12 @@ public class InventoryTransactionDTO
                     .ForMember(d => d.StaffName, opt => opt.MapFrom(s =>
                         s.Staff != null && s.Staff.Account != null
                         ? s.Staff.Account.Fullname
-                        : "Hệ thống"))
+                        : "Hệ thống"));
                     // Lấy Metadata từ danh sách Constant All
-                    .ForMember(d => d.TypeLabel, opt => opt.MapFrom(s =>
-                        InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Label))
-                    .ForMember(d => d.TypeColor, opt => opt.MapFrom(s =>
-                        InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Color))
-                    .ForMember(d => d.CreatedAt, opt => opt.MapFrom(s => s.Created));
+                    //.ForMember(d => d.TypeLabel, opt => opt.MapFrom(s =>
+                    //    InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Label))
+                    //.ForMember(d => d.TypeColor, opt => opt.MapFrom(s =>
+                    //    InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Color));
         }
     }
 }

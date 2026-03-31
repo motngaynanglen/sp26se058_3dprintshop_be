@@ -12,7 +12,10 @@ public class OrderDTO
     public int TotalItem { get; set; }
     public string OrderStatus { get; set; } = string.Empty;
     public int Priority { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset? DepositedAt { get; set; }
+    public DateTimeOffset? DeliveredAt { get; set; }
+    public DateTimeOffset? CompletedAt { get; set; }
+    public DateTimeOffset? Created { get; set; }
 
     public List<OrderItemDTO> Items { get; set; } = new();
 
@@ -24,7 +27,9 @@ public class OrderDTO
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Customer.Account.Fullname))
                 .ForMember(dest => dest.Items,
-                    opt => opt.MapFrom(src => src.OrderItems));
+                    opt => opt.MapFrom(src => src.OrderItems))
+                .ForMember(dest => dest.TotalItem,
+                    opt => opt.MapFrom(src => src.OrderItems.Sum(oi => oi.QuantityOrdered)));
         }
         
     }
@@ -34,7 +39,7 @@ public class OrderItemDTO
 {
     public Guid Id { get; set; }
     public string SourceType { get; set; } = string.Empty;
-    public string ProductName { get; set; } = string.Empty;
+    public string ItemName { get; set; } = string.Empty;
     public Guid? DesignVariantId { get; set; }
     public int QuantityOrdered { get; set; }
     public decimal UnitPrice { get; set; }
@@ -46,8 +51,6 @@ public class OrderItemDTO
         public Mapping()
         {
             CreateMap<OrderItem, OrderItemDTO>()
-                .ForMember(dest => dest.ProductName,
-                    opt => opt.MapFrom(src => src.DesignVariant)) // join DesignVariant
                 .ForMember(dest => dest.SourceType,
                     opt => opt.MapFrom(src => src.SourceType.ToString()))
                 .ForMember(dest => dest.FulfillmentStatus,
