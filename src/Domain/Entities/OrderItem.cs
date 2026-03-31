@@ -10,7 +10,7 @@ public class OrderItem : BaseAuditableEntity
 
 
     // phân loại hàng hóa
-    public required string SourceType { get; set; } // 'Design', 'Pre-order', 'Shop' , 'custome-print'
+    public required string SourceType { get; set; }
     public Guid? DesignWorkId { get; set; }
     public Guid? DesignVariantId { get; set; }
     public Guid? TechnicalDraftId { get; set; }
