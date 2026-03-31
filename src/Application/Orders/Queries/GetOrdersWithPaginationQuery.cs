@@ -31,7 +31,7 @@ public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<Paginate
         }
         public async Task<PaginatedList<OrderDTO>> Handle(GetOrdersWithPaginationQuery request, CancellationToken cancellationToken)
         {
-            var query = _context.Orders.AsNoTracking();
+            var query = _context.Orders.Include(o=>o.OrderItems).AsNoTracking();
             if (!string.IsNullOrEmpty(request.Search))
             {
                 query = query.Where(o => o.Customer.Account.Username.Contains(request.Search) || o.Code.Contains(request.Search));

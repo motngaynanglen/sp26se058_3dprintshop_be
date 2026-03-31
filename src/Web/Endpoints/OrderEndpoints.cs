@@ -6,6 +6,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Orders.Commands;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
@@ -22,7 +23,7 @@ public class OrderEndpoints : EndpointGroupBase
 
         group.MapPost("/checkout", CheckOut)
                 .WithSummary("[Customer] Tạo đơn hàng với thông tin giỏ hàng.")
-                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.");
+                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. " + SourceTypes.ListString);
 
         group.MapGet("/{id}/detail", GetDetail)
                 .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
@@ -59,11 +60,12 @@ public class OrderEndpoints : EndpointGroupBase
                 ));
 
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+
         }
     }
 
@@ -78,9 +80,11 @@ public class OrderEndpoints : EndpointGroupBase
                     message: "Lấy chi tiết đơn hàng thành công"
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
 
         }
     }
@@ -92,12 +96,14 @@ public class OrderEndpoints : EndpointGroupBase
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,
-                    message: "Lấy chi tiết đơn hàng thành công"
+                    message: "Tạo đơn hàng thành công"
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
 
         }
     }
@@ -113,9 +119,11 @@ public class OrderEndpoints : EndpointGroupBase
                     message: "Lấy chi tiết đơn hàng thành công"
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
 
         }
     }
