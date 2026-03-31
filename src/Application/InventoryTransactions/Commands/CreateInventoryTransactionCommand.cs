@@ -17,7 +17,7 @@ public record CreateInventoryTransactionCommand : IRequest<CreateInventoryTransa
     [DefaultValue(InventoryTransactionTypes.Adjustment)]
     public required string Type { get; init; } // 'PurchaseIn', 'ProductionIn', 'Adjustment'
     public string? Note { get; init; }
-    public Guid? ReferenceId { get; init; }
+    //public Guid? ReferenceId { get; init; }
 }
 
 public class CreateInventoryTransactionHandler : IRequestHandler<CreateInventoryTransactionCommand, CreateInventoryTransactionCommand>
@@ -71,7 +71,7 @@ public class CreateInventoryTransactionHandler : IRequestHandler<CreateInventory
             DesignVariantId = request.DesignVariantId,
             Quantity = request.Quantity,
             Type = request.Type,
-            ReferenceId = request.ReferenceId,
+            //ReferenceId = request.ReferenceId,
             Note = request.Note,
             StaffId = staff?.Id // Có thể null nếu là Manager thực hiện mà không có bản ghi Staff
         };

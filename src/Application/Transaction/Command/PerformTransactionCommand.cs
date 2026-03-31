@@ -6,6 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using PayOS;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using System.ComponentModel;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
 {
@@ -40,12 +43,12 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
 
                 if (order == null)
-                    return new { StatusCode = "404", Message = "Không tìm thấy đơn hàng" };
+                    throw new Exception("Không tìm thấy đơn hàng");
 
                 // --- TRƯỜNG HỢP 1: Đơn hàng đã được xử lý thanh toán trước đó ---
-                if (order.OrderStatus != "PENDING" || (order.Invoice != null && order.Invoice.PaymentStatus == "PAID"))
+                if (order.OrderStatus != OrderStatuses.Pending || (order.Invoice != null && order.Invoice.PaymentStatus == InvoiceStatuses.Paid))
                 {
-                    return new { StatusCode = "400", Message = "Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ" };
+                    throw new Exception("Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ");
                 }
 
                 // --- TRƯỜNG HỢP 3 (Bổ sung): Đảm bảo luôn có Invoice trước khi tạo Transaction ---
@@ -57,8 +60,8 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                         OrderId = order.Id,
                         InvoiceCode = $"INV-{DateTime.Now:yyyyMMdd}-{order.Code}",
                         TotalAmount = order.TotalPrice,
-                        PaymentStatus = "Unpaid",
-                        Created = DateTimeOffset.UtcNow
+                        PaymentStatus = InvoiceStatuses.Unpaid,
+                        Created = CoreHelper.SystemTimeNow
                     };
                     // Lưu tạm hoặc để EF tự track khi save cuối cùng
                 }
@@ -70,9 +73,9 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 if (pendingTransaction != null)
                 {
                     // Kiểm tra thời hạn 10 phút của link PayOS
-                    if ( pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow
-                        && pendingTransaction.InternalCode != null 
-                        && pendingTransaction.PaymentLink != null 
+                    if (pendingTransaction.Created.AddMinutes(10) > DateTimeOffset.UtcNow
+                        && pendingTransaction.InternalCode != null
+                        && pendingTransaction.PaymentLink != null
                         && pendingTransaction.QrCode != null
                         )
                     {
@@ -97,7 +100,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                 var paymentResponse = await _paymentService.CreatePaymentLink(order, returnUrl, cancelUrl);
 
                 if (paymentResponse == null)
-                    return new { StatusCode = "500", Message = "Lỗi kết nối cổng thanh toán" };
+                    throw new Exception("Lỗi kết nối cổng thanh toán");
 
                 var newTransaction = new Domain.Entities.Transaction
                 {
@@ -106,7 +109,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     InvoiceId = order.Invoice.Id,
                     InternalCode = paymentResponse.PaymentCode.ToString(),
                     Amount = order.TotalPrice,
-                    PaymentMethod = "PayOS",
+                    PaymentMethod = PaymentMethods.PAYOS,
                     TransactionStatus = "PENDING",
                     PaymentLink = paymentResponse.PaymentLink,
                     QrCode = paymentResponse.QrCode,

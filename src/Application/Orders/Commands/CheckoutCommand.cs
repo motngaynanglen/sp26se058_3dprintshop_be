@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +10,10 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 
@@ -22,7 +25,7 @@ public record CheckoutCommand : IRequest<Guid>
     //public Guid ShippingMethodId { get; init; }
     //[DefaultValue("ONLINE")]
     //public string? PaymentMethod { get; init; } // MoMo, BankTransfer
-    [DefaultValue("ORDER")]
+    [DefaultValue(SourceTypes.InStock)]
     public string SourceType { get; init; } = null!;
     public string? Note { get; init; }
     public List<CheckoutItemRequest> Items { get; init; } = new();
@@ -30,7 +33,7 @@ public record CheckoutCommand : IRequest<Guid>
 public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IUser _user; 
+    private readonly IUser _user;
 
     public CheckoutCommandHandler(IApplicationDbContext context, IUser user)
     {
@@ -40,16 +43,46 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
     public async Task<Guid> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
         var userId = _user.Id.ToGuid(); // Lấy ID từ Token
-        var customer = await _context.Customers.FirstOrDefaultAsync(x=> x.AccountId == userId);
-        if(customer == null)
+        var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId);
+        if (customer == null)
         {
             throw new Exception("Chỉ có khách hàng mới có thể dùng phương thức này.");
         }
         var order = await CreateOrderAsync(customer.Id, request, cancellationToken);
-        var shipment = CreateShipment(order.Id, request.ShippingAddressId, 0);
-        var invoice = CreateInvoice(order);
+        var shipment = new Shipment
+        {
+            Id = Guid.NewGuid(),
+            Order = order, // Quan trọng: Gán Object
+            ShippingAddressId = request.ShippingAddressId,
+            ShippingFee = 0,
+            ShipmentStatus = ShipmentStatuses.Preparing,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username
+        };
 
-        await _context.SaveChangesAsync(cancellationToken);
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            Order = order, // Quan trọng: Gán Object
+            InvoiceCode = $"INV-{DateTime.UtcNow.Ticks}",
+            TotalAmount = order.TotalPrice,
+            PaymentStatus = InvoiceStatuses.Unpaid,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username
+        };
+
+        _context.Orders.Add(order);
+        _context.Shipments.Add(shipment);
+        _context.Invoices.Add(invoice);
+        try {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            // Xem cái này trong Watch window: ex.InnerException.Message
+            var message = ex.InnerException?.Message;
+            throw new Exception($"Lỗi DB: {message}");
+        }
 
         return order.Id;
     }
@@ -60,14 +93,20 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             Id = Guid.NewGuid(),
             Code = $"ORD-{DateTime.UtcNow.Ticks}", // Dùng UtcNow cho chuẩn xác
             CustomerId = customerId,
-            OrderStatus = "PENDING",
-            TotalPrice = 0
+            OrderStatus = OrderStatuses.Pending,
+            TotalPrice = 0,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
+            OrderItems = new List<OrderItem>()
         };
 
         foreach (var itemReq in request.Items)
         {
+            var itemName = "Sản phẩm";
             decimal unitPrice = 0;
-            if (request.SourceType == "ORDER" && itemReq.DesignVariantId.HasValue)
+            if (request.SourceType == SourceTypes.InStock && itemReq.DesignVariantId.HasValue)
             {
                 // 1. Lấy thông tin biến thể sản phẩm kèm theo Lock (nếu cần)
                 var variant = await _context.DesignVariants
@@ -88,7 +127,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
                 // 3. CẬP NHẬT INVENTORY: Trừ số lượng trong kho
                 // Nếu là hàng Pre-order mà hết kho thì số lượng có thể âm (tùy nghiệp vụ của Bách)
                 variant.StockQuantity -= itemReq.Quantity;
-
+                itemName = variant.Name;
                 var inventoryLog = new InventoryTransaction
                 {
                     Id = Guid.NewGuid(),
@@ -96,9 +135,13 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
                     // Lưu ID của Order để sau này biết món hàng này xuất cho đơn nào
                     ReferenceId = order.Id,
                     Quantity = -itemReq.Quantity, // Xuất kho để số âm
-                    Type = InventoryTransactionTypes.OrderOut, 
+                    Type = InventoryTransactionTypes.OrderOut,
                     Note = $"Khách hàng đặt hàng từ đơn: {order.Code}",
                     // StaffId = null vì đây là hệ thống tự động xuất khi khách mua
+                    Created = CoreHelper.SystemTimeNow,
+                    CreatedBy = _user.Username,
+                    LastModified = CoreHelper.SystemTimeNow,
+                    LastModifiedBy = _user.Username
                 };
 
                 _context.InventoryTransactions.Add(inventoryLog);
@@ -108,22 +151,27 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
 
             var orderItem = new OrderItem
             {
-                Id = Guid.NewGuid(),
+                //Id = Guid.NewGuid(),
                 SourceType = request.SourceType,
                 DesignVariantId = itemReq.DesignVariantId,
                 QuantityOrdered = itemReq.Quantity,
+                ItemName = itemName,
                 UnitPrice = unitPrice,
                 TotalPrice = unitPrice * itemReq.Quantity,
-                FulfillmentStatus = "PENDING",
-                Order = order
+                FulfillmentStatus = OrderItemStatuses.Pending,
+                Order = order,
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username,
+                LastModified = CoreHelper.SystemTimeNow,
+                LastModifiedBy = _user.Username
             };
+            order.OrderItems.Add(orderItem);
             order.TotalPrice += orderItem.TotalPrice;
-            _context.OrderItems.Add(orderItem);
         }
-        _context.Orders.Add(order);
         return order;
     }
-    private Task<Shipment> CreateShipment(Guid orderId, Guid addressId, decimal fee)
+
+    /*private Task<Shipment> CreateShipment(Guid orderId, Guid addressId, decimal fee)
     {
         var shipment = new Shipment
         {
@@ -137,8 +185,9 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
         _context.Shipments.Add(shipment);
 
         return Task.FromResult(shipment);
-    }
-    private Task<Invoice> CreateInvoice(Order order)
+    }*/
+
+    /*private Task<Invoice> CreateInvoice(Order order)
     {
         var invoice = new Invoice
         {
@@ -150,7 +199,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
         };
         _context.Invoices.Add(invoice);
         return Task.FromResult(invoice);
-    }
+    }*/
 }
 public record CheckoutItemRequest
 {

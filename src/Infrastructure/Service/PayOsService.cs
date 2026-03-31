@@ -43,7 +43,7 @@ public class PayOsService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)order.TotalPrice,
-            Description = $"Thanh toán đơn hàng #{order.Id}",
+            Description = $"#{order.Code}",
             Items = Items,
             CancelUrl = cancelUrl,
             ReturnUrl = returnUrl,
@@ -75,6 +75,25 @@ public class PayOsService : IPaymentService
         {
             // Nếu sai chữ ký, coi như dữ liệu không hợp lệ
             throw new Exception("Chữ ký Webhook không hợp lệ!");
+        }
+    }
+    public async Task<bool> CancelPaymentLink(long orderCode, string? reason = null)
+    {
+        try
+        {
+            // Gọi API của PayOS để hủy link thanh toán
+            // Lý do hủy là tùy chọn
+            var result = await _payOsClient.PaymentRequests.CancelAsync(orderCode, reason);
+
+            // Nếu không có exception ném ra, PayOS coi như đã xử lý yêu cầu hủy thành công
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Log lỗi nếu cần thiết (Ví dụ: Link đã hết hạn hoặc đã hủy rồi PayOS sẽ báo lỗi)
+            Console.WriteLine($"PayOS Cancel Error for OrderCode {orderCode}: {ex.Message}");
+            // return để logic ở Handler phía sau tiếp tục chạy.
+            return false;
         }
     }
 }
