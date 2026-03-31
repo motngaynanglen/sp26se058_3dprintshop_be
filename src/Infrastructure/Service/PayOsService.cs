@@ -43,7 +43,7 @@ public class PayOsService : IPaymentService
         {
             OrderCode = orderCode,
             Amount = (int)order.TotalPrice,
-            Description = $"Thanh toán đơn hàng #{order.Id}",
+            Description = $"#{order.Code}",
             Items = Items,
             CancelUrl = cancelUrl,
             ReturnUrl = returnUrl,
