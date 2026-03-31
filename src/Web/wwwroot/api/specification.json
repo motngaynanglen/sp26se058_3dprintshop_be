@@ -1685,6 +1685,44 @@
         }
       }
     },
+    "/api/transaction/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
+        "operationId": "PostApiTransactionCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/transaction/{orderId}/detail-by-order-id": {
       "get": {
         "tags": [
@@ -2827,6 +2865,17 @@
             "type": "string",
             "format": "guid",
             "minLength": 1
+          }
+        }
+      },
+      "CancelTransactionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "default": "Tôi thích thì tôi hủy đơn thôi.",
+            "nullable": true
           }
         }
       }

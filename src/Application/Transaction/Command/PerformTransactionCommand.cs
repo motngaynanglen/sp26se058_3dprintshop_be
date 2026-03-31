@@ -6,6 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using PayOS;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using System.ComponentModel;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
 {
@@ -43,7 +46,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     throw new Exception("Không tìm thấy đơn hàng");
 
                 // --- TRƯỜNG HỢP 1: Đơn hàng đã được xử lý thanh toán trước đó ---
-                if (order.OrderStatus != "PENDING" || (order.Invoice != null && order.Invoice.PaymentStatus == "PAID"))
+                if (order.OrderStatus != OrderStatuses.Pending || (order.Invoice != null && order.Invoice.PaymentStatus == InvoiceStatuses.Paid))
                 {
                     throw new Exception("Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ");
                 }
@@ -57,8 +60,8 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                         OrderId = order.Id,
                         InvoiceCode = $"INV-{DateTime.Now:yyyyMMdd}-{order.Code}",
                         TotalAmount = order.TotalPrice,
-                        PaymentStatus = "Unpaid",
-                        Created = DateTimeOffset.UtcNow
+                        PaymentStatus = InvoiceStatuses.Unpaid,
+                        Created = CoreHelper.SystemTimeNow
                     };
                     // Lưu tạm hoặc để EF tự track khi save cuối cùng
                 }
@@ -106,7 +109,7 @@ namespace sp26se058_3dprintshop_be.Application.Transaction.Commands
                     InvoiceId = order.Invoice.Id,
                     InternalCode = paymentResponse.PaymentCode.ToString(),
                     Amount = order.TotalPrice,
-                    PaymentMethod = "PayOS",
+                    PaymentMethod = PaymentMethods.PAYOS,
                     TransactionStatus = "PENDING",
                     PaymentLink = paymentResponse.PaymentLink,
                     QrCode = paymentResponse.QrCode,
