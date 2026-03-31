@@ -1312,7 +1312,7 @@
           "Order"
         ],
         "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
-        "description": "Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow.IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
+        "description": "Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -1360,13 +1360,13 @@
       }
     },
     "/api/order/{id}/cancel": {
-      "get": {
+      "patch": {
         "tags": [
           "Order"
         ],
         "summary": "[Customer/Staff/Manager] Hủy đơn hàng có ID.",
         "description": "Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.",
-        "operationId": "GetApiOrderCancel",
+        "operationId": "PatchApiOrderCancel",
         "parameters": [
           {
             "name": "id",
