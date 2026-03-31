@@ -1312,7 +1312,7 @@
           "Order"
         ],
         "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
-        "description": "Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.",
+        "description": "Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow.IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -1352,6 +1352,45 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/{id}/cancel": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer/Staff/Manager] Hủy đơn hàng có ID.",
+        "description": "Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.",
+        "operationId": "GetApiOrderCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -2391,11 +2430,6 @@
           "note": {
             "type": "string",
             "nullable": true
-          },
-          "referenceId": {
-            "type": "string",
-            "format": "guid",
-            "nullable": true
           }
         }
       },
@@ -2492,6 +2526,10 @@
             "format": "guid",
             "default": "00000000-0000-0000-0000-000000000000"
           },
+          "sourceType": {
+            "type": "string",
+            "default": "IN_STOCK"
+          },
           "note": {
             "type": "string",
             "nullable": true
@@ -2508,10 +2546,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "sourceType": {
-            "type": "string",
-            "default": "ORDER"
-          },
           "designVariantId": {
             "type": "string",
             "format": "guid",
@@ -2521,6 +2555,17 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "CancelOrderCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "default": "Tôi thích thì tôi hủy đơn thôi.",
+            "nullable": true
           }
         }
       },

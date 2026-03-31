@@ -12,7 +12,7 @@ public class OrderDTO
     public int TotalItem { get; set; }
     public string OrderStatus { get; set; } = string.Empty;
     public int Priority { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime Created { get; set; }
 
     public List<OrderItemDTO> Items { get; set; } = new();
 
@@ -24,7 +24,9 @@ public class OrderDTO
                 .ForMember(dest => dest.CustomerName,
                     opt => opt.MapFrom(src => src.Customer.Account.Fullname))
                 .ForMember(dest => dest.Items,
-                    opt => opt.MapFrom(src => src.OrderItems));
+                    opt => opt.MapFrom(src => src.OrderItems))
+                .ForMember(dest => dest.TotalItem,
+                    opt => opt.MapFrom(src => src.OrderItems.Sum(oi => oi.QuantityOrdered)));
         }
         
     }
