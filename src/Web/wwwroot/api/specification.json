@@ -871,13 +871,13 @@
         }
       }
     },
-    "/api/design-variant/all": {
+    "/api/design-variant": {
       "post": {
         "tags": [
           "Design Variant"
         ],
         "summary": "Lấy danh sách Biến thể",
-        "operationId": "PostApiDesignVariantAll",
+        "operationId": "PostApiDesignVariant",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -1392,7 +1392,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateMateialCommand"
+                "$ref": "#/components/schemas/UpdateMaterialCommand"
               }
             }
           },
@@ -1406,13 +1406,13 @@
         }
       }
     },
-    "/api/material/{id}/delete": {
+    "/api/material/{id}/toggle-active": {
       "delete": {
         "tags": [
           "Material"
         ],
-        "summary": "Xoá vật liệu",
-        "operationId": "DeleteApiMaterialDelete",
+        "summary": "Chuyển đổi trạng thái Active của vật liệu",
+        "operationId": "DeleteApiMaterialToggleActive",
         "parameters": [
           {
             "name": "id",
@@ -2333,24 +2333,19 @@
         "additionalProperties": false,
         "properties": {
           "code": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "description": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "fileUrl": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "thumbnailUrl": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         }
       },
@@ -2359,34 +2354,25 @@
         "additionalProperties": false
       },
       "GetDesignVariantListQuery": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PaginationRequest"
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000",
+            "nullable": true
           },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "search": {
-                "type": "string",
-                "nullable": true
-              },
-              "designTemplateId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "materialId": {
-                "type": "string",
-                "format": "guid",
-                "nullable": true
-              },
-              "isActive": {
-                "type": "boolean"
-              }
-            }
+          "materialId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
           }
-        ]
+        }
       },
       "CreateDesignVariantCommand": {
         "type": "object",
@@ -2437,11 +2423,13 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
           },
           "materialId": {
             "type": "string",
             "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000",
             "nullable": true
           },
           "code": {
@@ -2489,7 +2477,8 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000000"
           },
           "additionalQuantity": {
             "type": "integer",
@@ -2677,7 +2666,7 @@
           }
         }
       },
-      "UpdateMateialCommand": {
+      "UpdateMaterialCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
