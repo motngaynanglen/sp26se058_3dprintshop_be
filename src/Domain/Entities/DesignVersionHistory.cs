@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class DesignVersionHistory : BaseAuditableEntity
 {
-    public string? Tilte {  get; set; } = string.Empty;
+    public string? Tilte { get; set; } = string.Empty;
     public Guid DesignWorkId { get; set; }
 
     public Guid? DesignLogId { get; set; }
@@ -18,6 +18,7 @@ public class DesignVersionHistory : BaseAuditableEntity
     public required string FileUrl { get; set; }
     public int VersionNumber { get; set; }
     public bool IsPreviewable { get; set; } = true;
+    public bool IsApproved { get; set; } = false;
     public bool IsPrintable { get; set; } = false;
 
     public virtual DesignLog? DesignLog { get; set; }

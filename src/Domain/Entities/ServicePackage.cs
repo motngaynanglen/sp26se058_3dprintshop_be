@@ -11,10 +11,10 @@ public class ServicePackage : BaseAuditableEntity
 {
     public required string Code { get; set; }
     public required string Name { get; set; }
-    public decimal BasePrice { get; set; } = decimal.Zero;
+    public string ServiceType { get; set; } = null!; // DESIGN | PRINTING
+    public decimal BasePrice { get; set; }
     public string? Description { get; set; }
-    public bool IsSupported { get; set; } = true;
-    public string? HtmlRaw { get; set; }
+    public bool IsActive { get; set; } = true;
 
-    public virtual ICollection<DesignWork> DesignWorks { get; set; } = new List<DesignWork>();
+    public virtual ICollection<PackageOption> PackageOptions { get; set; } = new List<PackageOption>();
 }
