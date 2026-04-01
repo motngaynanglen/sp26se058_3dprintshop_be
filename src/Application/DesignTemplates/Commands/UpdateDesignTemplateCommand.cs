@@ -1,44 +1,60 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions; // Nếu bạn có NotFoundException
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
 
-public record UpdateDesignTemplateCommand : IRequest<Guid>
+public record UpdateDesignTemplateCommand : IRequest<DesignTemplateDTO>
 {
     [JsonIgnore]
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
-    // Dữ liệu cần update
-    public string? Code { get; init; }
-    public string? Name { get; init; }
-    public string? Description { get; init; }
-    public string? FileUrl { get; init; }
-    public string? ThumbnailUrl { get; init; }
+
+    public string Code { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string FileUrl { get; set; } = null!;
+    public string ThumbnailUrl { get; set; } = null!;
 }
 
-public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTemplateCommand, Guid>
+public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTemplateCommand, DesignTemplateDTO>
 {
     private readonly IApplicationDbContext _context;
-    public UpdateDesignTemplateCommandHandler(IApplicationDbContext context)
+    private readonly IMapper _mapper;
+
+    public UpdateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(UpdateDesignTemplateCommand request, CancellationToken cancellationToken)
+
+    public async Task<DesignTemplateDTO> Handle(UpdateDesignTemplateCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.DesignTemplates
-              .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-        if (entity == null) throw new Exception("Không tìm thấy mẫu thiết kế");
-        if (!string.IsNullOrEmpty(request.Code)) entity.Code = request.Code;
-        if (!string.IsNullOrEmpty(request.Name)) entity.Name = request.Name;
-        if (!string.IsNullOrEmpty(request.Description)) entity.Description = request.Description;
-        if (!string.IsNullOrEmpty(request.FileUrl)) entity.FileUrl = request.FileUrl;
-        if (!string.IsNullOrEmpty(request.ThumbnailUrl)) entity.ThumbnailUrl = request.ThumbnailUrl;
-        entity.LastModified = DateTime.UtcNow;
+        var designTemplate = await _context.DesignTemplates
+            .FirstOrDefaultAsync(dt => dt.Id == request.Id, cancellationToken);
+
+        if (designTemplate == null)
+        {
+            throw new Exception($"DesignTemplate with id {request.Id} not found.");
+        }
+
+        // Cập nhật thông tin
+        designTemplate.Code = request.Code;
+        designTemplate.Name = request.Name;
+        designTemplate.Description = request.Description;
+        designTemplate.FileUrl = request.FileUrl;
+        designTemplate.ThumbnailUrl = request.ThumbnailUrl;
+        // designTemplate.LastModified = DateTime.UtcNow;   // Nếu có trường này thì mở ra
+
         await _context.SaveChangesAsync(cancellationToken);
-        return entity.Id;
+
+        // Map sang DTO
+        var designTemplateDto = _mapper.Map<DesignTemplateDTO>(designTemplate);
+
+        return designTemplateDto;
     }
 }

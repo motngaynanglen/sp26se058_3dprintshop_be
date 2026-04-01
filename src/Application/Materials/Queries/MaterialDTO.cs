@@ -11,6 +11,7 @@ public class MaterialDTO
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
+    public bool IsActive { get; set; }
     public decimal BaseCostPerGram { get; set; }
     public decimal TotalServiceCostPerGram { get; set; }
     public DateTime EffectiveDate { get; set; }
