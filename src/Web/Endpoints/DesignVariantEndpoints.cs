@@ -18,7 +18,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
-        group.MapPost("/all", GetAll)
+        group.MapPost("", GetAll)
             .WithSummary("Lấy danh sách Biến thể");
         group.MapPost("/add", Add)
             .WithSummary("Thêm mới biến thể");
@@ -48,7 +48,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
                     data: result,
                     message: "Tạo biến thể thành công!",
                     code: ResponseCodeConstants.SUCCESS
@@ -68,7 +68,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
                     data: result,
                     message: "Cập nhật biến thể thành công!",
                     code: ResponseCodeConstants.SUCCESS
@@ -88,7 +88,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
                     data: result,
                     message: "Nhập kho thành công",
                     code: ResponseCodeConstants.SUCCESS
@@ -108,10 +108,9 @@ public class DesignVariantEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(query);
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignVariantDTO>>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { pagination = result.Metadata },
+                    data: result,
                     message: "Truy vấn biến thể thành công!"
                 ));
 

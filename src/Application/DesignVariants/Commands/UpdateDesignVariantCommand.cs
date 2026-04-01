@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariant.Commands;
 
-public record UpdateDesignVariantCommand : IRequest<Guid>
+public record UpdateDesignVariantCommand : IRequest<DesignVariantDTO>
 {
-    public Guid Id { get; init; }                 // id của variant cần update
-
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
+    public Guid Id { get; init; }
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid? MaterialId { get; init; }
 
     public string? Code { get; init; }
@@ -24,14 +25,18 @@ public record UpdateDesignVariantCommand : IRequest<Guid>
     public decimal? EstimatedPrintTimePerUnit { get; init; }
 }
 
-public class UpdateDesignVariantCommandHandler : IRequestHandler<UpdateDesignVariantCommand, Guid>
+public class UpdateDesignVariantCommandHandler : IRequestHandler<UpdateDesignVariantCommand, DesignVariantDTO>
 {
     private readonly IApplicationDbContext _context;
-    public UpdateDesignVariantCommandHandler(IApplicationDbContext context)
+    private readonly IMapper _mapper;
+
+    public UpdateDesignVariantCommandHandler(IApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(UpdateDesignVariantCommand request, CancellationToken cancellationToken)
+
+    public async Task<DesignVariantDTO> Handle(UpdateDesignVariantCommand request, CancellationToken cancellationToken)
     {
         var entity = await _context.DesignVariants
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
@@ -39,7 +44,8 @@ public class UpdateDesignVariantCommandHandler : IRequestHandler<UpdateDesignVar
         if (entity == null)
             throw new Exception("Không tìm thấy biến thể thiết kế");
 
-        if (request.MaterialId != null)
+        // Update only fields that are provided (nullable)
+        if (request.MaterialId.HasValue)
             entity.MaterialId = request.MaterialId.Value;
 
         if (request.Code != null)
@@ -48,28 +54,29 @@ public class UpdateDesignVariantCommandHandler : IRequestHandler<UpdateDesignVar
         if (request.Name != null)
             entity.Name = request.Name;
 
-        if (request.SizeScale != null)
+        if (request.SizeScale.HasValue)
             entity.SizeScale = request.SizeScale.Value;
 
-        if (request.StockQuantity != null)
+        if (request.StockQuantity.HasValue)
             entity.StockQuantity = request.StockQuantity.Value;
 
-        if (request.Price != null)
+        if (request.Price.HasValue)
             entity.Price = request.Price.Value;
 
-        if (request.IsAllowPreOrder != null)
+        if (request.IsAllowPreOrder.HasValue)
             entity.IsAllowPreOrder = request.IsAllowPreOrder.Value;
 
-        if (request.EstimatedWeightPerUnit != null)
+        if (request.EstimatedWeightPerUnit.HasValue)
             entity.EstimatedWeightPerUnit = request.EstimatedWeightPerUnit.Value;
 
-        if (request.EstimatedPrintTimePerUnit != null)
+        if (request.EstimatedPrintTimePerUnit.HasValue)
             entity.EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit.Value;
 
         entity.LastModified = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
-        return entity.Id;
-    }
 
+        var dto = _mapper.Map<DesignVariantDTO>(entity);
+        return dto;
+    }
 }

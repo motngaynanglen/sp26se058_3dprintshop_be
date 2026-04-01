@@ -30,13 +30,19 @@ public class DeleteMaterialCommandHandler : IRequestHandler<DeleteMaterialComman
     public async Task<bool> Handle(DeleteMaterialCommand request, CancellationToken cancellationToken)
     {
         var userId = _user.Id;
-        var material = await _context.Materials.FindAsync(new object[] { request });
+        var material = await _context.Materials.FindAsync(request.Id);
         if (material == null)
         {
             throw new Exception("Material not found");
         }
+        if (material.IsActive)
+        {
+            material.IsActive = false;
+        }else
+        {
+            material.IsActive = true;
+        }
 
-        material.IsActive = false;
         material.Deleted = DateTimeOffset.Now;
         material.DeletedBy = userId;
         material.LastModified = DateTime.Now;

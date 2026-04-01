@@ -1,55 +1,63 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Mappings;
-using sp26se058_3dprintshop_be.Application.Common.Models;
+using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
 
-public class GetDesignVariantListQuery : PaginationRequest, IRequest<PaginatedList<DesignVariantDTO>>
+public class GetDesignVariantListQuery : IRequest<List<DesignVariantDTO>>   // ← Thay đổi ở đây
 {
-    public string? Search { get; init; }
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid? DesignTemplateId { get; init; }
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid? MaterialId { get; init; }
     public bool IsActive { get; init; } = true;
-    
-    public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariantListQuery, PaginatedList<DesignVariantDTO>>
+}
+
+public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariantListQuery, List<DesignVariantDTO>>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
+
+    public GetDesignVariantListQueryHandler(IApplicationDbContext context, IMapper mapper)
     {
-        private readonly IApplicationDbContext _context;
-        private readonly IMapper _mapper;
-        public GetDesignVariantListQueryHandler(IApplicationDbContext context, IMapper mapper)
+        _context = context;
+        _mapper = mapper;
+    }
+
+    public async Task<List<DesignVariantDTO>> Handle(GetDesignVariantListQuery request, CancellationToken cancellationToken)
+    {
+        var query = _context.DesignVariants.AsNoTracking();
+
+        // Áp dụng filter
+        if (request.DesignTemplateId.HasValue)
         {
-            _context = context;
-            _mapper = mapper;
+            query = query.Where(dv => dv.DesignTemplateId == request.DesignTemplateId.Value);
         }
-        public async Task<PaginatedList<DesignVariantDTO>> Handle(GetDesignVariantListQuery request, CancellationToken cancellationToken)
+
+        if (request.MaterialId.HasValue)
         {
-            var query = _context.DesignVariants.AsNoTracking();
-            if(!string.IsNullOrEmpty(request.Search))
-            {
-                query = query.Where(dv => dv.Name.Contains(request.Search) || dv.Code.Contains(request.Search));
-            }
-            if (request.DesignTemplateId.HasValue)
-            {
-                query = query.Where(dv => dv.DesignTemplateId == request.DesignTemplateId);
-            }
-            if (request.MaterialId.HasValue)
-            {
-                query = query.Where(dv => dv.MaterialId == request.MaterialId);
-            }
-            if (request.IsActive)
-            {
-                query = query.Where(dv => dv.IsActive);
-            }
-            // Sắp xếp
-            query = query.OrderBy(dv => dv.Id);
-            return await query
-                .ProjectTo<DesignVariantDTO>(_mapper.ConfigurationProvider)
-                .PaginatedListAsync(request.PageNumber, request.PageSize);
+            query = query.Where(dv => dv.MaterialId == request.MaterialId.Value);
         }
+
+        if (request.IsActive)
+        {
+            query = query.Where(dv => dv.IsActive == true);
+        }
+
+        // Sắp xếp (bạn có thể thay đổi theo nhu cầu)
+        query = query.OrderBy(dv => dv.Code)
+                     .ThenBy(dv => dv.Name);
+
+        // ProjectTo và lấy danh sách
+        var result = await query
+            .ProjectTo<DesignVariantDTO>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
+
+        return result;
     }
 }
