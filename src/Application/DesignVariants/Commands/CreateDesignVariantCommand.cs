@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;   // ← Thêm using này
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariant.Commands;
 
-public record CreateDesignVariantCommand : IRequest<Guid>
+public record CreateDesignVariantCommand : IRequest<DesignVariantDTO>
 {
     public Guid DesignTemplateId { get; init; }
     public Guid MaterialId { get; init; }
@@ -22,30 +20,37 @@ public record CreateDesignVariantCommand : IRequest<Guid>
     public decimal EstimatedPrintTimePerUnit { get; init; }
 }
 
-public class CreateDesignVariantCommandHandler : IRequestHandler<CreateDesignVariantCommand, Guid>
+public class CreateDesignVariantCommandHandler : IRequestHandler<CreateDesignVariantCommand, DesignVariantDTO>
 {
     private readonly IApplicationDbContext _context;
-    public CreateDesignVariantCommandHandler(IApplicationDbContext context)
+    private readonly IMapper _mapper;                    // ← Thêm IMapper
+
+    public CreateDesignVariantCommandHandler(IApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(CreateDesignVariantCommand request, CancellationToken cancellationToken)
-    {
-        var existTemplate = await _context.DesignTemplates.FindAsync(new object[] { request.DesignTemplateId }, cancellationToken);
-        if (existTemplate == null)
-        {
-            throw new Exception($"Design Template with Id {request.DesignTemplateId} not found.");
-        }
 
-        var existMaterial = await _context.Materials.FindAsync(new object[] { request.MaterialId }, cancellationToken);
+    public async Task<DesignVariantDTO> Handle(CreateDesignVariantCommand request, CancellationToken cancellationToken)
+    {
+        // Kiểm tra DesignTemplate tồn tại
+        var existTemplate = await _context.DesignTemplates
+            .FindAsync(new object[] { request.DesignTemplateId }, cancellationToken);
+
+        if (existTemplate == null)
+            throw new Exception($"Design Template with Id {request.DesignTemplateId} not found.");
+
+        // Kiểm tra Material tồn tại
+        var existMaterial = await _context.Materials
+            .FindAsync(new object[] { request.MaterialId }, cancellationToken);
+
         if (existMaterial == null)
-        {
             throw new Exception($"Material with Id {request.MaterialId} not found.");
-        }
+
         var newDesignVariant = new Domain.Entities.DesignVariant
         {
-            DesignTemplateId = existTemplate.Id,
-            MaterialId = existMaterial.Id,
+            DesignTemplateId = request.DesignTemplateId,
+            MaterialId = request.MaterialId,
             Code = request.Code,
             Name = request.Name,
             SizeScale = request.SizeScale,
@@ -54,10 +59,15 @@ public class CreateDesignVariantCommandHandler : IRequestHandler<CreateDesignVar
             IsAllowPreOrder = request.IsAllowPreOrder,
             EstimatedWeightPerUnit = request.EstimatedWeightPerUnit,
             EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit,
+            IsActive = true,                          // ← Nên set mặc định
             Created = DateTime.UtcNow
         };
+
         _context.DesignVariants.Add(newDesignVariant);
         await _context.SaveChangesAsync(cancellationToken);
-        return newDesignVariant.Id;
+
+        // Trả về DTO
+        var dto = _mapper.Map<DesignVariantDTO>(newDesignVariant);
+        return dto;
     }
 }

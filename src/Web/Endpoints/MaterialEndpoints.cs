@@ -34,7 +34,7 @@ public class MaterialEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
             data: result,
             message: "Tạo chất liệu thành công!",
             code: ResponseCodeConstants.SUCCESS));
@@ -66,13 +66,13 @@ public class MaterialEndpoints : EndpointGroupBase
     public async Task<IResult> Update(
         [FromServices] ISender sender,
         [FromRoute] Guid id,
-        [FromBody] UpdateMateialCommand command)
+        [FromBody] UpdateMaterialCommand command)
     {
         //command.Id = id;
 
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
             data: result,
             message: "Cập nhật chất liệu thành công!",
             code: ResponseCodeConstants.SUCCESS));
