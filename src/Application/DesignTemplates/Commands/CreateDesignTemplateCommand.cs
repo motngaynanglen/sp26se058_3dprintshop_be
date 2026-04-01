@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Domain.Constants;
+using MediatR;
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination; // ← Thêm using này
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
 
-public record CreateDesignTemplateCommand : IRequest<Guid>
+public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>   // ← Thay Guid bằng DesignTemplateDTO
 {
     public string Code { get; init; } = null!;
     public string Name { get; init; } = null!;
@@ -19,15 +13,18 @@ public record CreateDesignTemplateCommand : IRequest<Guid>
     public string ThumbnailUrl { get; init; } = null!;
 }
 
-public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTemplateCommand, Guid>
+public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTemplateCommand, DesignTemplateDTO>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;                    // ← Thêm IMapper
 
-    public CreateDesignTemplateCommandHandler(IApplicationDbContext context)
+    public CreateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(CreateDesignTemplateCommand request, CancellationToken cancellationToken)
+
+    public async Task<DesignTemplateDTO> Handle(CreateDesignTemplateCommand request, CancellationToken cancellationToken)
     {
         var newDesignTemplate = new Domain.Entities.DesignTemplate
         {
@@ -36,10 +33,16 @@ public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTe
             Description = request.Description,
             FileUrl = request.FileUrl,
             ThumbnailUrl = request.ThumbnailUrl,
+            IsActive = true,                    // ← Nên set mặc định là Active
             Created = DateTime.UtcNow
         };
+
         _context.DesignTemplates.Add(newDesignTemplate);
         await _context.SaveChangesAsync(cancellationToken);
-        return newDesignTemplate.Id;
+
+        // Map sang DTO và trả về
+        var designTemplateDto = _mapper.Map<DesignTemplateDTO>(newDesignTemplate);
+
+        return designTemplateDto;
     }
 }

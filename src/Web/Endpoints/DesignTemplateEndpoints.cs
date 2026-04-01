@@ -80,7 +80,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         try
         {
             var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
                     data: result,
                     message: "Tạo mẫu thiết kế thành công!",
                     code: ResponseCodeConstants.SUCCESS
@@ -120,7 +120,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         {
             var finalCmd = command with { Id = id };
             var result = await sender.Send(finalCmd);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
                     data: result,
                     message: "Cập nhật mẫu thiết kế thành công!",
                     code: ResponseCodeConstants.SUCCESS
