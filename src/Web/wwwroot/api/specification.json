@@ -1562,6 +1562,84 @@
         }
       }
     },
+    "/api/service-option/add": {
+      "post": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[Staff/Manager] Tạo gói mới.",
+        "operationId": "PostApiServiceOptionAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceOptionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/query": {
+      "post": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[All] Lấy danh sách các gói (P1, P2...).",
+        "operationId": "PostApiServicePackageQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetServicePackagesQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/add": {
+      "post": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[Staff/Manager] Tạo gói mới.",
+        "operationId": "PostApiServicePackageAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServicePackageCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/shipment/query": {
       "post": {
         "tags": [
@@ -2780,6 +2858,98 @@
             "type": "string",
             "default": "Tôi thích thì tôi hủy đơn thôi.",
             "nullable": true
+          }
+        }
+      },
+      "CreateServiceOptionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "optionType": {
+            "type": "string"
+          },
+          "defaultPrice": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "GetServicePackagesQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "search": {
+            "type": "string",
+            "nullable": true
+          },
+          "service": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortBy": {
+            "type": "string",
+            "default": "Created",
+            "nullable": true
+          },
+          "sortDescending": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateServicePackageCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "basePrice": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePackageOptionDTO"
+            }
+          }
+        }
+      },
+      "CreatePackageOptionDTO": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "serviceOptionId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "priceOverride": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "maxQuantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
