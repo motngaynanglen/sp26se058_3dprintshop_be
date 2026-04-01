@@ -28,7 +28,13 @@ public record UpdateMateialCommand : IRequest<Guid>
             }
             public async Task<Guid> Handle(UpdateMateialCommand request, CancellationToken cancellationToken)
             {
-                var material = await _context.Materials.FindAsync(new object[] { request.Id }, cancellationToken);
+
+                // Valid
+                if (request.BaseCostPerGram <= 0)            {
+                    throw new ValidationException("Đơn giá không hợp lệ.");
+                }
+
+                var material = await _context.Materials.FindAsync(request.Id, cancellationToken);
                 if (material == null)
                 {
                     throw new Exception("Material not found");
