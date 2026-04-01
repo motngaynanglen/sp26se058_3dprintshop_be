@@ -1829,6 +1829,7 @@
           "Transaction"
         ],
         "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
+        "description": "Trước mắt hỗ trợ 2 phương thức: 'PAYOS' và 'CASH'. CASH là thanh toán trực tiếp, có thể dùng để test!",
         "operationId": "PostApiTransactionPerformTransaction",
         "requestBody": {
           "x-name": "command",
