@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 
-namespace sp26se058_3dprintshop_be.Application.Transaction.Queries;
+namespace sp26se058_3dprintshop_be.Application.Transactions.Queries;
 public class TransactionDTO 
 {
     public Guid InvoiceId { get; set; }
