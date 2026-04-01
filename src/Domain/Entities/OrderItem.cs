@@ -11,8 +11,10 @@ public class OrderItem : BaseAuditableEntity
 
     // phân loại hàng hóa
     public required string SourceType { get; set; }
-    public Guid? DesignWorkId { get; set; }
     public Guid? DesignVariantId { get; set; }
+
+    public Guid? ServiceSelectionId { get; set; }
+    public Guid? DesignWorkId { get; set; }
     public Guid? TechnicalDraftId { get; set; }
     public string? ItemName { get; set; }
 
@@ -27,6 +29,7 @@ public class OrderItem : BaseAuditableEntity
     // Nativigation
     public required virtual Order Order { get; set; }
     public virtual DesignWork? DesignWork { get; set; }
+    public virtual ServiceSelection? ServiceSelection { get; set; }
     public virtual DesignVariant? DesignVariant { get; set; }
     public virtual TechnicalDraft? TechnicalDraft { get; set; }
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
