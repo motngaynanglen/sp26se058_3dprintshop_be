@@ -19,4 +19,5 @@ public static class SourceTypes
         new(Service, "Dịch vụ thiết kế", "#673AB7", "Yêu cầu vẽ mẫu hoặc chỉnh sửa 3D."),
         new(PrintService, "File khách gửi", "#FF5722", "Khách hàng cung cấp file định dạng .STL/.OBJ để in.")
     };
+    public static readonly string ListString = InStock + ", " + PreOrder + ", " + Service + ", " + PrintService;
 }

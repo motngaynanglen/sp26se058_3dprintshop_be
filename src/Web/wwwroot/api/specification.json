@@ -604,6 +604,94 @@
         }
       }
     },
+    "/api/design-tag": {
+      "post": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Thêm một tag mới cho Template.",
+        "operationId": "PostApiDesignTag",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-tag/{id}": {
+      "put": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Cập nhật trạng thái MainTag cho một Tag cụ thể.",
+        "operationId": "PutApiDesignTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignTagCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "DesignTag"
+        ],
+        "summary": "[Manager] Xóa một tag khỏi Template.",
+        "operationId": "DeleteApiDesignTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-template/query": {
       "post": {
         "tags": [
@@ -966,12 +1054,12 @@
       }
     },
     "/api/feedback/my-history": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[Customer] Xem lại các đánh giá đã gửi.",
-        "operationId": "GetApiFeedbackMyHistory",
+        "operationId": "PostApiFeedbackMyHistory",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -992,12 +1080,12 @@
       }
     },
     "/api/feedback/template": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).",
-        "operationId": "GetApiFeedbackTemplate",
+        "operationId": "PostApiFeedbackTemplate",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -1018,12 +1106,12 @@
       }
     },
     "/api/feedback/query": {
-      "get": {
+      "post": {
         "tags": [
           "Feedback"
         ],
         "summary": "[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).",
-        "operationId": "GetApiFeedbackQuery",
+        "operationId": "PostApiFeedbackQuery",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -1101,6 +1189,111 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/feedback/{id}/delete": {
+      "patch": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[Customer/Staff/Manager] Xóa đánh giá với ID.",
+        "description": "Để trống dữ liệu Request BODY khi gọi; Customer sẽ xóa được feedback của bản thân. Staff, Manager có thể xóa mọi feedback",
+        "operationId": "PatchApiFeedbackDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/query": {
+      "post": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Lấy danh sách lịch sử biến động kho (Paging, Filter).",
+        "operationId": "PostApiInventoryTransactionQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetInventoryTransactionsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/reference/{orderId}": {
+      "get": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Truy vết lịch sử kho theo ReferenceId (ví dụ OrderId).",
+        "operationId": "GetApiInventoryTransactionReference",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/inventory-transaction/create": {
+      "post": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Tạo mới một giao dịch kho (Nhập/Xuất/Điều chỉnh).",
+        "operationId": "PostApiInventoryTransactionCreate",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1283,7 +1476,7 @@
           "Order"
         ],
         "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
-        "description": "Trước mắt SourceType chỉ hỗ trợ Type ORDER, sau này sẽ sửa lại body để phù hợp 2 flow. \n Chưa hỗ trợ trừ inventory, gắn sau.",
+        "description": "Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -1323,6 +1516,45 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/{id}/cancel": {
+      "patch": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer/Staff/Manager] Hủy đơn hàng có ID.",
+        "description": "Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.",
+        "operationId": "PatchApiOrderCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1616,6 +1848,70 @@
           }
         }
       }
+    },
+    "/api/transaction/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
+        "operationId": "PostApiTransactionCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/transaction/{orderId}/detail-by-order-id": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[All] Tìm chi tiết giao dịch bằng ID hàng hóa.",
+        "operationId": "GetApiTransactionDetailByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1833,7 +2129,7 @@
             "type": "string",
             "default": "VanA@gmail.com"
           },
-          "phoneNumber": {
+          "contactPhone": {
             "type": "string",
             "default": "0777777777",
             "nullable": true
@@ -1942,6 +2238,41 @@
           "conceptTagId": {
             "type": "string",
             "format": "guid"
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "CreateDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designTemplateId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "conceptTagId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "UpdateDesignTagCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "isMainTag": {
             "type": "boolean",
@@ -2276,6 +2607,52 @@
           }
         }
       },
+      "GetInventoryTransactionsWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "designVariantId": {
+                "type": "string",
+                "format": "guid",
+                "nullable": true
+              },
+              "type": {
+                "type": "string",
+                "default": "ADJUSTMENT",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateInventoryTransactionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designVariantId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "type": {
+            "type": "string",
+            "default": "ADJUSTMENT"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateMaterialCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -2342,14 +2719,18 @@
                 "nullable": true
               },
               "status": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
               },
               "priority": {
                 "type": "integer",
-                "format": "int32"
+                "format": "int32",
+                "nullable": true
               },
               "sortDescending": {
-                "type": "boolean"
+                "type": "boolean",
+                "default": false,
+                "nullable": true
               },
               "sortBy": {
                 "type": "string",
@@ -2369,6 +2750,10 @@
             "format": "guid",
             "default": "00000000-0000-0000-0000-000000000000"
           },
+          "sourceType": {
+            "type": "string",
+            "default": "IN_STOCK"
+          },
           "note": {
             "type": "string",
             "nullable": true
@@ -2385,10 +2770,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "sourceType": {
-            "type": "string",
-            "default": "ORDER"
-          },
           "designVariantId": {
             "type": "string",
             "format": "guid",
@@ -2398,6 +2779,17 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "CancelOrderCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "default": "Tôi thích thì tôi hủy đơn thôi.",
+            "nullable": true
           }
         }
       },
@@ -2659,6 +3051,17 @@
             "type": "string",
             "format": "guid",
             "minLength": 1
+          }
+        }
+      },
+      "CancelTransactionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "default": "Tôi thích thì tôi hủy đơn thôi.",
+            "nullable": true
           }
         }
       }

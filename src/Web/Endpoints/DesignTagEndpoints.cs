@@ -22,7 +22,14 @@ public class DesignTagEndpoints : EndpointGroupBase
                 .WithSummary("[Manager] Lấy tất cả tag của một Template với TemplateID.");
         group.MapPost("/sync",SyncDesignTags)
                 .WithSummary("[Manager] Cập nhật tất cả tags của một Template với TemplateID và danh sách TagId.");
-       
+        group.MapPost("/", CreateDesignTag)
+             .WithSummary("[Manager] Thêm một tag mới cho Template.");
+
+        group.MapPut("/{id}", UpdateDesignTag)
+                .WithSummary("[Manager] Cập nhật trạng thái MainTag cho một Tag cụ thể.");
+
+        group.MapDelete("/{id}", DeleteDesignTag)
+                .WithSummary("[Manager] Xóa một tag khỏi Template.");
     }
 
     //public async Task<IResult> GetAllDesignTags([FromServices] ISender sender, [FromBody] GetDesignTagsListQuery query)
@@ -86,6 +93,74 @@ public class DesignTagEndpoints : EndpointGroupBase
                 BaseResponseModel<string>.BadRequestResponseModel(
                     ex.Message,
                     "Sync tag thất bại"
+                ));
+        }
+    }
+    public async Task<IResult> CreateDesignTag([FromServices] ISender sender, [FromBody] CreateDesignTagCommand command)
+    {
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(
+                BaseResponseModel<CreateDesignTagCommand>.OkResponseModel(
+                    data: result,
+                    message: "Thêm tag thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(
+                BaseResponseModel<string>.BadRequestResponseModel(
+                    ex.Message,
+                    "Thêm tag thất bại"
+                ));
+        }
+    }
+    public async Task<IResult> UpdateDesignTag([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignTagCommand command)
+    {
+        try
+        {
+            // Đảm bảo ID từ Route khớp với ID trong Command
+            if (id != command.Id) return TypedResults.BadRequest("ID không khớp.");
+
+            var result = await sender.Send(command);
+            return TypedResults.Ok(
+                BaseResponseModel<UpdateDesignTagCommand>.OkResponseModel(
+                    data: result,
+                    message: "Cập nhật tag thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(
+                BaseResponseModel<string>.BadRequestResponseModel(
+                    ex.Message,
+                    "Cập nhật tag thất bại"
+                ));
+        }
+    }
+    public async Task<IResult> DeleteDesignTag([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        try
+        {
+            var result = await sender.Send(new DeleteDesignTagCommand { Id = id });
+            if (!result) return TypedResults.NotFound("Không tìm thấy tag để xóa.");
+
+            return TypedResults.Ok(
+                BaseResponseModel<bool>.OkResponseModel(
+                    data: result,
+                    message: "Xóa tag thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(
+                BaseResponseModel<string>.BadRequestResponseModel(
+                    ex.Message,
+                    "Xóa tag thất bại"
                 ));
         }
     }

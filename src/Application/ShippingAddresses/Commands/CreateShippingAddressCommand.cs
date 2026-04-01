@@ -5,9 +5,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
-public record CreateShippingAddressCommand : IRequest<Guid>
+public record CreateShippingAddressCommand : IRequest<CreateShippingAddressCommand>
 {
     [Required]
     [DefaultValue("Nguyễn Văn A")]
@@ -36,7 +37,7 @@ public record CreateShippingAddressCommand : IRequest<Guid>
     [DefaultValue(false)]
     public bool IsDefault { get; set; } = false;
 }
-public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, Guid>
+public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, CreateShippingAddressCommand>
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
@@ -45,7 +46,7 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
         _context = context;
         _user = user;
     }
-    public async Task<Guid> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
+    public async Task<CreateShippingAddressCommand> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
     {
         Guid userId= _user.Id.ToGuid();
         // Nếu IsDefault = true, phải bỏ default của các địa chỉ cũ
@@ -66,7 +67,7 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
         {
             throw new Exception("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
         }
-        var entity = new Domain.Entities.ShippingAddress
+        var entity = new ShippingAddress
         {
             Id = Guid.NewGuid(),
             CustomerId = customer.Id,
@@ -83,6 +84,6 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
 
         _context.ShippingAddresses.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
-        return entity.Id;
+        return request;
     }
 }

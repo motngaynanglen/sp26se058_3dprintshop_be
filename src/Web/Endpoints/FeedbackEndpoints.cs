@@ -23,11 +23,11 @@ public class FeedbackEndpoints : EndpointGroupBase
         group.MapPost("/send", SendFeedback)
                 .WithSummary("[Customer] Gửi đánh giá mới (kèm tối đa 5 ảnh).");
 
-        group.MapGet("/my-history", GetMyHistory)
+        group.MapPost("/my-history", GetMyHistory)
                 .WithSummary("[Customer] Xem lại các đánh giá đã gửi.");
-        group.MapGet("/template/{templateId}", GetFeedbackByTemplateId)
+        group.MapPost("/template/{templateId}", GetFeedbackByTemplateId)
                 .WithSummary("[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).");
-        group.MapGet("/query", QueryFeedbacks)
+        group.MapPost("/query", QueryFeedbacks)
                 .WithSummary("[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).");
         group.MapPatch("/{id}/reply", ReplyFeedback)
                 .WithSummary("[Staff/Manager] Nhân viên phản hồi đánh giá của khách.");
@@ -35,6 +35,9 @@ public class FeedbackEndpoints : EndpointGroupBase
         group.MapPatch("/{id}/toggle-status", SwitchStatus)
                 .WithSummary("[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).")
                 .WithDescription("Để trống dữ liệu Request BODY khi gọi");
+        group.MapPatch("/{id}/delete", DeleteFeedback)
+                .WithSummary("[Customer/Staff/Manager] Xóa đánh giá với ID.")
+                .WithDescription("Để trống dữ liệu Request BODY khi gọi; Customer sẽ xóa được feedback của bản thân. Staff, Manager có thể xóa mọi feedback");
 
 
     }
@@ -164,6 +167,26 @@ public class FeedbackEndpoints : EndpointGroupBase
         }
     }
     public async Task<IResult> SwitchStatus([FromServices] ISender sender, [FromRoute] Guid id )
+    {
+        try
+        {
+            var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
+
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Đổi trạng thái thành công"
+                ));
+
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+    }
+    public async Task<IResult> DeleteFeedback([FromServices] ISender sender, [FromRoute] Guid id)
     {
         try
         {
