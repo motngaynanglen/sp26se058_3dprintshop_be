@@ -10,7 +10,7 @@ public static class PaymentMethods
     //public const string BankTransfer = "BANK_TRANSFER";
     public const string PAYOS = "PAYOS";
     //public const string MoMo = "MOMO"; // Cân nhắc thêm vào sau
-    //public const string Cash = "CASH";
+    public const string Cash = "CASH";
     //public const string VNPAY = "VNPAY"; 
 
     public static readonly List<StatusDefinition> All = new()
@@ -18,6 +18,6 @@ public static class PaymentMethods
         //new(BankTransfer, "Chuyển khoản ngân hàng", "#00468C", "Thanh toán qua số tài khoản ngân hàng chính thức."),
         new(PAYOS, "Ví điện tử PAYOS", "#A50064", "Thanh toán nhanh qua ứng dụng PAYOS."),
         //new(VNPAY, "Ví điện tử VNPAY", "#A50064", "Thanh toán nhanh qua ứng dụng VNPAY."),
-        //new(Cash, "Tiền mặt", "#4CAF50", "Thanh toán trực tiếp tại cửa hàng hoặc khi nhận hàng."),
+        new(Cash, "Tiền mặt", "#4CAF50", "Thanh toán trực tiếp tại cửa hàng hoặc khi nhận hàng."),
     };
 }

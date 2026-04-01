@@ -1,5 +1,4 @@
-﻿using BG_IMPACT.Business.Command.Transaction.Commands;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32;
 using PayOS.Models.Webhooks;
@@ -7,9 +6,9 @@ using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
-using sp26se058_3dprintshop_be.Application.Transaction.Command;
-using sp26se058_3dprintshop_be.Application.Transaction.Commands;
-using sp26se058_3dprintshop_be.Application.Transaction.Queries;
+using sp26se058_3dprintshop_be.Application.Transactions.Command;
+using sp26se058_3dprintshop_be.Application.Transactions.Commands;
+using sp26se058_3dprintshop_be.Application.Transactions.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -29,7 +28,8 @@ public class TransactionEndpoints : EndpointGroupBase
                     .WithSummary("[PayOS] Đây là api để payos gọi để xác thực đã thanh toán");
 
         group.MapPost("/perform-transaction", PerformTransaction)
-                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
+                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.")
+                    .WithDescription("Trước mắt hỗ trợ 2 phương thức: 'PAYOS' và 'CASH'. CASH là thanh toán trực tiếp, có thể dùng để test!");
         group.MapPost("/{id}/cancel", CancelTransaction)
                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
         group.MapGet("/{orderId}/detail-by-order-id", GetDetailByOrderID)
