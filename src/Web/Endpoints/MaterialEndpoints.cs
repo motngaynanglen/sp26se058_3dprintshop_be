@@ -24,8 +24,8 @@ public class MaterialEndpoints : EndpointGroupBase
             .WithSummary("[Manager] Xem chi tiết vật liệu");
         group.MapPut("/{id}/update", Update)
             .WithSummary("[Manager] Cập nhật vật liệu");
-        group.MapDelete("/{id}/delete", Delete)
-            .WithSummary("Xoá vật liệu");
+        group.MapDelete("/{id}/toggle-active", Delete)
+            .WithSummary("Chuyển đổi trạng thái Active của vật liệu");
     }
 
     public async Task<IResult> Add(
@@ -86,7 +86,7 @@ public class MaterialEndpoints : EndpointGroupBase
             var result = await sender.Send(finalCommand);
             return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
                 data: result,
-                message: "Cập nhật chất liệu thành công!",
+                message: "Cập nhật IsActive của chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
         }
         catch (Exception ex)

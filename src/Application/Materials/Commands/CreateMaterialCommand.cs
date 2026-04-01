@@ -25,6 +25,11 @@ public record CreateMaterialCommand : IRequest<Guid>
         }
         public async Task<Guid> Handle(CreateMaterialCommand request, CancellationToken cancellationToken)
         {
+            // Valid
+            if (request.BaseCostPerGram <= 0)            {
+                throw new ValidationException("Đơn giá không hợp lệ.");
+            }
+
             var newMaterial = new Domain.Entities.Material
             {
                 Name = request.Name,
