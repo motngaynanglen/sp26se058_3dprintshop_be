@@ -8,7 +8,7 @@ using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
-using sp26se058_3dprintshop_be.Application.ShippingAddress.Queries;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -19,25 +19,14 @@ public static class DependencyInjection
         services.AddAutoMapper(cfg => {
             cfg.AddMaps(Assembly.GetExecutingAssembly());
         });
-        //services.AddAutoMapper(cfg => {
-        //    // Mỗi khi tạo DTO mới, phải thêm 1 dòng ở đây
-        //    AccountDTO.Register(cfg);
-        //    DesignTagDTO.Register(cfg);
-        //    DesignTemplateDTO.Register(cfg);
-        //    DesignVariantDTO.Register(cfg);
-        //    MaterialDTO.Register(cfg);
-        //    OrderDTO.Register(cfg);
-        //    OrderItemDTO.Register(cfg);
-        //    ShippingAddressDTO.Register(cfg);
-        //    ShipmentDTO.Register(cfg);
-        //});
+
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
             //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehaviour<,>));
-            //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
             //cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehaviour<,>));
         });
         services.AddTransient<PayOsCodeGenerator>();

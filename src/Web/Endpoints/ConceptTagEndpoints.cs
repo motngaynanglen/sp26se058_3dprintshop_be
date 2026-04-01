@@ -67,11 +67,21 @@ public class ConceptTagEndpoints : EndpointGroupBase
         [FromServices] ISender sender,
         [FromBody] CreateConceptTagCommand command)
     {
-        var result = await sender.Send(command);
+        try
+        {
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-            data: result,
-            message: "Tạo Concept tag thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            var result = await sender.Send(command);
+
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                data: result,
+                message: "Tạo Concept tag thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
 }

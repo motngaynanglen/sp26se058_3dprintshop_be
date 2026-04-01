@@ -7,7 +7,9 @@ using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Application.Transaction.Command;
 using sp26se058_3dprintshop_be.Application.Transaction.Commands;
+using sp26se058_3dprintshop_be.Application.Transaction.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -28,6 +30,12 @@ public class TransactionEndpoints : EndpointGroupBase
 
         group.MapPost("/perform-transaction", PerformTransaction)
                     .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
+        group.MapPost("/{id}/cancel", CancelTransaction)
+                   .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
+        group.MapGet("/{orderId}/detail-by-order-id", GetDetailByOrderID)
+                    .WithSummary("[All] Tìm chi tiết giao dịch bằng ID hàng hóa.");
+
+
 
     }
 
@@ -57,7 +65,47 @@ public class TransactionEndpoints : EndpointGroupBase
             var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel.OkResponseModel(
                     data: result,
-                    message: "Thanh toán thành công",
+                    message: "Mở cổng thanh toán thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            // Trả về 401 Unauthorized
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+    }
+    public async Task<IResult> GetDetailByOrderID([FromServices] ISender sender, [FromRoute] Guid orderId)
+    {
+        try
+        {
+            var result = await sender.Send(new GetTransactionByOrderIdQuery { OrderId = orderId});
+            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                    data: result,
+                    message: "Đã tìm thấy cổng thanh toán!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            
+            // Trả về 401 Unauthorized
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+    }
+    public async Task<IResult> CancelTransaction([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelTransactionCommand command)
+    {
+        try
+        {
+            var finalcommand = command with { TransactionId = id };
+            var result = await sender.Send(finalcommand);
+            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                    data: result,
+                    message: "Mở cổng thanh toán thành công!",
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }

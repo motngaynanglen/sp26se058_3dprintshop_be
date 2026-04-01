@@ -3,96 +3,86 @@ using sp26se058_3dprintshop_be.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Infrastructure.Data.Interceptors;
 
 public class AuditableEntityInterceptor : SaveChangesInterceptor
 {
     private readonly IUser _user;
-    private readonly TimeProvider _dateTime;
-
-    public AuditableEntityInterceptor(
-        IUser user,
-        TimeProvider dateTime)
+    //Phương thức này đang gặp vấn đề nên ae gắn thủ công nha
+    public AuditableEntityInterceptor(IUser user)
     {
         _user = user;
-        _dateTime = dateTime;
     }
 
+    // Ghi đè phương thức đồng bộ
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
         UpdateEntities(eventData.Context);
-
         return base.SavingChanges(eventData, result);
     }
 
+    // Ghi đè phương thức bất đồng bộ 
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
     {
         UpdateEntities(eventData.Context);
-
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     public void UpdateEntities(DbContext? context)
     {
         if (context == null) return;
+        var utcNow = CoreHelper.SystemTimeNow;
+        var user = GetCurrentUsername();
 
         foreach (var entry in context.ChangeTracker.Entries<BaseAuditableEntity>())
         {
-            var utcNow = _dateTime.GetUtcNow();
-            var user = GetCurrentUserId();
-         
 
-                if (entry.State == EntityState.Added)
+
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.CreatedBy = user;
+                entry.Entity.Created = utcNow;
+
+                // Khi thêm mới thì LastModified cũng khởi tạo luôn
+                entry.Entity.LastModifiedBy = user;
+                entry.Entity.LastModified = utcNow;
+            }
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
+            {
+                entry.Entity.LastModifiedBy = user;
+                entry.Entity.LastModified = utcNow;
+            }
+            if (entry.State == EntityState.Deleted)
+            {
+                // Logic Soft Delete của Bách
+                if (entry.Entity.DeletedBy == "HARD_DELETE_FLAG")
                 {
-                    entry.Entity.CreatedBy = user;
-                    entry.Entity.Created = utcNow;
-
-                    entry.Entity.LastModifiedBy = user;
-                    entry.Entity.LastModified = utcNow;
+                    continue;
                 }
-                if (entry.State == EntityState.Modified || entry.HasChangedOwnedEntities())
-                {
-                    entry.Entity.LastModifiedBy = user;
-                    entry.Entity.LastModified = utcNow;
-                }
-                if (entry.State == EntityState.Deleted)
-                {
-                    if (entry.Entity.DeletedBy == "HARD_DELETE_FLAG")
-                    {
-                        //Tiếp tục xóa
-                        continue;
-                    }
-                    // Thay đổi trạng thái từ Xóa sang Sửa (Modified) để EF Update thay vì Delete
-                    entry.State = EntityState.Modified;
 
-                    // Gán thông tin người xóa và ngày xóa
-                    entry.Entity.DeletedBy = user;
-                    entry.Entity.Deleted = utcNow;
+                // Chuyển từ Delete sang Modified để Update thay vì Delete thật trong DB
+                entry.State = EntityState.Modified;
 
-                    // Đồng thời cập nhật luôn thông tin Modified để đồng nhất
-                    entry.Entity.LastModifiedBy = user;
-                    entry.Entity.LastModified = utcNow;
-                }
-            
+                entry.Entity.DeletedBy = user;
+                entry.Entity.Deleted = utcNow;
+
+                // Cập nhật luôn dấu vết sửa đổi cuối cùng
+                entry.Entity.LastModifiedBy = user;
+                entry.Entity.LastModified = utcNow;
+            }
+
         }
     }
-    private string GetCurrentUserId()
+    private string GetCurrentUsername()
     {
         // 1. Nếu không có User (chưa đăng nhập - ví dụ: Register)
-        if (string.IsNullOrEmpty(_user.Id))
+        if (string.IsNullOrEmpty(_user.Username))
         {
             return "SYSTEM";
         }
-
-        // 2. Nếu là Admin/Dev (Bạn có thể check dựa trên Claims hoặc Role)
-        //if (_user.IsAdmin)
-        //{
-        //    return "SYSTEM_ADMIN";
-        //}
-
-        // 3. Nếu là User bình thường đã đăng nhập
-        return _user.Id;
+        return _user.Username;
     }
 }
 

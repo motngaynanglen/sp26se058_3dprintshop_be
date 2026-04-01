@@ -12,4 +12,5 @@ public interface IPaymentService
 {
     Task<PaymentResponse> CreatePaymentLink(Order order, string returnUrl, string cancelUrl);
     Task<WebhookData> VerifyWebhookData(Webhook webhook);
+    Task<bool> CancelPaymentLink(long orderCode, string? reason = null);
 }
