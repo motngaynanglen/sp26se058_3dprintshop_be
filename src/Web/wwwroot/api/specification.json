@@ -3033,12 +3033,18 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "orderId"
+          "orderId",
+          "paymentMethod"
         ],
         "properties": {
           "orderId": {
             "type": "string",
             "format": "guid",
+            "minLength": 1
+          },
+          "paymentMethod": {
+            "type": "string",
+            "default": "PAYOS",
             "minLength": 1
           }
         }

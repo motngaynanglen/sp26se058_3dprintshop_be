@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
-namespace sp26se058_3dprintshop_be.Application.Transaction.Command;
+namespace sp26se058_3dprintshop_be.Application.Transactions.Command;
 public record CancelTransactionCommand : IRequest<bool>
 {
     [JsonIgnore]

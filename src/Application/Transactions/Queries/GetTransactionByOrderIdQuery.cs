@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
-namespace sp26se058_3dprintshop_be.Application.Transaction.Queries;
+namespace sp26se058_3dprintshop_be.Application.Transactions.Queries;
 public class GetTransactionByOrderIdQuery : IRequest<TransactionDTO>
 {
     [Required]
