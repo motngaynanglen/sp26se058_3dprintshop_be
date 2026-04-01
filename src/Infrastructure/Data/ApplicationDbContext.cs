@@ -39,6 +39,12 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Shipment> Shipments => Set<Shipment>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<FeedbackImage> FeedbackImages => Set<FeedbackImage>();
+    public DbSet<ServiceOption> ServiceOptions => Set<ServiceOption>();
+    public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
+    public DbSet<PackageOption> PackageOptions => Set<PackageOption>();
+    public DbSet<ServiceSelection> ServiceSelections => Set<ServiceSelection>();
+    public DbSet<ServiceSelectionOption> ServiceSelectionOptions => Set<ServiceSelectionOption>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         //base.OnModelCreating(builder); remove ASP core identity
