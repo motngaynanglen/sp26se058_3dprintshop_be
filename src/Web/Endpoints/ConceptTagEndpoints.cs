@@ -23,7 +23,8 @@ public class ConceptTagEndpoints : EndpointGroupBase
                 .WithSummary("[Manager] Thêm Tag.");
         group.MapPut("/{id}/update", Update)
                 .WithSummary("[Manager] Cập nhật nội dung tag.");
-
+        group.MapPut("/{id}/delete", Delete)
+                .WithSummary("[Manager] Xóa concept tag và các tag được dán trên sản phẩm với tag ID.");
     }
 
     public async Task<IResult> GetAll(
@@ -62,7 +63,19 @@ public class ConceptTagEndpoints : EndpointGroupBase
             message: "Cập nhật Concept tag thành công!",
             code: ResponseCodeConstants.SUCCESS));
     }
+    public async Task<IResult> Delete(
+        [FromServices] ISender sender,
+        [FromRoute] Guid id)
+    {
+        var finalCommand = new DeleteConceptTagCommand { Id = id };
 
+        var result = await sender.Send(finalCommand);
+
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+            data: result,
+            message: "Xóa Concept tag thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+    }
     public async Task<IResult> Add(
         [FromServices] ISender sender,
         [FromBody] CreateConceptTagCommand command)

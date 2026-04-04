@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 
@@ -14,18 +16,21 @@ public record UpdateConceptTagCommand : IRequest<Guid>
     [JsonIgnore]
     public Guid Id { get; init; }
     [DefaultValue("Resin")]
-    public string Name { get; init; } = null!;
+    public string? Name { get; init; }
     [DefaultValue("Sản phẩm được in từ Resin")]
-    public string Description { get; init; } = null!;
-    public bool IsActive { get; init; } = false;
+    public string? Description { get; init; }
+    public bool? IsActive { get; init; }
 }
 
 public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
-    public UpdateConceptTagCommandHandler(IApplicationDbContext context)
+    private readonly IUser _user;
+
+    public UpdateConceptTagCommandHandler(IApplicationDbContext context, IUser user)
     {
         _context = context;
+        _user = user;
     }
     public async Task<Guid> Handle(UpdateConceptTagCommand request, CancellationToken cancellationToken)
     {
@@ -39,10 +44,33 @@ public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCo
         {
             throw new Exception("Đã tồn tại Concept tag với tên " + request.Name + ".");
         }
-        conceptTag.Name = request.Name;
-        conceptTag.Description = request.Description;
-        conceptTag.IsActive = request.IsActive;
+
+        //UpdateAllChildTags(conceptTag, request.IsActive ?? conceptTag.IsActive);
+
+        conceptTag.Name = request.Name ?? conceptTag.Name;
+        conceptTag.Description = request.Description ?? conceptTag.Description;
+        conceptTag.IsActive = request.IsActive ?? conceptTag.IsActive;
+
+        conceptTag.LastModified = CoreHelper.SystemTimeNow;
+        conceptTag.LastModifiedBy = _user.Username;
+
         await _context.SaveChangesAsync(cancellationToken);
         return conceptTag.Id;
+    }
+    private bool UpdateAllChildTags(ConceptTag conceptTag, bool isActive)
+    {
+        if (conceptTag.DesignTags.Any())
+        {
+            foreach (var tag in conceptTag.DesignTags)
+            {
+                if (tag.IsActive != isActive)
+                {
+                    tag.IsActive = isActive;
+                    tag.LastModified = CoreHelper.SystemTimeNow;
+                    tag.LastModifiedBy = _user.Username;
+                }
+            }
+        }
+        return true;
     }
 }
