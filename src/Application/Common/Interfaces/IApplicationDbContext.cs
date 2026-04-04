@@ -15,7 +15,7 @@ public interface IApplicationDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderItem> OrderItems { get; }
     DbSet<Invoice> Invoices { get; }
-    DbSet<Domain.Entities.Transaction> Transactions { get; }
+    DbSet<Transaction> Transactions { get; }
     DbSet<DesignTemplate> DesignTemplates { get; }
     DbSet<Domain.Entities.DesignVariant> DesignVariants { get; }
     DbSet<ConceptTag> ConceptTags { get; }
@@ -27,11 +27,15 @@ public interface IApplicationDbContext
     DbSet<DesignLog> DesignLogs { get; }
     DbSet<DesignVersionHistory> DesignVersionHistorys { get; }
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
-    DbSet<Domain.Entities.ShippingAddress> ShippingAddresses { get; }
+    DbSet<ShippingAddress> ShippingAddresses { get; }
     DbSet<Shipment> Shipments { get; }
     DbSet<Feedback> Feedbacks { get; }
     DbSet<FeedbackImage> FeedbackImages { get; }
-
+    DbSet<ServiceOption> ServiceOptions { get; }
+    DbSet<ServicePackage> ServicePackages { get; }
+    DbSet<PackageOption> PackageOptions { get; }
+    DbSet<ServiceSelection> ServiceSelections { get; }
+    DbSet<ServiceSelectionOption> ServiceSelectionOptions { get; }
 
     //DatabaseFacade Database { get; }
 
