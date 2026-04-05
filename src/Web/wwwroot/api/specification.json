@@ -552,6 +552,32 @@
         }
       }
     },
+    "/api/concept-tag/{id}/delete": {
+      "put": {
+        "tags": [
+          "ConceptTag"
+        ],
+        "summary": "[Manager] Xóa concept tag và các tag được dán trên sản phẩm với tag ID.",
+        "operationId": "PutApiConceptTagDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-tag/{templateId}/tags": {
       "get": {
         "tags": [
@@ -1562,12 +1588,26 @@
         }
       }
     },
+    "/api/service-option/all": {
+      "get": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[All] Lấy danh sách tùy chọn dịch vụ.",
+        "operationId": "GetApiServiceOptionAll",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/service-option/add": {
       "post": {
         "tags": [
           "ServiceOption"
         ],
-        "summary": "[Staff/Manager] Tạo gói mới.",
+        "summary": "[Staff/Manager] Tạo tùy chọn dịch vụ mới.",
         "operationId": "PostApiServiceOptionAdd",
         "requestBody": {
           "x-name": "command",
@@ -1581,6 +1621,122 @@
           "required": true,
           "x-position": 1
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-option/{id}/update": {
+      "patch": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin tùy chọn.",
+        "operationId": "PatchApiServiceOptionUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceOptionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-option/{id}/active": {
+      "patch": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[Staff/Manager] Kích hoạt tùy chọn.",
+        "operationId": "PatchApiServiceOptionActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-option/{id}/deactive": {
+      "patch": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[Staff/Manager] Ngưng kích hoạt tùy chọn.",
+        "operationId": "PatchApiServiceOptionDeactive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-option/{id}/delete": {
+      "delete": {
+        "tags": [
+          "ServiceOption"
+        ],
+        "summary": "[Staff/Manager] Xóa tùy chọn dịch vụ.",
+        "operationId": "DeleteApiServiceOptionDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -2283,14 +2439,17 @@
         "properties": {
           "name": {
             "type": "string",
-            "default": "Resin"
+            "default": "Resin",
+            "nullable": true
           },
           "description": {
             "type": "string",
-            "default": "Sản phẩm được in từ Resin"
+            "default": "Sản phẩm được in từ Resin",
+            "nullable": true
           },
           "isActive": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -2866,17 +3025,42 @@
         "additionalProperties": false,
         "properties": {
           "code": {
-            "type": "string"
+            "type": "string",
+            "default": "CodeAutoGenSau"
           },
           "name": {
             "type": "string"
           },
           "optionType": {
-            "type": "string"
+            "type": "string",
+            "default": "ADDON Hoặc CONFIG"
           },
           "defaultPrice": {
             "type": "number",
             "format": "decimal"
+          }
+        }
+      },
+      "UpdateServiceOptionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "optionType": {
+            "type": "string",
+            "nullable": true
+          },
+          "defaultPrice": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },
@@ -2886,10 +3070,12 @@
         "properties": {
           "search": {
             "type": "string",
+            "default": "",
             "nullable": true
           },
           "service": {
             "type": "string",
+            "default": "DESIGN Hoặc PRINTING",
             "nullable": true
           },
           "sortBy": {
