@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
 public record CreateServiceOptionCommand : IRequest<object>
@@ -39,10 +40,12 @@ public class CreateServiceOptionCommandValidator : AbstractValidator<CreateServi
 public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOptionCommand, object>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _user;
 
-    public CreateServiceOptionCommandHandler(IApplicationDbContext context)
+    public CreateServiceOptionCommandHandler(IApplicationDbContext context, IUser user)
     {
         _context = context;
+        _user = user;
     }
 
     public async Task<object> Handle(CreateServiceOptionCommand request, CancellationToken ct)
@@ -63,7 +66,11 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
             Name = request.Name,
             OptionType = request.OptionType,
             DefaultPrice = request.DefaultPrice,
-            IsActive = true
+            IsActive = true,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
         };
 
         _context.ServiceOptions.Add(entity);

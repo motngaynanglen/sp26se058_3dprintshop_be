@@ -72,6 +72,10 @@ jobs:
               -e EmailSettings__FromEmail="${{ secrets.EMAILSETTINGS__FROMEMAIL }}" \
               -e EmailSettings__AppPassword="${{ secrets.EMAILSETTINGS__APPPASSWORD }}" \
               -e DevAccount__Password="${{ secrets.DEV_ADMIN_PASSWORD }}" \
+              -e BackblazeB2__KeyId="${{ secrets.BACKBLAZEB2_KEYID }}" \
+              -e BackblazeB2__ApplicationKey="${{ secrets.BACKBLAZEB2_APPLICATIONKEY }}" \
+              -e BackblazeB2__BucketName="${{ secrets.BACKBLAZEB2_BUCKETNAME }}" \
+              -e BackblazeB2__ServiceUrl="${{ secrets.BACKBLAZEB2_SERVICEURL }}" \
               ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest
 
             # 5. Dọn dẹp các Image cũ không dùng đến để tiết kiệm dung lượng VPS

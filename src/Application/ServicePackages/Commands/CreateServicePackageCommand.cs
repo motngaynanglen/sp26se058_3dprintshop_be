@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServicePackages.Commands;
 public record CreatePackageOptionDTO(
@@ -37,8 +39,13 @@ public class CreateServicePackageCommandValidator : AbstractValidator<CreateServ
 public class CreateServicePackageCommandHandler : IRequestHandler<CreateServicePackageCommand, object>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _user;
 
-    public CreateServicePackageCommandHandler(IApplicationDbContext context) => _context = context;
+    public CreateServicePackageCommandHandler(IApplicationDbContext context, IUser user)
+    {
+        _context = context;
+        _user = user;
+    }
 
     public async Task<object> Handle(CreateServicePackageCommand request, CancellationToken ct)
     {
@@ -54,7 +61,11 @@ public class CreateServicePackageCommandHandler : IRequestHandler<CreateServiceP
             ServiceType = request.ServiceType,
             BasePrice = request.BasePrice,
             Description = request.Description,
-            IsActive = true
+            IsActive = true,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
         };
 
         // 2. Thêm các Option vào gói
@@ -67,7 +78,11 @@ public class CreateServicePackageCommandHandler : IRequestHandler<CreateServiceP
                 IsRequired = opt.IsRequired,
                 PriceOverride = opt.PriceOverride,
                 MaxQuantity = opt.MaxQuantity,
-                MinQuantity = opt.IsRequired ? 1 : 0
+                MinQuantity = opt.IsRequired ? 1 : 0,
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username,
+                LastModified = CoreHelper.SystemTimeNow,
+                LastModifiedBy = _user.Username,
             });
         }
 
