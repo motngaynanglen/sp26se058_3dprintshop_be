@@ -318,6 +318,72 @@
         }
       }
     },
+    "/api/app-support/presigned-upload-url": {
+      "get": {
+        "tags": [
+          "AppSupport"
+        ],
+        "summary": "[Staff/Manager] Lấy link đăng kí trước cho upload",
+        "operationId": "GetApiAppSupportPresignedUploadUrl",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/test-upload-to-b2": {
+      "post": {
+        "tags": [
+          "AppSupport"
+        ],
+        "summary": "[Dev Only] Test đẩy file trực tiếp lên B2 bằng Presigned URL.",
+        "operationId": "PostApiAppSupportTestUploadToB2",
+        "parameters": [
+          {
+            "name": "uploadUrl",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/auth/system-login": {
       "post": {
         "tags": [
