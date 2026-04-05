@@ -7,9 +7,9 @@ using sp26se058_3dprintshop_be.Application.ServicePackages.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Queries;
-public record GetServiceOptionsQuery : IRequest<List<ServiceOption>>;
+public record GetServiceOptionsQuery : IRequest<List<ServiceOptionDTO>>;
 
-public class GetServiceOptionsQueryHandler : IRequestHandler<GetServiceOptionsQuery, List<ServiceOption>>
+public class GetServiceOptionsQueryHandler : IRequestHandler<GetServiceOptionsQuery, List<ServiceOptionDTO>>
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
@@ -19,12 +19,12 @@ public class GetServiceOptionsQueryHandler : IRequestHandler<GetServiceOptionsQu
         _mapper = mapper;
     } 
 
-    public async Task<List<ServiceOption>> Handle(GetServiceOptionsQuery request, CancellationToken ct)
+    public async Task<List<ServiceOptionDTO>> Handle(GetServiceOptionsQuery request, CancellationToken ct)
     {
         return await _context.ServiceOptions
             .AsNoTracking()
             .OrderBy(x => x.OptionType)
-            .ProjectTo<ServiceOption>(_mapper.ConfigurationProvider)
+            .ProjectTo<ServiceOptionDTO>(_mapper.ConfigurationProvider)
             .ToListAsync(ct);
     }
 }
