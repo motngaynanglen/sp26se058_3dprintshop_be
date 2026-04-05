@@ -66,7 +66,7 @@ public static class DependencyInjection
             var settings = sp.GetRequiredService<IOptions<PayOsSettings>>().Value;
             return new PayOSClient(settings.ClientId, settings.ApiKey, settings.ChecksumKey);
         });
-
+        services.Configure<BackblazeB2Settings>(configuration.GetSection(BackblazeB2Settings.SectionName));
         services.AddScoped<IS3StorageService, S3StorageService>();
         return services;
     }
