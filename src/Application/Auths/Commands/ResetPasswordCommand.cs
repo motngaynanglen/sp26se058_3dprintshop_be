@@ -11,6 +11,7 @@ using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 public record ResetPasswordCommand : IRequest<bool>
@@ -52,6 +53,8 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         // Xóa token sau khi dùng xong
         account.PasswordResetToken = null;
         account.ResetTokenExpires = null;
+        account.LastModified = CoreHelper.SystemTimeNow;
+        account.LastModifiedBy = nameof(ResetPasswordCommand);
 
         await _context.SaveChangesAsync(cancellationToken);
         return true;
