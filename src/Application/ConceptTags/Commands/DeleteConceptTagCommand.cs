@@ -15,7 +15,7 @@ public record DeleteConceptTagCommand : IRequest<bool>
 {
     [JsonIgnore]
     public Guid Id { get; init; }
-    public bool IsActive { get; init; } = false;
+    //public bool IsActive { get; init; } = false;
 }
 
 public class DeleteConceptTagCommandHandler : IRequestHandler<DeleteConceptTagCommand, bool>
