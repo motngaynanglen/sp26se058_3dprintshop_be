@@ -16,6 +16,8 @@ public class CreateConceptTagCommand : IRequest<Guid>
     [DefaultValue("Sản phẩm được in từ Resin")]
     public string Description { get; init; } = null!;
     public bool IsActive { get; init; } = false;
+    public bool IsMainTag { get; init; } = false;
+
 }
 
 public class CreateConceptTagCommandHandler : IRequestHandler<CreateConceptTagCommand, Guid>
