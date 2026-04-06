@@ -2496,6 +2496,9 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "isMainTag": {
+            "type": "boolean"
           }
         }
       },
@@ -2515,6 +2518,12 @@
           },
           "isActive": {
             "type": "boolean",
+            "default": "Sản phẩm được in từ Resin",
+            "nullable": true
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": "Sản phẩm được in từ Resin",
             "nullable": true
           }
         }
