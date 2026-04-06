@@ -19,7 +19,11 @@ public record UpdateConceptTagCommand : IRequest<Guid>
     public string? Name { get; init; }
     [DefaultValue("Sản phẩm được in từ Resin")]
     public string? Description { get; init; }
+    [DefaultValue(false)]
     public bool? IsActive { get; init; }
+    [DefaultValue(false)]
+    public bool? IsMainTag { get; init; }
+
 }
 
 public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCommand, Guid>
