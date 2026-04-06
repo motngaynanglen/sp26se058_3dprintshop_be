@@ -11,15 +11,14 @@ public class ConceptTagDTO
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
-    public string Description { get; set; } = null!;
-    public bool IsActive { get; set; }
+    public string? Description { get; set; }
+    public bool? IsActive { get; set; }
+    public bool? IsMainTag { get; set; }
     private class Mapping : Profile
     {
         public Mapping()
         {
-            CreateMap<Domain.Entities.ConceptTag, ConceptTagDTO>();
-            
+            CreateMap<ConceptTag, ConceptTagDTO>();
         }
-
     }
 }
