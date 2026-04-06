@@ -54,6 +54,7 @@ public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCo
         conceptTag.Name = request.Name ?? conceptTag.Name;
         conceptTag.Description = request.Description ?? conceptTag.Description;
         conceptTag.IsActive = request.IsActive ?? conceptTag.IsActive;
+        conceptTag.IsMainTag = request.IsMainTag ?? conceptTag.IsMainTag;
 
         conceptTag.LastModified = CoreHelper.SystemTimeNow;
         conceptTag.LastModifiedBy = _user.Username;
