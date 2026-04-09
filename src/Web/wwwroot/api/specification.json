@@ -1536,6 +1536,36 @@
         }
       }
     },
+    "/api/model-generate": {
+      "post": {
+        "tags": [
+          "Model Generate"
+        ],
+        "summary": "Tạo mô hình 3D từ ảnh",
+        "operationId": "PostApiModelGenerate",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "Image": {
+                    "type": "string",
+                    "format": "binary",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/order/query": {
       "post": {
         "tags": [
@@ -2477,6 +2507,11 @@
               "search": {
                 "type": "string",
                 "default": "Resin"
+              },
+              "isMainTag": {
+                "type": "boolean",
+                "default": false,
+                "nullable": true
               }
             }
           }
@@ -2518,12 +2553,12 @@
           },
           "isActive": {
             "type": "boolean",
-            "default": "Sản phẩm được in từ Resin",
+            "default": false,
             "nullable": true
           },
           "isMainTag": {
             "type": "boolean",
-            "default": "Sản phẩm được in từ Resin",
+            "default": false,
             "nullable": true
           }
         }
