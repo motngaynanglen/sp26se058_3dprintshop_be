@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Application.Common.Options;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
+using sp26se058_3dprintshop_be.Infrastructure.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +30,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         ServerVersion.AutoDetect(cs)
     );
 });
+// AI Service
+builder.Services.AddHttpClient<IAIService, AIService>();
 
+// Backblaze B2 Service
+builder.Services.Configure<BackblazeB2Options>(
+    builder.Configuration.GetSection("BackblazeB2"));
+builder.Services.AddScoped<IBackblazeB2Service, BackblazeB2Service>();
 
 builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
 
