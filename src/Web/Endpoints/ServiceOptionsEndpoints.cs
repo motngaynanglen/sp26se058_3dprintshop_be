@@ -84,9 +84,9 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
     {
         try
         {
-            if (id != command.Id) return TypedResults.BadRequest("ID không khớp.");
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
 
-            var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,

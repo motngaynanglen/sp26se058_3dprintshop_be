@@ -23,12 +23,17 @@ public class ServicePackageEndpoints : EndpointGroupBase
         group.MapPost("/add", CreateServicePackage)
                 .WithSummary("[Staff/Manager] Tạo gói mới.");
 
-        //group.MapPatch("/{id}/toggle-status", SwitchStatus)
-        //        .WithSummary("[Staff/Manager] Ẩn/Hiện đánh giá (nếu vi phạm quy tắc cộng đồng).")
-        //        .WithDescription("Để trống dữ liệu Request BODY khi gọi");
-        //group.MapPatch("/{id}/delete", DeleteFeedback)
-        //        .WithSummary("[Customer/Staff/Manager] Xóa đánh giá với ID.")
-        //        .WithDescription("Để trống dữ liệu Request BODY khi gọi; Customer sẽ xóa được feedback của bản thân. Staff, Manager có thể xóa mọi feedback");
+        group.MapPatch("/{id}/update", UpdateServicePackage)
+                .WithSummary("[Staff/Manager] Cập nhật thông tin gói dịch vụ.");
+
+        group.MapPatch("/{id}/active", ActiveServicePackage)
+                .WithSummary("[Staff/Manager] Kích hoạt gói dịch vụ.");
+
+        group.MapPatch("/{id}/deactive", DeactiveServicePackage)
+                .WithSummary("[Staff/Manager] Ngưng kích hoạt gói dịch vụ.");
+
+        group.MapDelete("/{id}/delete", DeleteServicePackage)
+               .WithSummary("[Staff/Manager] Xóa tùy gói dịch vụ.");
 
 
     }
@@ -73,5 +78,83 @@ public class ServicePackageEndpoints : EndpointGroupBase
                 statusCode: StatusCodes.Status404NotFound);
         }
     }
-   
+    public async Task<IResult> UpdateServicePackage(Guid id, [FromServices] ISender sender, [FromBody] UpdateServicePackageCommand command)
+    {
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
+
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Cập nhật thành công!"
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+    }
+    public async Task<IResult> DeleteServicePackage(Guid id, [FromServices] ISender sender)
+    {
+        try
+        {
+            var result = await sender.Send(new DeleteServicePackageCommand { Id = id});
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Xóa thành công!"
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+    }
+
+    public async Task<IResult> ActiveServicePackage(Guid id, [FromServices] ISender sender)
+    {
+        try
+        {
+            var result = await sender.Send(new ActiveServicePackageCommand { Id = id });
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Đã kích hoạt tùy chọn!"
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+    }
+
+    public async Task<IResult> DeactiveServicePackage(Guid id, [FromServices] ISender sender)
+    {
+        try
+        {
+            var result = await sender.Send(new DeactiveServicePackageCommand{ Id = id });
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Đã ngưng kích hoạt tùy chọn!"
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status400BadRequest);
+        }
+
+    }
 }
