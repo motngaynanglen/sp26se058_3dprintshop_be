@@ -9,9 +9,11 @@ namespace sp26se058_3dprintshop_be.Application.ServicePackages.Queries;
 public record GetServicePackagesQuery : IRequest<List<ServicePackageDTO>>
 {
     [DefaultValue("")]
-    public string? search { get; set; }
+    public string? Search { get; init; }
     [DefaultValue("DESIGN Hoặc PRINTING")]
-    public string? service { get; set; }
+    public string? Service { get; init; }
+    [DefaultValue(null)]
+    public bool? IsActive { get; init; }
     [DefaultValue("Created")]
     public string? SortBy { get; init; }
     public bool SortDescending { get; init; } = false;
@@ -34,14 +36,17 @@ public class GetServicePackagesQueryHandler : IRequestHandler<GetServicePackages
                 .ThenInclude(po => po.ServiceOption)
             .AsNoTracking()
             .Where(x => x.IsActive);
-
-        if (!string.IsNullOrEmpty(request.search))
+        if (request.IsActive.HasValue)
         {
-            query = query.Where(s => s.Name.Contains(request.search) || s.Code.Contains(request.search));
+            query = query.Where(x => x.IsActive == request.IsActive);
         }
-        if (!string.IsNullOrEmpty(request.service))
+        if (!string.IsNullOrEmpty(request.Search))
         {
-            query = query.Where(s => s.ServiceType.Contains(request.service));
+            query = query.Where(s => s.Name.Contains(request.Search) || s.Code.Contains(request.Search));
+        }
+        if (!string.IsNullOrEmpty(request.Service))
+        {
+            query = query.Where(s => s.ServiceType.Contains(request.Service));
         }
 
         query = request.SortBy switch
