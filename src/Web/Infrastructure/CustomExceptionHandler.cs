@@ -42,10 +42,10 @@ public class CustomExceptionHandler : IExceptionHandler
 
         await httpContext.Response.WriteAsJsonAsync(
             new BaseResponseModel(
-                statusCode: StatusCodes.Status500InternalServerError,
+                statusCode: StatusCodes.Status400BadRequest,
                 data: ex.Message,
                 message: "Đã xảy ra lỗi hệ thống không mong muốn.",
-                code: ResponseCodeConstants.INTERNAL_SERVER_ERROR
+                code: ResponseCodeConstants.FAILED
             )
         );
     }
