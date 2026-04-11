@@ -16,7 +16,6 @@ public static class StringExtensions
         {
             return Guid.Empty;
         }
-
         return Guid.TryParse(value, out var result) ? result : Guid.Empty;
     }
     public static long ToLong(this string? value)

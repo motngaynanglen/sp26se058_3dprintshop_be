@@ -1654,6 +1654,96 @@
         }
       }
     },
+    "/api/package-option/add": {
+      "post": {
+        "tags": [
+          "PackageOption"
+        ],
+        "summary": "[Staff/Manager] Thêm tùy chọn dịch vụ mới.",
+        "operationId": "PostApiPackageOptionAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePackageOptionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/package-option/{id}/update": {
+      "patch": {
+        "tags": [
+          "PackageOption"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin tùy chọn gói.",
+        "operationId": "PatchApiPackageOptionUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePackageOptionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/package-option/{id}/delete": {
+      "delete": {
+        "tags": [
+          "PackageOption"
+        ],
+        "summary": "[Staff/Manager] Xóa tùy chọn dịch vụ gói.",
+        "operationId": "DeleteApiPackageOptionDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/service-option/all": {
       "get": {
         "tags": [
@@ -1855,6 +1945,122 @@
           "required": true,
           "x-position": 1
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/{id}/update": {
+      "patch": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin gói dịch vụ.",
+        "operationId": "PatchApiServicePackageUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServicePackageCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/{id}/active": {
+      "patch": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[Staff/Manager] Kích hoạt gói dịch vụ.",
+        "operationId": "PatchApiServicePackageActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/{id}/deactive": {
+      "patch": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[Staff/Manager] Ngưng kích hoạt gói dịch vụ.",
+        "operationId": "PatchApiServicePackageDeactive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/service-package/{id}/delete": {
+      "delete": {
+        "tags": [
+          "ServicePackage"
+        ],
+        "summary": "[Staff/Manager] Xóa tùy gói dịch vụ.",
+        "operationId": "DeleteApiServicePackageDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -2477,6 +2683,11 @@
               "search": {
                 "type": "string",
                 "default": "Resin"
+              },
+              "isMainTag": {
+                "type": "boolean",
+                "default": false,
+                "nullable": true
               }
             }
           }
@@ -2518,12 +2729,12 @@
           },
           "isActive": {
             "type": "boolean",
-            "default": "Sản phẩm được in từ Resin",
+            "default": false,
             "nullable": true
           },
           "isMainTag": {
             "type": "boolean",
-            "default": "Sản phẩm được in từ Resin",
+            "default": false,
             "nullable": true
           }
         }
@@ -3095,6 +3306,68 @@
           }
         }
       },
+      "CreatePackageOptionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "servicePackageId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "serviceOptionId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "isRequired": {
+            "type": "boolean"
+          },
+          "defaultSelected": {
+            "type": "boolean"
+          },
+          "priceOverride": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "minQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxQuantity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpdatePackageOptionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isRequired": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "defaultSelected": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "priceOverride": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "minQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
       "CreateServiceOptionCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -3153,6 +3426,10 @@
             "default": "DESIGN Hoặc PRINTING",
             "nullable": true
           },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
           "sortBy": {
             "type": "string",
             "default": "Created",
@@ -3184,6 +3461,9 @@
             "type": "string",
             "nullable": true
           },
+          "isActive": {
+            "type": "boolean"
+          },
           "options": {
             "type": "array",
             "items": {
@@ -3211,6 +3491,37 @@
           "maxQuantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "UpdateServicePackageCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "basePrice": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
           }
         }
       },

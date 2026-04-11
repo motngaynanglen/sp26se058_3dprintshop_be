@@ -47,7 +47,7 @@ public static class DependencyInjection
         //    .AddApiEndpoints();
 
         services.AddSingleton(TimeProvider.System);
-        //services.AddTransient<IIdentityService, IdentityService>();
+        services.AddTransient<IIdentityService, IdentityService>();
 
         services.AddAuthorization(options =>
             options.AddPolicy(Policies.CanPurge, policy => policy.RequireRole(Roles.ADMIN)));

@@ -52,22 +52,22 @@ public class AccountEndpoints : EndpointGroupBase
     }
     public async Task<IResult> CreateAccount([FromServices] ISender sender, [FromBody] CreateAccountCommand command)
     {
-        try
-        {
+        //try
+        //{
             var result = await sender.Send(command);
             return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
                     data: result,
                     message: "Tạo tài khoản thành công!",
                     code: ResponseCodeConstants.SUCCESS
                 ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Tạo tài khoản thất bại"
-            ));
-        }
+        //}
+        //catch (Exception ex)
+        //{
+        //    return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+        //        data: ex.Message,
+        //        message: "Tạo tài khoản thất bại"
+        //    ));
+        //}
     }
     public async Task<IResult> QueryAccounts([FromServices] ISender sender, [FromBody] GetAccountsWithPaginationQuery command)
     {
