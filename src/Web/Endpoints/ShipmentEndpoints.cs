@@ -42,81 +42,45 @@ public class ShipmentEndpoints : EndpointGroupBase
     }
     public async Task<IResult> QueryShipments([FromServices] ISender sender, [FromBody] GetShipmentsWithPaginationQuery command)
     {
-        try
-        {
-            var result = await sender.Send(command);
+        var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<ShipmentDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<ShipmentDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
     }
     public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateShipmentCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                data: result,
-                message: "Cập nhật địa chỉ thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật."
-            ));
-        }
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            data: result,
+            message: "Cập nhật địa chỉ thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
     public async Task<IResult> GetByOrderId([FromServices] ISender sender, [FromRoute] Guid orderId)
     {
-        try
-        {
-            var result = await sender.Send(new GetShipmentByOrderIdQuery { OrderId = orderId });
+        var result = await sender.Send(new GetShipmentByOrderIdQuery { OrderId = orderId });
 
-            return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
-                data: result,
-                message: "Truy vấn thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình truy vấn."
-            ));
-        }
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Truy vấn thành công!",
+            code: ResponseCodeConstants.SUCCESS));
     }
     public async Task<IResult> GetById([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetShipmentByIdQuery { Id = id });
 
-            return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
-                data: result,
-                message: "Truy vấn thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình truy vấn."
-            ));
-        }
+        var result = await sender.Send(new GetShipmentByIdQuery { Id = id });
+
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Truy vấn thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
 }

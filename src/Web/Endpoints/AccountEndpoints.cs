@@ -27,7 +27,7 @@ public class AccountEndpoints : EndpointGroupBase
         group.MapGet("/{id}/detail", GetAccountDetail)
             .WithSummary("[Admin] Lấy thông tin chi tiết tài khoản.")
             .WithDescription("Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.");
-        
+
         group.MapPatch("/{id}/update", UpdateAccount)
             .WithSummary("[Admin] Cập nhật thông tin tài khoản với ID.");
 
@@ -52,189 +52,118 @@ public class AccountEndpoints : EndpointGroupBase
     }
     public async Task<IResult> CreateAccount([FromServices] ISender sender, [FromBody] CreateAccountCommand command)
     {
-        //try
-        //{
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                    data: result,
-                    message: "Tạo tài khoản thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        //}
-        //catch (Exception ex)
-        //{
-        //    return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-        //        data: ex.Message,
-        //        message: "Tạo tài khoản thất bại"
-        //    ));
-        //}
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                data: result,
+                message: "Tạo tài khoản thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> QueryAccounts([FromServices] ISender sender, [FromBody] GetAccountsWithPaginationQuery command)
     {
-        try
-        {
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
+
     }
     public async Task<IResult> GetAccountDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetAccountDetailQuery { Id = id });
-            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
-                    data: result,
-                    message: "Lấy thông tin chi tiết thành công",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(new GetAccountDetailQuery { Id = id });
+        return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy thông tin chi tiết thành công",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> GetAccountMine([FromServices] ISender sender)
     {
-        try
-        {
-            var result = await sender.Send(new GetAccountMineDetailQuery());
-            return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
-                    data: result,
-                    message: "Lấy thông tin chi tiết thành công",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(new GetAccountMineDetailQuery());
+        return TypedResults.Ok(BaseResponseModel<AccountDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy thông tin chi tiết thành công",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> UpdateAccount([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateAccountCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: new { id = result },
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: new { id = result },
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> UpdateAccountMine([FromServices] ISender sender, [FromBody] UpdateAccountMineCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: new { id = result },
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: new { id = result },
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> ChangePassword([FromServices] ISender sender, [FromBody] ChangePasswordAccountCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-                data: true,
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+            data: true,
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> Deactive([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeactiveAccountCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: result,
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result,
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> Active([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ActiveAccountCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: result,
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result,
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteAccountCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: result,
-                message: "Cập nhật thành công",
-                code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result,
+            message: "Cập nhật thành công",
+            code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
 }

@@ -33,102 +33,68 @@ public class AuthEndpoints : EndpointGroupBase
     }
     public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                    data: result,
-                    message: "Đăng nhập thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                data: result,
+                message: "Đăng nhập thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
+
     }
     public async Task<IResult> Login([FromServices] ISender sender, [FromBody] LoginCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                    data: result,
-                    message: "Đăng nhập thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                data: result,
+                message: "Đăng nhập thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> ForgetPassword([FromServices] ISender sender, [FromBody] ForgetPasswordCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    data: result,
-                    message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> ResetPassword([FromServices] ISender sender, [FromBody] ResetPasswordCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    data: result,
-                    message: "Đặt lại mật khẩu thành công.",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Đặt lại mật khẩu thành công.",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> Register([FromServices] ISender sender, [FromBody] RegisterCommand command)
     {
-        try
+
+        // Gửi command tới RegisterCommandHandler
+        var result = await sender.Send(command);
+
+        if (result)
         {
-            // Gửi command tới RegisterCommandHandler
-            var result = await sender.Send(command);
-
-            if (result)
-            {
-                return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-                    data: true,
-                    message: "Đăng ký tài khoản khách hàng thành công."
-                ));
-            }
-
-            return TypedResults.BadRequest(BaseResponseModel<bool>.BadRequestResponseModel(
-                data: false,
-                message: "Đăng ký thất bại, vui lòng thử lại."
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: true,
+                message: "Đăng ký tài khoản khách hàng thành công."
             ));
         }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        return TypedResults.BadRequest(BaseResponseModel<bool>.BadRequestResponseModel(
+            data: false,
+            message: "Đăng ký thất bại, vui lòng thử lại."
+        ));
+
 
     }
 
