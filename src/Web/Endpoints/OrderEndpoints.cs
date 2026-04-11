@@ -18,32 +18,36 @@ public class OrderEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/order")
                        .WithTags("Order")
                        .WithOpenApi();
+
+
+        // --- TRUY VẤN ---
         group.MapPost("/query", Query)
                     .WithSummary("[All] Truy vấn danh sách đơn hàng.");
 
-        group.MapPost("/checkout", CheckOut)
-                .WithSummary("[Customer] Tạo đơn hàng với thông tin giỏ hàng.")
-                .WithDescription("Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. " + SourceTypes.ListString);
-
         group.MapGet("/{id}/detail", GetDetail)
-                .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
+                    .WithSummary("[All] Lấy thông tin chi tiết đơn hàng.");
+
+
+        // --- FLOW KHỞI TẠO & HỦY ---
+        group.MapPost("/checkout", CheckOut)
+                .WithSummary("[Customer] Tạo đơn hàng mới từ giỏ hàng.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.ListString);
+
         group.MapPatch("/{id}/cancel", CancelOrder)
-                .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng có ID.")
-                .WithDescription("Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.");
+                .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng.")
+                .WithDescription("Chỉ hỗ trợ khi đơn hàng chưa thanh toán hoặc chưa đi vào sản xuất.");
 
-        //group.MapPut("/update/{id}", Update);
+        // --- FLOW SẢN XUẤT & HOÀN TẤT (NEW) ---
 
-        /*
-        của customer
-        group.MapPost("/add", Add); //Tạo đơn hàng mới
-        group.MapPost("/invoice", CreateInvoice); // Tạo hóa đơn cho đơn hàng
-        group.MapPut("/query", Query); // Truy vấn đơn hàng với phân trang
-        group.MapGet("/detail/{id}", GetById); // Lấy chi tiết đơn hàng
+        group.MapPatch("/item/{orderItemId}/finish-package", FinishOrderItem)
+                .WithSummary("[Staff] Xác nhận một món hàng vật lý đã làm xong.")
+                .WithDescription("Chuyển trạng thái Item sang FINISHED. Nếu là món cuối cùng, hệ thống tự động cập nhật Shipment sang READY_FOR_PICKUP.");
 
-        của staff
-        group.MapPost("/confirm", ConfirmOrder); // Xác nhận đơn hàng
-        group.MapPatch("/update-status/{id}", UpdateStatus); // Cập nhật trạng thái đơn hàng (ví dụ: đang in, đã hoàn thành, đã giao hàng)
-         */
+        group.MapPatch("/{id}/complete", CompleteOrder)
+                .WithSummary("[Customer/Staff/Manager] Hoàn thành đơn hàng (Đóng đơn).")
+                .WithDescription("Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Staff/Manager chỉ được bấm sau 3 ngày kể từ khi Delivered.");
+
+       
     }
 
     public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetOrdersWithPaginationQuery query)
@@ -94,14 +98,24 @@ public class OrderEndpoints : EndpointGroupBase
             ));
 
     }
-    //public async Task<IResult> Create(ISender sender)
-    //{
-    //    return TypedResults.Ok();
-    //}
+    public async Task<IResult> FinishOrderItem([FromServices] ISender sender, [FromRoute] Guid orderItemId)
+    {
+        var result = await sender.Send(new MarkOrderItemAsFinishedPackageCommand { Id = orderItemId});
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Xác nhận món hàng đã hoàn tất sản xuất/đóng gói."
+            ));
+    }
 
-    //public async Task<IResult> Update(ISender sender)
-    //{
-    //    var order = await sender.Send(sender);
-    //    return TypedResults.Ok();
-    //}
+    // API mới chốt vòng đời đơn hàng
+    public async Task<IResult> CompleteOrder([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new CompleteOrderCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Đơn hàng đã hoàn thành và đóng lại thành công."
+            ));
+    }
 }
