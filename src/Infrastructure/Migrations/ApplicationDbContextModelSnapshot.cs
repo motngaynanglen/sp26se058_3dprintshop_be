@@ -1359,6 +1359,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("CarrierName")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
 
@@ -1404,9 +1407,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m);
-
-                    b.Property<Guid?>("ShippingMethodId")
-                        .HasColumnType("char(36)");
 
                     b.Property<string>("TrackingNumber")
                         .HasMaxLength(100)

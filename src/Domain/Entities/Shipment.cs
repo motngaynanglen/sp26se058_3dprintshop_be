@@ -9,9 +9,10 @@ public class Shipment : BaseAuditableEntity
 {
     public Guid OrderId { get; set; }
     public Guid ShippingAddressId { get; set; }
-    public Guid? ShippingMethodId { get; set; }
 
     public decimal ShippingFee { get; set; }
+
+    public string? CarrierName { get; set; }
     public string? TrackingNumber { get; set; }
     public DateTime? EstimatedDeliveryTime { get; set; }
     public string ShipmentStatus { get; set; } = "PENDING";

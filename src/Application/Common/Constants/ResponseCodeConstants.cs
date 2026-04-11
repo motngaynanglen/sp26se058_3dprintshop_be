@@ -20,6 +20,7 @@ public static class ResponseCodeConstants
     public const string NOT_FOUND = "SYS_404";             // Không tìm thấy tài nguyên
     public const string UNAUTHORIZED = "SYS_401";          // Chưa đăng nhập
     public const string FORBIDDEN = "SYS_403";             // Không có quyền truy cập
+    public const string UNPROCESSABLE_ENTITY = "SYS_422";  // Lỗi kiểm duyệt dữ liệu đầu vào
 
     // Lỗi xác thực (Auth)
     public const string INVALID_CREDENTIALS = "AUTH_001";  // Sai tài khoản/mật khẩu

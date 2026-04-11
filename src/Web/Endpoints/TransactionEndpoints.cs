@@ -41,80 +41,47 @@ public class TransactionEndpoints : EndpointGroupBase
 
     public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
-                    data: result,
-                    message: "Xác nhực thanh toán thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                data: result,
+                message: "Xác nhực thanh toán thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> PerformTransaction([FromServices] ISender sender, [FromBody] PerformTransactionCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
-                    data: result,
-                    message: "Mở cổng thanh toán thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                data: result,
+                message: "Mở cổng thanh toán thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> GetDetailByOrderID([FromServices] ISender sender, [FromRoute] Guid orderId)
     {
-        try
-        {
-            var result = await sender.Send(new GetTransactionByOrderIdQuery { OrderId = orderId});
-            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
-                    data: result,
-                    message: "Đã tìm thấy cổng thanh toán!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var result = await sender.Send(new GetTransactionByOrderIdQuery { OrderId = orderId });
+        return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                data: result,
+                message: "Đã tìm thấy cổng thanh toán!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> CancelTransaction([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelTransactionCommand command)
     {
-        try
-        {
-            var finalcommand = command with { TransactionId = id };
-            var result = await sender.Send(finalcommand);
-            return TypedResults.Ok(BaseResponseModel.OkResponseModel(
-                    data: result,
-                    message: "Mở cổng thanh toán thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+
+        var finalcommand = command with { TransactionId = id };
+        var result = await sender.Send(finalcommand);
+        return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                data: result,
+                message: "Mở cổng thanh toán thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
 }

@@ -20,103 +20,121 @@ public class ShipmentEndpoints : EndpointGroupBase
                        .WithTags("Shipment")
                        .WithOpenApi();
 
-        //group.MapPost("/add", Add)
-        //        .WithSummary("[Customer] Thêm địa chỉ nhận hàng mới.");
-
-        //group.MapGet("/my", GetMy)
-        //        .WithSummary("[Customer] Lấy danh sách địa chỉ.");
+        // --- NHÓM TRUY VẤN (QUERIES) ---
         group.MapPost("/query", QueryShipments)
-            .WithSummary("[Staff/Manager] Truy vấn danh sách tài khoản.")
-            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered' ");
+            .WithSummary("[Staff/Manager] Truy vấn danh sách vận đơn.")
+            .WithDescription("Hỗ trợ tìm kiếm, lọc theo trạng thái và phân trang. Sắp xếp: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered'.");
 
-        group.MapPatch("/{id}/update", Update)
-                .WithSummary("[Staff/Manager] Cập nhật thông tin đơn vận có ID.");
+        group.MapGet("/{id}/detail", GetById)
+            .WithSummary("[All] Lấy thông tin chi tiết vận đơn theo ID.")
+            .WithDescription("Khách hàng chỉ xem được vận đơn của mình. Staff/Manager xem được tất cả.");
 
         group.MapGet("/{orderId}/detail-by-order-id", GetByOrderId)
-                .WithSummary("[All] Lấy thông tin đơn vận có đơn hàng ID.");
-        group.MapGet("/{id}/detail", GetById)
-                .WithSummary("[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.")
-                .WithDescription("Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn");
+            .WithSummary("[All] Lấy thông tin vận đơn thông qua Order ID.");
+
+        // --- NHÓM ĐIỀU PHỐI TRẠNG THÁI (COMMANDS - THEO LUỒNG) ---
+
+        group.MapPatch("/{id}/mark-ready", MarkReady)
+            .WithSummary("[Staff] Xác nhận đóng gói xong, chờ gửi hàng.")
+            .WithDescription("Chuyển trạng thái sang 'ReadyForPickup'. Chỉ thực hiện được khi toàn bộ vật phẩm trong đơn đã sản xuất xong.");
+
+        group.MapPatch("/{id}/mark-in-transit", StartInTransit)
+            .WithSummary("[Staff] Xác nhận đã giao cho đơn vị vận chuyển.")
+            .WithDescription("Chuyển trạng thái sang 'InTransit'. Yêu cầu nhập CarrierName và TrackingNumber.");
+
+        group.MapPatch("/{id}/confirm-delivered", ConfirmDelivered)
+            .WithSummary("[Staff] Xác nhận shipper đã giao hàng thành công.")
+            .WithDescription("Chuyển trạng thái sang 'Delivered'. Ghi nhận thời điểm giao hàng để tính thời hạn bảo hành/khiếu nại.");
+
+        group.MapPatch("/{id}/mark-failed", MarkFailed)
+            .WithSummary("[Staff] Báo cáo sự cố giao hàng thất bại.")
+            .WithDescription("Chuyển trạng thái sang 'Failed'. Yêu cầu nhập lý do để làm căn cứ xử lý (giao lại hoặc hoàn hàng).");
+
+        // --- NHÓM CẬP NHẬT HÀNH CHÍNH ---
+        group.MapPatch("/{id}/update-info", Update)
+            .WithSummary("[Staff/Manager] Cập nhật thông tin hành chính của vận đơn.")
+            .WithDescription("Sửa đổi phí ship, địa chỉ hoặc thời gian dự kiến giao hàng.");
 
 
     }
     public async Task<IResult> QueryShipments([FromServices] ISender sender, [FromBody] GetShipmentsWithPaginationQuery command)
     {
-        try
-        {
-            var result = await sender.Send(command);
+        var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<ShipmentDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 Unauthorized
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<ShipmentDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
     }
     public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateShipmentCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                data: result,
-                message: "Cập nhật địa chỉ thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật."
-            ));
-        }
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+            data: result,
+            message: "Cập nhật địa chỉ thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
     public async Task<IResult> GetByOrderId([FromServices] ISender sender, [FromRoute] Guid orderId)
     {
-        try
-        {
-            var result = await sender.Send(new GetShipmentByOrderIdQuery { OrderId = orderId });
+        var result = await sender.Send(new GetShipmentByOrderIdQuery { OrderId = orderId });
 
-            return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
-                data: result,
-                message: "Truy vấn thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình truy vấn."
-            ));
-        }
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Truy vấn thành công!",
+            code: ResponseCodeConstants.SUCCESS));
     }
     public async Task<IResult> GetById([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetShipmentByIdQuery { Id = id });
 
-            return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
-                data: result,
-                message: "Truy vấn thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình truy vấn."
-            ));
-        }
+        var result = await sender.Send(new GetShipmentByIdQuery { Id = id });
+
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Truy vấn thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
+    }
+    public async Task<IResult> MarkReady([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new MarkShipmentAsReadyCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result, 
+            message: "Kiện hàng đã sẵn sàng để giao!", 
+            code: ResponseCodeConstants.SUCCESS));
+    }
+
+    public async Task<IResult> StartInTransit([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsInTransitCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result, 
+            message: "Đã bắt đầu quá trình vận chuyển.", 
+            code: ResponseCodeConstants.SUCCESS));
+    }
+
+    public async Task<IResult> ConfirmDelivered([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new ConfirmShipmentDeliveredCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result, 
+            message: "Giao hàng thành công!", 
+            code: ResponseCodeConstants.SUCCESS));
+    }
+
+    public async Task<IResult> MarkFailed([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsFailedCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result, 
+            message: "Đã ghi nhận sự cố giao hàng.", 
+            code: ResponseCodeConstants.SUCCESS));
     }
 }

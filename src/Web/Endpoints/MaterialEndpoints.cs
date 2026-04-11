@@ -4,6 +4,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -32,35 +33,65 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromServices] ISender sender,
         [FromBody] CreateMaterialCommand command)
     {
-        var result = await sender.Send(command);
+        try
+        {
+            var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-            data: result,
-            message: "Tạo chất liệu thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+                data: result,
+                message: "Tạo chất liệu thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
     }
 
     public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
-        var result = await sender.Send(new GetMaterialListQuery());
+        try
+        {
+            var result = await sender.Send(new GetMaterialListQuery());
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.OkResponseModel(
-            data: result,
-            message: "Lấy danh sách chất liệu thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.OkResponseModel(
+                data: result,
+                message: "Lấy danh sách chất liệu thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
     }
 
     public async Task<IResult> GetByID(
         [FromServices] ISender sender,
         [FromRoute] Guid id)
     {
-        var result = await sender.Send(new GetMaterialDetailQuery { Id = id });
+        try
+        {
+            var result = await sender.Send(new GetMaterialDetailQuery { Id = id });
 
-        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-            data: result,
-            message: "Lấy thông tin chất liệu thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy thông tin chất liệu thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+        
     }
 
     public async Task<IResult> Update(
@@ -68,14 +99,23 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromRoute] Guid id,
         [FromBody] UpdateMaterialCommand command)
     {
-        //command.Id = id;
+        
+        try
+        {
+            var finalCommand = command with { Id = id };
+            var result = await sender.Send(finalCommand);
 
-        var result = await sender.Send(command);
-
-        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-            data: result,
-            message: "Cập nhật chất liệu thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+                data: result,
+                message: "Cập nhật chất liệu thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
 
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteMaterialCommand command)

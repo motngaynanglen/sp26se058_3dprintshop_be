@@ -23,69 +23,56 @@ public class AppSupportEndpoints : EndpointGroupBase
     }
     public async Task<IResult> GetPresignedUploadUrl([FromQuery] string fileName, [FromServices] IS3StorageService s3Service)
     {
-        try
-        {
-            var uploadUrl = await s3Service.GetPresignedUploadUrlAsync(fileName, "sp26se058");
 
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                    data: new
-                    {
-                        UploadUrl = uploadUrl,
-                        // Trả về luôn URL đích để Frontend lưu vào DB sau khi upload xong
-                        FileUrl = uploadUrl.Split('?')[0]
-                    },
-                    message: "Lấy URL thành công!"
-                ));
+        var uploadUrl = await s3Service.GetPresignedUploadUrlAsync(fileName, "sp26se058");
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
-    }
-    public async Task<IResult> TestUploadToB2([FromQuery] string uploadUrl,[FromForm] IFormFile file)
-    {
-        try
-        {
-            using var client = new HttpClient();
-
-            // Đọc file vào Stream
-            using var stream = file.OpenReadStream();
-            var content = new StreamContent(stream);
-
-            // BẮT BUỘC: Content-Type phải khớp (thường là image/jpeg hoặc image/png)
-            // CẢI THIỆN: Lấy trực tiếp ContentType của file vừa chọn trên Swagger
-            // Ví dụ: Nếu chọn file .png, nó sẽ tự là "image/png"
-            // Nếu chọn .webp, nó sẽ tự là "image/webp"
-            var mimeType = file.ContentType;
-
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
-
-            // Thực hiện lệnh PUT 
-            var response = await client.PutAsync(uploadUrl, content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return TypedResults.Ok(new
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            code: ResponseCodeConstants.SUCCESS,
+                data: new
                 {
-                    Message = "BE Test: Upload lên Backblaze thành công!",
-                    StatusCode = (int)response.StatusCode
-                });
-            }
+                    UploadUrl = uploadUrl,
+                    // Trả về luôn URL đích để Frontend lưu vào DB sau khi upload xong
+                    FileUrl = uploadUrl.Split('?')[0]
+                },
+                message: "Lấy URL thành công!"
+            ));
 
-            var errorDetail = await response.Content.ReadAsStringAsync();
-            return TypedResults.BadRequest(new
+    }
+    public async Task<IResult> TestUploadToB2([FromQuery] string uploadUrl, [FromForm] IFormFile file)
+    {
+
+        using var client = new HttpClient();
+
+        // Đọc file vào Stream
+        using var stream = file.OpenReadStream();
+        var content = new StreamContent(stream);
+
+        // BẮT BUỘC: Content-Type phải khớp (thường là image/jpeg hoặc image/png)
+        // CẢI THIỆN: Lấy trực tiếp ContentType của file vừa chọn trên Swagger
+        // Ví dụ: Nếu chọn file .png, nó sẽ tự là "image/png"
+        // Nếu chọn .webp, nó sẽ tự là "image/webp"
+        var mimeType = file.ContentType;
+
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mimeType);
+
+        // Thực hiện lệnh PUT 
+        var response = await client.PutAsync(uploadUrl, content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return TypedResults.Ok(new
             {
-                Message = "B2 từ chối File",
-                Detail = errorDetail
+                Message = "BE Test: Upload lên Backblaze thành công!",
+                StatusCode = (int)response.StatusCode
             });
         }
-        catch (Exception ex)
+
+        var errorDetail = await response.Content.ReadAsStringAsync();
+        return TypedResults.BadRequest(new
         {
-            return TypedResults.BadRequest(ex.Message);
-        }
+            Message = "B2 từ chối File",
+            Detail = errorDetail
+        });
+
     }
 }

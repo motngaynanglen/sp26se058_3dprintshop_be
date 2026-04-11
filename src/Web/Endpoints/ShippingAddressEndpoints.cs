@@ -36,45 +36,45 @@ public class ShippingAddressEndpoints : EndpointGroupBase
 
     public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateShippingAddressCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<CreateShippingAddressCommand>.OkResponseModel(
-                data: result,
-                message: "Thêm địa chỉ thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(BaseResponseModel<CreateShippingAddressCommand>.OkResponseModel(
+            data: result,
+            message: "Thêm địa chỉ thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
 
     public async Task<IResult> GetMy([FromServices] ISender sender)
     {
+
         var result = await sender.Send(new GetMyShippingAddressesQuery());
 
         return TypedResults.Ok(BaseResponseModel<IEnumerable<ShippingAddressDTO>>.OkResponseModel(
             data: result,
             message: "Lấy danh sách địa chỉ thành công!",
             code: ResponseCodeConstants.SUCCESS));
+
+
     }
 
     public async Task<IResult> Remove([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteShippingAddressCommand command)
     {
+
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
         return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
             data: result,
             message: "Loại bỏ địa chỉ thành công!",
             code: ResponseCodeConstants.SUCCESS));
+
+
     }
 
     public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateShippingAddressCommand command)
     {
+
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
 
@@ -82,5 +82,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
             data: result,
             message: "Cập nhật địa chỉ thành công!",
             code: ResponseCodeConstants.SUCCESS));
+
+
     }
 }

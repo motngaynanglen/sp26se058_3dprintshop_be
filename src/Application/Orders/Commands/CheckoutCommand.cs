@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1.Ocsp;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -18,7 +19,7 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 
 [Authorize(Roles = Roles.CUSTOMER)]
-public record CheckoutCommand : IRequest<Guid>
+public record CheckoutCommand : IRequest<object>
 {
     [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid ShippingAddressId { get; init; }
@@ -30,17 +31,19 @@ public record CheckoutCommand : IRequest<Guid>
     public string? Note { get; init; }
     public List<CheckoutItemRequest> Items { get; init; } = new();
 }
-public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
+public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
     private readonly IUser _user;
 
-    public CheckoutCommandHandler(IApplicationDbContext context, IUser user)
+    public CheckoutCommandHandler(IApplicationDbContext context,IMapper mapper, IUser user)
     {
         _context = context;
+        _mapper = mapper;
         _user = user;
     }
-    public async Task<Guid> Handle(CheckoutCommand request, CancellationToken cancellationToken)
+    public async Task<object> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
         var userId = _user.Id.ToGuid(); // Lấy ID từ Token
         var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId);
@@ -57,7 +60,9 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             ShippingFee = 0,
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
         };
 
         var invoice = new Invoice
@@ -68,7 +73,9 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
             Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
         };
 
         _context.Orders.Add(order);
@@ -84,7 +91,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
             throw new Exception($"Lỗi DB: {message}");
         }
 
-        return order.Id;
+        return _mapper.Map<OrderDTO>(order);
     }
     private async Task<Order> CreateOrderAsync(Guid customerId, CheckoutCommand request, CancellationToken ct)
     {
@@ -171,35 +178,6 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, Guid>
         return order;
     }
 
-    /*private Task<Shipment> CreateShipment(Guid orderId, Guid addressId, decimal fee)
-    {
-        var shipment = new Shipment
-        {
-            Id = Guid.NewGuid(),
-            OrderId = orderId,
-            ShippingAddressId = addressId,
-            ShippingFee = fee,
-            ShipmentStatus = "PENDING"
-        };
-
-        _context.Shipments.Add(shipment);
-
-        return Task.FromResult(shipment);
-    }*/
-
-    /*private Task<Invoice> CreateInvoice(Order order)
-    {
-        var invoice = new Invoice
-        {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            InvoiceCode = $"INV-{DateTime.UtcNow.Ticks}-{order.Code}",
-            TotalAmount = order.TotalPrice,
-            PaymentStatus = "UNPAID",
-        };
-        _context.Invoices.Add(invoice);
-        return Task.FromResult(invoice);
-    }*/
 }
 public record CheckoutItemRequest
 {
