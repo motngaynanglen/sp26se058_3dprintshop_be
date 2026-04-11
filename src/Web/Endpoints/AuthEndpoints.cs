@@ -33,82 +33,52 @@ public class AuthEndpoints : EndpointGroupBase
     }
     public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                    data: result,
-                    message: "Đăng nhập thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                data: result,
+                message: "Đăng nhập thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
+
     }
     public async Task<IResult> Login([FromServices] ISender sender, [FromBody] LoginCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                    data: result,
-                    message: "Đăng nhập thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                data: result,
+                message: "Đăng nhập thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> ForgetPassword([FromServices] ISender sender, [FromBody] ForgetPasswordCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    data: result,
-                    message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> ResetPassword([FromServices] ISender sender, [FromBody] ResetPasswordCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    data: result,
-                    message: "Đặt lại mật khẩu thành công.",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Trả về 401 
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Đặt lại mật khẩu thành công.",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
     public async Task<IResult> Register([FromServices] ISender sender, [FromBody] RegisterCommand command)
     {
+
         // Gửi command tới RegisterCommandHandler
         var result = await sender.Send(command);
 
@@ -124,6 +94,8 @@ public class AuthEndpoints : EndpointGroupBase
             data: false,
             message: "Đăng ký thất bại, vui lòng thử lại."
         ));
+
+
     }
 
 }

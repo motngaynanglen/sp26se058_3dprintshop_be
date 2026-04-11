@@ -43,167 +43,111 @@ public class FeedbackEndpoints : EndpointGroupBase
     }
     public async Task<IResult> GetMyPending([FromServices] ISender sender, [FromBody] GetPendingFeedbacksQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<PendingFeedbackDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<PendingFeedbackDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
+
+
     }
     public async Task<IResult> SendFeedback([FromServices] ISender sender, [FromBody] CreateFeedbackCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Gửi phản hồi thành công!"
-                ));
+        var result = await sender.Send(command);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Gửi phản hồi thành công!"
+            ));
+
+
     }
     public async Task<IResult> GetMyHistory([FromServices] ISender sender, [FromBody] GetMyFeedbackHistoryQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
+
+
     }
     public async Task<IResult> GetFeedbackByTemplateId([FromServices] ISender sender, [FromBody] GetFeedbacksByTemplateWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
+
+
     }
     public async Task<IResult> QueryFeedbacks([FromServices] ISender sender, [FromBody] GetFeedbacksWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
+
+
     }
-    public async Task<IResult> ReplyFeedback([FromServices] ISender sender , [FromRoute] Guid id, [FromBody] ReplyFeedbackCommand command)
+    public async Task<IResult> ReplyFeedback([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ReplyFeedbackCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Trả lời thành công."
-                ));
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Trả lời thành công."
+            ));
+
+
     }
-    public async Task<IResult> SwitchStatus([FromServices] ISender sender, [FromRoute] Guid id )
+    public async Task<IResult> SwitchStatus([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Đổi trạng thái thành công"
-                ));
+        var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Đổi trạng thái thành công"
+            ));
+
+
     }
     public async Task<IResult> DeleteFeedback([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
 
-            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Đổi trạng thái thành công"
-                ));
+        var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Đổi trạng thái thành công"
+            ));
+
+
     }
 }

@@ -11,11 +11,12 @@ namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
 public class ShipmentDTO
 {
     public Guid Id { get; set; }
-    public Guid OrderId { get; set; }
-    public Guid ShippingAddressId { get; set; }
+    public Guid? OrderId { get; set; }
+    //public Guid? ShippingAddressId { get; set; }
     public Guid? ShippingMethodId { get; set; }
     public string? FullAddress { get; set; }
-    public decimal ShippingFee { get; set; }
+    public decimal? ShippingFee { get; set; }
+    public string? CarrierName { get; set; }
     public string? TrackingNumber { get; set; }
     public DateTime? EstimatedDeliveryTime { get; set; }
     public string? ShipmentStatus { get; set; }
@@ -34,15 +35,13 @@ public class ShipmentDTO
             .ForMember(dest => dest.FullAddress, opt =>
             {
                 opt.Condition(src => src.ShippingAddress != null);
-                opt.MapFrom(src => string.Join(", ", new[]
-                {
-                    src.ShippingAddress!.AddressLine,
-                    src.ShippingAddress.Ward,
-                    src.ShippingAddress.District,
-                    src.ShippingAddress.City
-                }.Where(str => !string.IsNullOrWhiteSpace(str))));
-            })
-            .ForMember(dest => dest.ShippingAddress, opt => opt.MapFrom(src => src.ShippingAddress));
-        }  
+                opt.MapFrom(src => (
+                src.ShippingAddress.AddressLine
+                + ", " + src.ShippingAddress.Ward
+                + ", " + src.ShippingAddress.District
+                + ", " + src.ShippingAddress.City
+                ) ?? string.Empty);
+            });
+        }
     }
 }

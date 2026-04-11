@@ -80,21 +80,7 @@ public static class DependencyInjection
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
         });
 
-        //// --- CẤU HÌNH PAYOS --- cấu hình ở infrastructure
-        //var payOsSection = configuration.GetSection("PayOS");
-
-        //// Đăng ký PayOSClient với Singleton
-        //services.AddSingleton(new PayOSClient(
-        //    payOsSection["ClientId"] ?? throw new InvalidOperationException("PayOS ClientId is missing"),
-        //    payOsSection["ApiKey"] ?? throw new InvalidOperationException("PayOS ApiKey is missing"),
-        //    payOsSection["ChecksumKey"] ?? throw new InvalidOperationException("PayOS ChecksumKey is missing")
-        //));
-        //services.AddScoped<PayOsCodeGenerator>();
-        //// --- HẾT CẤU HÌNH PAYOS ---
-
-        //// --- CẤU HÌNH EMAIL ---
-        //services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
-        //// --- HẾT CẤU HÌNH EMAIL ---
+        
         return services;
     }
 
