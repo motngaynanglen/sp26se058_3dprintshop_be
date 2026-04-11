@@ -10,6 +10,8 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Commands;
 
@@ -38,6 +40,11 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
     public async Task<object> Handle(PerformTransactionCommand request, CancellationToken cancellationToken)
     {
+        //if (request.PaymentMethod == PaymentMethods.Cash && _user.Role == Roles.CUSTOMER)
+        //{
+        //    throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
+        //}
+
         // 1. Lấy thông tin Order kèm theo Invoice và các Transaction liên quan
         var order = await GetOrderWithDetailsAsync(request.OrderId, cancellationToken);
 
@@ -53,7 +60,10 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             var existingPayment = TryGetValidPendingPayment(order.Invoice!); // Bước 3 bảo đảm Invoice không null
             if (existingPayment != null) return existingPayment;
         }
-
+        if (request.PaymentMethod == PaymentMethods.Cash)
+        {
+             ProcessOrderWorkflowAfterPayment(order);
+        }
         // 5. Tạo Transaction mới dựa trên phương thức thanh toán
         var result = await CreateTransactionByMethodAsync(order, request.PaymentMethod, cancellationToken);
 
@@ -144,7 +154,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
     private async Task<object> CreateTransactionByMethodAsync(Order order, string method, CancellationToken ct)
     {
-        var transaction = new Domain.Entities.Transaction
+        var transaction = new Transaction
         {
             Id = Guid.NewGuid(),
             Invoice = order.Invoice!,
@@ -189,6 +199,32 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         }
 
         throw new Exception("Phương thức thanh toán không hỗ trợ");
+    }
+    private bool ProcessOrderWorkflowAfterPayment(Order order)
+    {
+        // 1. Cập nhật Order sang PROCESSING
+        order.OrderStatus = OrderStatuses.Processing;
+
+        // 2. Cập nhật từng OrderItem dựa trên SourceType
+        // Vì Checkout đang dùng SourceType cho toàn bộ Request
+        foreach (var item in order.OrderItems)
+        {
+            if (item.SourceType == SourceTypes.InStock)
+            {
+                // Hàng có sẵn thì chuyển sang "Đang nhặt hàng"
+                item.FulfillmentStatus = OrderItemStatuses.Picking;
+            }
+            if (item.SourceType == SourceTypes.DesignService)
+            {
+                // Hàng thiết kế/in theo yêu cầu
+                item.FulfillmentStatus = OrderItemStatuses.Designing;
+            }
+            if (item.SourceType == SourceTypes.PreOrder || item.SourceType == SourceTypes.PrintService)
+            {
+                item.FulfillmentStatus = OrderItemStatuses.Printing;
+            }
+        }
+        return true;
     }
     #endregion
 }
