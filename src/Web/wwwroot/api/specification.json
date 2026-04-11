@@ -2793,11 +2793,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000001"
-          },
           "isMainTag": {
             "type": "boolean",
             "default": false
