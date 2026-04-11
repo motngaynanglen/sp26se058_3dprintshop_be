@@ -82,12 +82,11 @@ public class AccountEndpoints : EndpointGroupBase
                     message: "Lấy danh sách thành công"
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            // Trả về 401 Unauthorized
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.INVALID_CREDENTIALS),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> GetAccountDetail([FromServices] ISender sender, [FromRoute] Guid id)
@@ -101,9 +100,11 @@ public class AccountEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> GetAccountMine([FromServices] ISender sender)
@@ -117,9 +118,11 @@ public class AccountEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return TypedResults.NotFound(BaseResponseModel<object>.NotFoundResponseModel(null));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> UpdateAccount([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateAccountCommand command)
@@ -136,10 +139,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> UpdateAccountMine([FromServices] ISender sender, [FromBody] UpdateAccountMineCommand command)
@@ -155,10 +157,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> ChangePassword([FromServices] ISender sender, [FromBody] ChangePasswordAccountCommand command)
@@ -174,10 +175,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> Deactive([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeactiveAccountCommand command)
@@ -194,10 +194,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> Active([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ActiveAccountCommand command)
@@ -214,10 +213,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteAccountCommand command)
@@ -234,10 +232,9 @@ public class AccountEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
 }
