@@ -48,7 +48,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         var emailClean = request.Email.Trim().ToLower();
 
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var existAccount = await _context.Accounts
+        var existAccount = await _context.Accounts.IgnoreQueryFilters() //lấy luôn đã xóa
             .Where(a => a.Username.ToLower() == usernameClean || a.Email.ToLower() == emailClean)
             .ToListAsync(cancellationToken);
 

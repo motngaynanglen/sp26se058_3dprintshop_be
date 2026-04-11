@@ -96,6 +96,9 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
         // 5. Hoàn trả kho (Inventory Rollback)
         foreach (var item in order.OrderItems)
         {
+            item.FulfillmentStatus = "CANCELLED";
+            item.LastModified = CoreHelper.SystemTimeNow;
+            item.LastModifiedBy = _user.Username;
             // Chỉ hoàn kho đối với loại hàng có sẵn (ORDER) có DesignVariantId
             if (item.SourceType == "ORDER" && item.DesignVariantId.HasValue)
             {
