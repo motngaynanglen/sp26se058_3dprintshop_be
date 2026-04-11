@@ -21,7 +21,7 @@ public record CreateServicePackageCommand : IRequest<object>
     public string ServiceType { get; init; } = null!;
     public decimal BasePrice { get; init; }
     public string? Description { get; init; }
-
+    public bool IsActive { get; init; } = true;
     // Danh sách các Option gán vào gói ngay khi tạo
     public List<CreatePackageOptionDTO> Options { get; init; } = new();
 }
@@ -61,7 +61,7 @@ public class CreateServicePackageCommandHandler : IRequestHandler<CreateServiceP
             ServiceType = request.ServiceType,
             BasePrice = request.BasePrice,
             Description = request.Description,
-            IsActive = true,
+            IsActive = request.IsActive,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,

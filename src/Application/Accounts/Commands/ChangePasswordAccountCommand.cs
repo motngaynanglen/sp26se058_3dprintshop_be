@@ -36,13 +36,9 @@ public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswor
     }
     public async Task<bool> Handle(ChangePasswordAccountCommand request, CancellationToken cancellationToken)
     {
-        var userId = _user.Id;
-        if (string.IsNullOrEmpty(userId))
-        {
-            throw new UnauthorizedAccessException("Tài khoản chưa được đăng nhập.");
-        }
+        var userId = _user.Id.ToGuid();
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var account = await _context.Accounts.FirstOrDefaultAsync(a =>  a.Id.ToString().ToLower() == userId!.ToLower(), cancellationToken);
+        var account = await _context.Accounts.FirstOrDefaultAsync(a =>  a.Id == userId, cancellationToken);
 
         if (account == null)
         {

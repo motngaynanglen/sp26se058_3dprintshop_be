@@ -82,84 +82,56 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
     // 3. Cập nhật
     public async Task<IResult> UpdateServiceOption(Guid id, [FromServices] ISender sender, [FromBody] UpdateServiceOptionCommand command)
     {
-        try
-        {
-            if (id != command.Id) return TypedResults.BadRequest("ID không khớp.");
 
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Cập nhật thành công!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Cập nhật thành công!"
+            ));
+
     }
     // 4. Xóa
     public async Task<IResult> DeleteServiceOption(Guid id, [FromServices] ISender sender)
     {
-        try
-        {
-            var result = await sender.Send(new DeleteServiceOptionCommand(id));
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Xóa thành công!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+
+        var result = await sender.Send(new DeleteServiceOptionCommand(id));
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Xóa thành công!"
+            ));
+
 
     }
 
     // 5. Kích hoạt (Active)
     public async Task<IResult> ActiveServiceOption(Guid id, [FromServices] ISender sender)
     {
-        try
-        {
-            var result = await sender.Send(new ActiveServiceOptionCommand(id));
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Đã kích hoạt tùy chọn!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+
+        var result = await sender.Send(new ActiveServiceOptionCommand(id));
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Đã kích hoạt tùy chọn!"
+            ));
+
 
     }
 
     // 6. Ngưng kích hoạt (Deactive)
     public async Task<IResult> DeactiveServiceOption(Guid id, [FromServices] ISender sender)
     {
-        try
-        {
-            var result = await sender.Send(new DeactiveServiceOptionCommand(id));
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Đã ngưng kích hoạt tùy chọn!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+
+        var result = await sender.Send(new DeactiveServiceOptionCommand(id));
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Đã ngưng kích hoạt tùy chọn!"
+            ));
+
 
     }
 }

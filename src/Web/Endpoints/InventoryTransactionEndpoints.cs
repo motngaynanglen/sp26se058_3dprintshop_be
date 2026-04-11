@@ -26,62 +26,41 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
 
     public async Task<IResult> QueryTransactions([FromServices] ISender sender, [FromBody] GetInventoryTransactionsWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<InventoryTransactionDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách biến động kho thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+        var result = await sender.Send(query);
+
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<InventoryTransactionDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách biến động kho thành công"
+            ));
+
     }
 
     public async Task<IResult> GetByReference([FromServices] ISender sender, [FromRoute] Guid orderId)
     {
-        try
-        {
-            var result = await sender.Send(new GetInventoryTransactionsByReferenceQuery { ReferenceId = orderId});
 
-            return TypedResults.Ok(BaseResponseModel<List<InventoryTransactionDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Truy vết dữ liệu thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        var result = await sender.Send(new GetInventoryTransactionsByReferenceQuery { ReferenceId = orderId });
+
+        return TypedResults.Ok(BaseResponseModel<List<InventoryTransactionDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Truy vết dữ liệu thành công"
+            ));
+
     }
 
     public async Task<IResult> CreateTransaction([FromServices] ISender sender, [FromBody] CreateInventoryTransactionCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<CreateInventoryTransactionCommand>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Thực hiện giao dịch kho thành công!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(BaseResponseModel<CreateInventoryTransactionCommand>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Thực hiện giao dịch kho thành công!"
+            ));
+
     }
 }
