@@ -33,8 +33,21 @@ public class CustomExceptionHandler : IExceptionHandler
             await _exceptionHandlers[exceptionType].Invoke(httpContext, exception);
             return true;
         }
+        await HandleUnknownException(httpContext, exception);
+        return true;
+    }
+    private async Task HandleUnknownException(HttpContext httpContext, Exception ex)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-        return false;
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status500InternalServerError,
+                data: ex.Message,
+                message: "Đã xảy ra lỗi hệ thống không mong muốn.",
+                code: ResponseCodeConstants.INTERNAL_SERVER_ERROR
+            )
+        );
     }
 
     private async Task HandleValidationException(HttpContext httpContext, Exception ex)

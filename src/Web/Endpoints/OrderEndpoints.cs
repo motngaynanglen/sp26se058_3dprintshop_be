@@ -46,86 +46,53 @@ public class OrderEndpoints : EndpointGroupBase
          */
     }
 
-    public async Task<IResult> Query ([FromServices] ISender sender, [FromBody] GetOrdersWithPaginationQuery query)
+    public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetOrdersWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách thành công"
+            ));
 
-        }
     }
 
     public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetOrderDetailQuery { Id = id });
-            return TypedResults.Ok(BaseResponseModel<OrderDTO>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Lấy chi tiết đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
+        var result = await sender.Send(new GetOrderDetailQuery { Id = id });
+        return TypedResults.Ok(BaseResponseModel<OrderDTO>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Lấy chi tiết đơn hàng thành công"
+            ));
+
     }
     public async Task<IResult> CheckOut([FromServices] ISender sender, [FromBody] CheckoutCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Tạo đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Tạo đơn hàng thành công"
+            ));
+
     }
     public async Task<IResult> CancelOrder([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelOrderCommand command)
     {
-        try
-        {
-            var finalCommand = command with { OrderId = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Hủy đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
+        var finalCommand = command with { OrderId = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Hủy đơn hàng thành công"
+            ));
+
     }
     //public async Task<IResult> Create(ISender sender)
     //{

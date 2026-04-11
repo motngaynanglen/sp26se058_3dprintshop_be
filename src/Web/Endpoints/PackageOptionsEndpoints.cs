@@ -37,61 +37,40 @@ public class PackageOptionsEndpoints : EndpointGroupBase
     // 1. Tạo mới
     public async Task<IResult> CreateServiceOption([FromServices] ISender sender, [FromBody] CreatePackageOptionCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Thêm thành công!"
-                ));
+        var result = await sender.Send(command);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Thêm thành công!"
+            ));
+
+
     }
 
     public async Task<IResult> UpdateServiceOption(Guid id, [FromServices] ISender sender, [FromBody] UpdatePackageOptionCommand command)
     {
-        try
-        {
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Cập nhật thành công!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Cập nhật thành công!"
+            ));
+
     }
     public async Task<IResult> DeleteServiceOption(Guid id, [FromServices] ISender sender)
     {
-        try
-        {
-            var result = await sender.Send(new DeletePackageOptionCommand { Id = id });
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Xóa thành công!"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+
+        var result = await sender.Send(new DeletePackageOptionCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Xóa thành công!"
+            ));
+
 
     }
 }
