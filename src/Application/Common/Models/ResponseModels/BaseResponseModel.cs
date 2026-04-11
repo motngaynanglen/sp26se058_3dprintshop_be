@@ -35,19 +35,19 @@ public class BaseResponseModel<T>
         return new BaseResponseModel<T>(200, code, data, additionalData,message);
     }
 
-    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string code = ResponseCodeConstants.NOT_FOUND)
+    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.NOT_FOUND)
     {
-        return new BaseResponseModel<T>(404, code, data, additionalData);
+        return new BaseResponseModel<T>(404, code, data, additionalData, message);
     }
 
     public static BaseResponseModel<T> BadRequestResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.FAILED)
     {
-        return new BaseResponseModel<T>(400, code, data, additionalData);
+        return new BaseResponseModel<T>(400, code, data, additionalData, message);
     }
 
-    public static BaseResponseModel<T> InternalErrorResponseModel(T? data, object? additionalData = null, string code = ResponseCodeConstants.FAILED)
+    public static BaseResponseModel<T> InternalErrorResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.FAILED)
     {
-        return new BaseResponseModel<T>(500, code, data, additionalData);
+        return new BaseResponseModel<T>(500, code, data, additionalData, message);
     }
 }
 

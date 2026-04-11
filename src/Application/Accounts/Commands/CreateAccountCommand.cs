@@ -5,10 +5,13 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using FluentValidation.Results;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using ValidationException = sp26se058_3dprintshop_be.Application.Common.Exceptions.ValidationException;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
@@ -40,21 +43,32 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
     }
     public async Task<Guid> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
     {
+        var failures = new List<ValidationFailure>();
+        var usernameClean = request.Username.Trim().ToLower();
+        var emailClean = request.Email.Trim().ToLower();
+
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var isExisted = await _context.Accounts.AnyAsync(a =>
-            a.Username.ToLower() == request.Username.ToLower() || a.Email.ToLower() == request.Email.ToLower(), cancellationToken);
+        var existAccount = await _context.Accounts
+            .Where(a => a.Username.ToLower() == usernameClean || a.Email.ToLower() == emailClean)
+            .ToListAsync(cancellationToken);
 
-        if (isExisted)
+        if (existAccount.Any())
         {
-            // Ném lỗi 400 hoặc xử lý qua ValidationBehaviour
-            throw new Exception("Tên đăng nhập hoặc Email đã tồn tại trong hệ thống.");
+            if (existAccount.Any(a => a.Username.ToLower() == usernameClean))
+                failures.Add(new ValidationFailure(nameof(request.Username), "Tên đăng nhập hoặc Email đã tồn tại."));
+            if (existAccount.Any(a => a.Email.ToLower() == emailClean))
+                failures.Add(new ValidationFailure(nameof(request.Email), "Email này đã được sử dụng."));
         }
-
+        if (request.Role.ToUpper() is not (Roles.MANAGER or Roles.STAFF or Roles.CUSTOMER))
+        {
+            failures.Add(new ValidationFailure(nameof(request.Role), "Vai trò không tồn tại trong hệ thống."));
+        }
+        if (failures.Any()) throw new ValidationException(failures);
         // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new Exception("Lỗi tạo pass");
+            throw new Exception("Không thể tạo mã băm mật khẩu.");
         }
         var newAccount = new Account
         {
@@ -81,10 +95,8 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
                 var customer = new Customer { Account = newAccount };
                 _context.Customers.Add(customer);
                 break;
-            default:
-                throw new Exception("Vài trò không tồn tại trong hệ thống.");
         }
-
+      
         _context.Accounts.Add(newAccount);
         await _context.SaveChangesAsync(cancellationToken);
         return newAccount.Id;

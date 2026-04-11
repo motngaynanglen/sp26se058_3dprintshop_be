@@ -20,4 +20,10 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DesignWorks\Commands\" />
+    <Folder Include="ServiceSelectionOptions\Commands\" />
+    <Folder Include="ServiceSelections\Commands\" />
+  </ItemGroup>
+
 </Project>
