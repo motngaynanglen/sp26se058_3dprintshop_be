@@ -4,28 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
-public record MarkOrderItemAsFinishedPackageCommand : IRequest<bool>
+public record MarkOrderItemAsFinishedPackageCommand : IRequest<object>
 {
     [JsonIgnore]
     public Guid Id { get; init; }
 }
-public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderItemAsFinishedPackageCommand, bool>
+public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderItemAsFinishedPackageCommand, object>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
     private readonly IUser _user;
 
-    public MarkOrderItemAsFinishedCommandHandler(IApplicationDbContext context, IUser user)
+    public MarkOrderItemAsFinishedCommandHandler(IApplicationDbContext context,  IUser user, IMapper mapper )
     {
         _context = context;
         _user = user;
+        _mapper = mapper;
     }
 
-    public async Task<bool> Handle(MarkOrderItemAsFinishedPackageCommand request, CancellationToken cancellationToken)
+    public async Task<object> Handle(MarkOrderItemAsFinishedPackageCommand request, CancellationToken cancellationToken)
     {
         // 1. Load Item kèm Order và toàn bộ Items khác để check điều kiện gộp
         var item = await _context.OrderItems
@@ -69,6 +72,6 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+        return _mapper.Map<OrderItemDTO>(item);
     }
 }

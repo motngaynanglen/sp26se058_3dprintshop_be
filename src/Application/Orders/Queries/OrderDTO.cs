@@ -18,7 +18,7 @@ public class OrderDTO
     public DateTimeOffset? Created { get; set; }
 
     public List<OrderItemDTO> Items { get; set; } = new();
-
+    
     private class Mapping : Profile
     {
         public Mapping()
