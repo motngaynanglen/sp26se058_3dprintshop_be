@@ -42,12 +42,11 @@ public class AuthEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            // Trả về 401 
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> Login([FromServices] ISender sender, [FromBody] LoginCommand command)
@@ -61,12 +60,11 @@ public class AuthEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            // Trả về 401 
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> ForgetPassword([FromServices] ISender sender, [FromBody] ForgetPasswordCommand command)
@@ -80,12 +78,11 @@ public class AuthEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            // Trả về 401 
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> ResetPassword([FromServices] ISender sender, [FromBody] ResetPasswordCommand command)
@@ -99,31 +96,40 @@ public class AuthEndpoints : EndpointGroupBase
                     code: ResponseCodeConstants.SUCCESS
                 ));
         }
-        catch (UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            // Trả về 401 
             return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status401Unauthorized);
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> Register([FromServices] ISender sender, [FromBody] RegisterCommand command)
     {
-        // Gửi command tới RegisterCommandHandler
-        var result = await sender.Send(command);
-
-        if (result)
+        try
         {
-            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-                data: true,
-                message: "Đăng ký tài khoản khách hàng thành công."
+            // Gửi command tới RegisterCommandHandler
+            var result = await sender.Send(command);
+
+            if (result)
+            {
+                return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                    data: true,
+                    message: "Đăng ký tài khoản khách hàng thành công."
+                ));
+            }
+
+            return TypedResults.BadRequest(BaseResponseModel<bool>.BadRequestResponseModel(
+                data: false,
+                message: "Đăng ký thất bại, vui lòng thử lại."
             ));
         }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
 
-        return TypedResults.BadRequest(BaseResponseModel<bool>.BadRequestResponseModel(
-            data: false,
-            message: "Đăng ký thất bại, vui lòng thử lại."
-        ));
     }
 
 }

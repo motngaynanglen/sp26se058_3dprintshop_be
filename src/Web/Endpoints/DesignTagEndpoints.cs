@@ -134,11 +134,9 @@ public class DesignTagEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(
-                BaseResponseModel<string>.BadRequestResponseModel(
-                    ex.Message,
-                    "Cập nhật tag thất bại"
-                ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
     public async Task<IResult> DeleteDesignTag([FromServices] ISender sender, [FromRoute] Guid id)
@@ -157,11 +155,9 @@ public class DesignTagEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(
-                BaseResponseModel<string>.BadRequestResponseModel(
-                    ex.Message,
-                    "Xóa tag thất bại"
-                ));
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
 }

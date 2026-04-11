@@ -85,7 +85,9 @@ public class AppSupportEndpoints : EndpointGroupBase
         }
         catch (Exception ex)
         {
-            return TypedResults.BadRequest(ex.Message);
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
         }
     }
 }

@@ -30,51 +30,88 @@ public class ConceptTagEndpoints : EndpointGroupBase
     public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
-        var result = await sender.Send(new GetConceptTagsListQuery());
+        try
+        {
+            var result = await sender.Send(new GetConceptTagsListQuery());
 
-        return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
-                data: result,
-                message: "Lấy danh sách concept tag thành công",
-                code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(
+                BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+                    data: result,
+                    message: "Lấy danh sách concept tag thành công",
+                    code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
     }
     public async Task<IResult> GetQuery([FromServices] ISender sender, [FromBody] GetConceptTagsByNameQuery command)
     {
-        var result = await sender.Send(command);
+        try
+        {
+            var result = await sender.Send(command);
 
-        return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách concept tag thành công",
-                code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(
+                BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+                    data: result.Items,
+                    additionalData: new { paging = result.Metadata },
+                    message: "Lấy danh sách concept tag thành công",
+                    code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
     public async Task<IResult> Update(
         [FromServices] ISender sender,
         [FromRoute] Guid id,
         [FromBody] UpdateConceptTagCommand command)
     {
-        var finalCommand = command with { Id = id };
+        try
+        {
+            var finalCommand = command with { Id = id };
 
-        var result = await sender.Send(finalCommand);
+            var result = await sender.Send(finalCommand);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-            data: result,
-            message: "Cập nhật Concept tag thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                data: result,
+                message: "Cập nhật Concept tag thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
     public async Task<IResult> Delete(
         [FromServices] ISender sender,
         [FromRoute] Guid id)
     {
-        var finalCommand = new DeleteConceptTagCommand { Id = id };
+        try
+        {
+            var finalCommand = new DeleteConceptTagCommand { Id = id };
 
-        var result = await sender.Send(finalCommand);
+            var result = await sender.Send(finalCommand);
 
-        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-            data: result,
-            message: "Xóa Concept tag thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: result,
+                message: "Xóa Concept tag thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
     public async Task<IResult> Add(
         [FromServices] ISender sender,
