@@ -1521,6 +1521,44 @@
         }
       }
     },
+    "/api/material/{id}/update-price": {
+      "post": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Manager] Cập nhật giá của vật liệu",
+        "operationId": "PostApiMaterialUpdatePrice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaterialPriceCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/model-generate": {
       "post": {
         "tags": [
@@ -3179,11 +3217,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000001"
-          },
           "materialId": {
             "type": "string",
             "format": "guid",
@@ -3452,6 +3485,26 @@
       "DeleteMaterialCommand": {
         "type": "object",
         "additionalProperties": false
+      },
+      "UpdateMaterialPriceCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "baseCostPerGram": {
+            "type": "number",
+            "format": "decimal",
+            "default": "10.0"
+          },
+          "totalServiceCostPerGram": {
+            "type": "number",
+            "format": "decimal",
+            "default": "10.0"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       },
       "GetOrdersWithPaginationQuery": {
         "allOf": [
