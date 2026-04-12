@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
@@ -35,8 +36,10 @@ public class MarkShipmentAsReadyCommandHandler : IRequestHandler<MarkShipmentAsR
             .FirstOrDefaultAsync(s => s.Id == request.Id, ct);
 
         if (shipment == null)
+            throw new DataNotFoundException(nameof(Shipment), request.Id);
+        if (shipment.ShipmentStatus == ShipmentStatuses.ReadyForPickup)
         {
-            throw new Exception("Không tìm thấy thông tin vận chuyển.");
+            throw new BusinessException("Kiện hàng đã được xác nhận sẵn sàng từ trước.", ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
         bool isAnyItemNotFinished = shipment.Order.OrderItems
@@ -44,17 +47,31 @@ public class MarkShipmentAsReadyCommandHandler : IRequestHandler<MarkShipmentAsR
 
         if (isAnyItemNotFinished)
         {
-            throw new Exception("Không thể chuyển trạng thái! Vẫn còn món hàng chưa hoàn thành sản xuất hoặc đóng gói.");
+            throw new BusinessException(
+                $"Vẫn còn sản phẩm trong đơn hàng {nameof(shipment.Order.OrderItems)} chưa hoàn thành sản xuất hoặc đóng gói. Hãy kiểm tra lại xưởng in.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+                );
+        }
+        if (shipment.ShipmentStatus != ShipmentStatuses.Preparing)
+        {
+            throw new BusinessException(
+                $"Không thể xác nhận sẵn sàng khi kiện hàng đang ở trạng thái '{shipment.ShipmentStatus}'.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+                );
         }
 
         shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;
-
-        shipment.Created = CoreHelper.SystemTimeNow;
-        shipment.CreatedBy = _user.Username;
         shipment.LastModified = CoreHelper.SystemTimeNow;
         shipment.LastModifiedBy = _user.Username;
 
-        await _context.SaveChangesAsync(ct);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException($"Lỗi khi xác nhận kiện hàng sẵn sàng: {ex.Message}");
+        }
         return _mapper.Map<ShipmentDTO>(shipment);
     }
 }

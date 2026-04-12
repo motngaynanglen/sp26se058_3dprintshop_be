@@ -35,7 +35,7 @@ public class BaseResponseModel<T>
         return new BaseResponseModel<T>(200, code, data, additionalData,message);
     }
 
-    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.NOT_FOUND)
+    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.NOT_EXIST)
     {
         return new BaseResponseModel<T>(404, code, data, additionalData, message);
     }

@@ -42,7 +42,7 @@ public class GetTransactionByOrderIdQuery : IRequest<TransactionDTO>
 
             if (entity == null)
             {
-                throw new NotFoundException(nameof(Domain.Entities.Transaction), request.OrderId.ToString());
+                throw new DataNotFoundException(nameof(Transaction), request.OrderId);
             }
 
             return entity;
