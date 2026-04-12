@@ -1,48 +1,73 @@
 ﻿using System;
+using System.ComponentModel;
 using MediatR;
-using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination; // ← Thêm using này
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
-
-public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>   // ← Thay Guid bằng DesignTemplateDTO
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>
 {
+    [DefaultValue("CODE_DEFAULT")]
     public string Code { get; init; } = null!;
+    [DefaultValue("Product Name")]
     public string Name { get; init; } = null!;
+    [DefaultValue("Description here")]
     public string Description { get; init; } = null!;
+    [DefaultValue("https://example.com/file.stl")]
     public string FileUrl { get; init; } = null!;
+    [DefaultValue("https://example.com/thumbnail.png")]
     public string ThumbnailUrl { get; init; } = null!;
+    [DefaultValue(true)]
+    public bool IsAcitve { get; init; } = true;
 }
 
 public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTemplateCommand, DesignTemplateDTO>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IMapper _mapper;                    // ← Thêm IMapper
+    private readonly IMapper _mapper;
+    private readonly IUser _user;
 
-    public CreateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper)
+    public CreateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
     {
         _context = context;
         _mapper = mapper;
+        _user = user;
     }
 
     public async Task<DesignTemplateDTO> Handle(CreateDesignTemplateCommand request, CancellationToken cancellationToken)
     {
-        var newDesignTemplate = new Domain.Entities.DesignTemplate
+        var isExist = await _context.DesignTemplates.AnyAsync(t => t.Code == request.Code, cancellationToken);
+        if (isExist)
+        {
+            throw new DuplicateException(nameof(DesignTemplates), nameof(request.Code), request.Code);
+        }
+        var newDesignTemplate = new DesignTemplate
         {
             Code = request.Code,
             Name = request.Name,
             Description = request.Description,
             FileUrl = request.FileUrl,
             ThumbnailUrl = request.ThumbnailUrl,
-            IsActive = true,                    // ← Nên set mặc định là Active
-            Created = DateTime.UtcNow
+            IsActive = true,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
         };
 
         _context.DesignTemplates.Add(newDesignTemplate);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Nếu có lỗi lạ từ DB (ví dụ lỗi DB chết, lỗi kết nối)
+            throw new CreateFailureException(nameof(DesignTemplate), ex.Message);
+        }
 
-        // Map sang DTO và trả về
-        var designTemplateDto = _mapper.Map<DesignTemplateDTO>(newDesignTemplate);
-
-        return designTemplateDto;
+        return _mapper.Map<DesignTemplateDTO>(newDesignTemplate);
     }
 }

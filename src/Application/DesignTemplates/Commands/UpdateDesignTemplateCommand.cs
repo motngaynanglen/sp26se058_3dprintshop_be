@@ -4,32 +4,50 @@ using System.Text.Json.Serialization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions; // Nếu bạn có NotFoundException
+using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
 
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
 public record UpdateDesignTemplateCommand : IRequest<DesignTemplateDTO>
 {
     [JsonIgnore]
-    [DefaultValue("00000000-0000-0000-0000-000000000000")]
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
 
-    public string Code { get; set; } = null!;
-    public string Name { get; set; } = null!;
-    public string Description { get; set; } = null!;
-    public string FileUrl { get; set; } = null!;
-    public string ThumbnailUrl { get; set; } = null!;
+    [DefaultValue("CODE_DEFAULT")]
+    public string? Code { get; init; }
+
+    [DefaultValue("Product Name")]
+    public string? Name { get; init; }
+
+    [DefaultValue("Description here")]
+    public string? Description { get; init; }
+
+    [DefaultValue("https://example.com/file.stl")]
+    public string? FileUrl { get; init; }
+
+    [DefaultValue("https://example.com/thumbnail.png")]
+    public string? ThumbnailUrl { get; init; }
+
+    [DefaultValue(true)]
+    public bool? IsAcitve { get; init; }
 }
 
 public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTemplateCommand, DesignTemplateDTO>
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
+    private readonly IUser _user;
 
-    public UpdateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper)
+    public UpdateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
     {
         _context = context;
         _mapper = mapper;
+        _user = user;
     }
 
     public async Task<DesignTemplateDTO> Handle(UpdateDesignTemplateCommand request, CancellationToken cancellationToken)
@@ -39,22 +57,48 @@ public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTe
 
         if (designTemplate == null)
         {
-            throw new Exception($"DesignTemplate with id {request.Id} not found.");
+            throw new DataNotFoundException(nameof(DesignTemplate), request.Id);
+        }
+        // Nếu thay đổi Code, phải đảm bảo Code mới chưa bị ai khác sử dụng
+        if (!string.IsNullOrEmpty(request.Code) && designTemplate.Code != request.Code)
+        {
+            var isCodeExist = await _context.DesignTemplates
+                .AnyAsync(dt => dt.Code == request.Code && dt.Id != request.Id, cancellationToken);
+
+            if (isCodeExist)
+            {
+                throw new DuplicateException(nameof(DesignTemplate), nameof(request.Code), request.Code);
+            }
+        }
+        // Cập nhật thông tin
+        if (!string.IsNullOrEmpty(request.Name))
+            designTemplate.Name = request.Name;
+
+        if (!string.IsNullOrEmpty(request.Description))
+            designTemplate.Description = request.Description;
+
+        if (!string.IsNullOrEmpty(request.FileUrl))
+            designTemplate.FileUrl = request.FileUrl;
+
+        if (!string.IsNullOrEmpty(request.ThumbnailUrl))
+            designTemplate.ThumbnailUrl = request.ThumbnailUrl;
+
+        if (request.IsAcitve.HasValue)
+            designTemplate.IsActive = request.IsAcitve.Value;
+
+        designTemplate.LastModified = CoreHelper.SystemTimeNow;
+        designTemplate.LastModifiedBy = _user.Username;
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Nếu có lỗi lạ từ DB (ví dụ lỗi DB chết, lỗi kết nối)
+            throw new UpdateFailureException(nameof(DesignTemplate), ex.Message);
         }
 
-        // Cập nhật thông tin
-        designTemplate.Code = request.Code;
-        designTemplate.Name = request.Name;
-        designTemplate.Description = request.Description;
-        designTemplate.FileUrl = request.FileUrl;
-        designTemplate.ThumbnailUrl = request.ThumbnailUrl;
-        // designTemplate.LastModified = DateTime.UtcNow;   // Nếu có trường này thì mở ra
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        // Map sang DTO
-        var designTemplateDto = _mapper.Map<DesignTemplateDTO>(designTemplate);
-
-        return designTemplateDto;
+        return _mapper.Map<DesignTemplateDTO>(designTemplate);
     }
 }
