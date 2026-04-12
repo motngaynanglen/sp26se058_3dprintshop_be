@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using System;
+using DataNotFoundException = sp26se058_3dprintshop_be.Application.Common.Exceptions.DataNotFoundException;
 
 namespace sp26se058_3dprintshop_be.Web.Infrastructure;
 
@@ -17,15 +18,22 @@ public class CustomExceptionHandler : IExceptionHandler
         _exceptionHandlers = new()
             {
                 { typeof(ValidationException), HandleValidationException },
-                { typeof(NotFoundException), HandleNotFoundException },
+                //{ typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
-                { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
-                { typeof(BadHttpRequestException), HandleBadHttpRequestException }, // Xử lý lỗi Binding/Guid sai
+                //{ typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+                { typeof(BadHttpRequestException), HandleBadHttpRequestException },
+                { typeof(BusinessException), HandleBusinessException },
             };
     }
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
+        if (exception is BusinessException businessEx)
+        {
+            await HandleBusinessException(httpContext, businessEx);
+            return true;
+        }
+
         var exceptionType = exception.GetType();
 
         if (_exceptionHandlers.ContainsKey(exceptionType))
@@ -36,15 +44,36 @@ public class CustomExceptionHandler : IExceptionHandler
         await HandleUnknownException(httpContext, exception);
         return true;
     }
+    private async Task HandleBusinessException(HttpContext httpContext, Exception ex)
+    {
+        var businessEx = (BusinessException)ex;
+        int statusCode = businessEx switch
+        {
+            DataNotFoundException => StatusCodes.Status404NotFound,
+            ForbiddenAccessException => StatusCodes.Status403Forbidden,
+            DuplicateException => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status400BadRequest
+        };
+
+        httpContext.Response.StatusCode = statusCode;
+
+        await httpContext.Response.WriteAsJsonAsync(new BaseResponseModel(
+            statusCode: statusCode,
+            data: businessEx.Details, 
+            message: businessEx.Message,
+            code: businessEx.Code
+        ));
+
+    }
     private async Task HandleUnknownException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         await httpContext.Response.WriteAsJsonAsync(
             new BaseResponseModel(
-                statusCode: StatusCodes.Status400BadRequest,
+                statusCode: StatusCodes.Status500InternalServerError,
                 data: ex.Message,
-                message: "Đã xảy ra lỗi hệ thống không mong muốn.",
+                message: "Đã xảy ra lỗi hệ thống không mong muốn, hoặc lỗi chưa được phân loại.",
                 code: ResponseCodeConstants.FAILED
             )
         );
@@ -80,22 +109,6 @@ public class CustomExceptionHandler : IExceptionHandler
                 )
             );
     }
-    private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
-    {
-        var exception = (NotFoundException)ex;
-
-        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-
-
-        await httpContext.Response.WriteAsJsonAsync(
-            new BaseResponseModel(
-                statusCode: StatusCodes.Status404NotFound,
-                data: exception.Message,
-                message: "Không tìm thấy mục tiêu.",
-                code: ResponseCodeConstants.NOT_FOUND
-                )
-            );
-    }
 
     private async Task HandleUnauthorizedAccessException(HttpContext httpContext, Exception ex)
     {
@@ -110,8 +123,24 @@ public class CustomExceptionHandler : IExceptionHandler
                 )
             );
     }
+    /*private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
+    {
+        var exception = (NotFoundException)ex;
 
-    private async Task HandleForbiddenAccessException(HttpContext httpContext, Exception ex)
+        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+
+
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status404NotFound,
+                data: exception.Message,
+                message: "Không tìm thấy mục tiêu.",
+                code: ResponseCodeConstants.NOT_FOUND
+                )
+            );
+    }*/
+
+    /*private async Task HandleForbiddenAccessException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
 
@@ -123,5 +152,5 @@ public class CustomExceptionHandler : IExceptionHandler
                 code: ResponseCodeConstants.FORBIDDEN
                 )
             );
-    }
+    }*/
 }

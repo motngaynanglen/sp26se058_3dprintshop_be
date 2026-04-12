@@ -3,7 +3,7 @@ using System.ComponentModel;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
+using sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 
