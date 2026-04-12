@@ -42,8 +42,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
     // 1. Tạo mới
     public async Task<IResult> CreateServiceOption([FromServices] ISender sender, [FromBody] CreateServiceOptionCommand command)
     {
-        try
-        {
+       
             var result = await sender.Send(command);
 
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
@@ -52,32 +51,19 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
                     message: "Thêm thành công!"
                 ));
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        
     }
     // 2. Truy vấn danh sách
     public async Task<IResult> QueryAllServiceOptions([FromServices] ISender sender)
     {
-        try
-        {
+        
             var result = await sender.Send(new GetServiceOptionsQuery());
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                     code: ResponseCodeConstants.SUCCESS,
                     data: result,
                     message: "Lấy danh sách tùy chọn thành công"
                 ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        
     }
     // 3. Cập nhật
     public async Task<IResult> UpdateServiceOption(Guid id, [FromServices] ISender sender, [FromBody] UpdateServiceOptionCommand command)
