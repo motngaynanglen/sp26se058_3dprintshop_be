@@ -5,10 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Command;
+[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
+
 public record CancelTransactionCommand : IRequest<bool>
 {
     [JsonIgnore]
@@ -31,13 +38,31 @@ public class CancelTransactionCommandHandler : IRequestHandler<CancelTransaction
 
     public async Task<bool> Handle(CancelTransactionCommand request, CancellationToken cancellationToken)
     {
+        // 1. Tìm giao dịch (Dùng DataNotFoundException - DB_004)
         var transaction = await _context.Transactions
             .FirstOrDefaultAsync(t => t.Id == request.TransactionId, cancellationToken);
 
-        if (transaction == null) return false;
-
-        // Nếu đã hủy hoặc đã thanh toán thì không làm gì cả
-        if (transaction.TransactionStatus != "PENDING") return true;
+        if (transaction == null)
+        {
+            throw new DataNotFoundException(nameof(Transaction), request.TransactionId);
+        }
+        // 2. Kiểm tra trạng thái giao dịch (Dùng VAL_002 - Sai trạng thái nghiệp vụ)
+        // Nếu đã CANCELLED rồi thì không báo lỗi (Idempotent), nhưng nếu đã Success thì KHÔNG được hủy.
+        if (transaction.TransactionStatus == TransactionStatuses.Success)
+        {
+            throw new BusinessException(
+                "Giao dịch đã được thanh toán thành công, không thể hủy.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+            );
+        }
+        // Nếu đã hủy từ trước, trả về true để báo hành động đã hoàn tất (Idempotency)
+        if (transaction.TransactionStatus == TransactionStatuses.Cancelled)
+        {
+            throw new BusinessException(
+                "Giao dịch này đã được hủy từ trước đó.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+            );
+        }
 
         // 1. Xử lý hủy trên cổng thanh toán (PayOS)
         if (transaction.PaymentMethod == PaymentMethods.PAYOS && !string.IsNullOrEmpty(transaction.InternalCode))
@@ -48,18 +73,26 @@ public class CancelTransactionCommandHandler : IRequestHandler<CancelTransaction
             }
             catch (Exception ex)
             {
+                // Đối với PayOS, nếu hủy thất bại có thể do link đã hết hạn hoặc đã hủy bên PayOS rồi
                 // Log lỗi PayOS nhưng vẫn tiếp tục cập nhật DB của mình
                 Console.WriteLine($"PayOS Cancel Error: {ex.Message}");
             }
         }
 
         // 2. Cập nhật trạng thái trong Database
-        transaction.TransactionStatus = "CANCELLED";
-        transaction.Note = $"[Hủy giao dịch] {request.Reason}. " + (transaction.Note ?? "");
+        transaction.TransactionStatus = TransactionStatuses.Cancelled;
+        transaction.Note = $"[Hủy bởi {_user.Username}]: {request.Reason ?? "Không có lý do"}.";
         transaction.LastModified = CoreHelper.SystemTimeNow;
-        transaction.LastModifiedBy = _user.Username ?? "SYSTEM";
+        transaction.LastModifiedBy = _user.Username;
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(ex.Message);
+        }
 
         return true;
     }

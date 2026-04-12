@@ -18,9 +18,7 @@ public class CustomExceptionHandler : IExceptionHandler
         _exceptionHandlers = new()
             {
                 { typeof(ValidationException), HandleValidationException },
-                //{ typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
-                //{ typeof(ForbiddenAccessException), HandleForbiddenAccessException },
                 { typeof(BadHttpRequestException), HandleBadHttpRequestException },
                 { typeof(BusinessException), HandleBusinessException },
             };
@@ -61,7 +59,7 @@ public class CustomExceptionHandler : IExceptionHandler
             statusCode: statusCode,
             data: businessEx.Details, 
             message: businessEx.Message,
-            code: businessEx.Code
+            code: businessEx.Code ?? ResponseCodeConstants.FAILED
         ));
 
     }
@@ -86,11 +84,11 @@ public class CustomExceptionHandler : IExceptionHandler
         httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
 
         await httpContext.Response.WriteAsJsonAsync(
-            new BaseResponseModel(
+            new BaseResponseModel<IDictionary<string, string[]>>(
                 statusCode: StatusCodes.Status422UnprocessableEntity,
                 data: exception.Errors,
                 message: exception.Message,
-                code: ResponseCodeConstants.UNPROCESSABLE_ENTITY
+                code: ResponseCodeConstants.VAL_INVALID_INPUT
                 )
             );
     }
@@ -104,8 +102,8 @@ public class CustomExceptionHandler : IExceptionHandler
             new BaseResponseModel(
                 statusCode: StatusCodes.Status400BadRequest,
                 data: ex.Message,
-                message: "Định dạng dữ liệu gửi lên không đúng.",
-                code: ResponseCodeConstants.INVALID_INPUT
+                message: "Định dạng dữ liệu gửi lên (JSON/Primitive Type) không hợp lệ.",
+                code: ResponseCodeConstants.VAL_GENERAL
                 )
             );
     }
@@ -118,7 +116,7 @@ public class CustomExceptionHandler : IExceptionHandler
             new BaseResponseModel(
                 statusCode: StatusCodes.Status404NotFound,
                 data: ex.Message,
-                message: "Chưa đăng nhập",
+                message: "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
                 code: ResponseCodeConstants.UNAUTHORIZED
                 )
             );
