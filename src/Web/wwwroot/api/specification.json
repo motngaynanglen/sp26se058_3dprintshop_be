@@ -1562,39 +1562,12 @@
         }
       }
     },
-    "/api/order/checkout": {
-      "post": {
-        "tags": [
-          "Order"
-        ],
-        "summary": "[Customer] Tạo đơn hàng với thông tin giỏ hàng.",
-        "description": "Trước mắt SourceType chỉ hỗ trợ Type IN_STOCK, sau này sẽ sửa lại body để phù hợp 2 flow. IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
-        "operationId": "PostApiOrderCheckout",
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckoutCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/order/{id}/detail": {
       "get": {
         "tags": [
           "Order"
         ],
-        "summary": "[All] lấy thông tin chi tiết đơn hàng có ID.",
+        "summary": "[All] Lấy thông tin chi tiết đơn hàng.",
         "operationId": "GetApiOrderDetail",
         "parameters": [
           {
@@ -1615,13 +1588,40 @@
         }
       }
     },
+    "/api/order/checkout": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer] Tạo đơn hàng mới từ giỏ hàng.",
+        "description": "Hỗ trợ các loại nguồn hàng: IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
+        "operationId": "PostApiOrderCheckout",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/order/{id}/cancel": {
       "patch": {
         "tags": [
           "Order"
         ],
-        "summary": "[Customer/Staff/Manager] Hủy đơn hàng có ID.",
-        "description": "Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.",
+        "summary": "[Customer/Staff/Manager] Hủy đơn hàng.",
+        "description": "Chỉ hỗ trợ khi đơn hàng chưa thanh toán hoặc chưa đi vào sản xuất.",
         "operationId": "PatchApiOrderCancel",
         "parameters": [
           {
@@ -1647,6 +1647,60 @@
           "required": true,
           "x-position": 2
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/item/{orderItemId}/finish-package": {
+      "patch": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Staff] Xác nhận một món hàng vật lý đã làm xong.",
+        "description": "Chuyển trạng thái Item sang FINISHED. Nếu là món cuối cùng, hệ thống tự động cập nhật Shipment sang READY_FOR_PICKUP.",
+        "operationId": "PatchApiOrderItemFinishPackage",
+        "parameters": [
+          {
+            "name": "orderItemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/{id}/complete": {
+      "patch": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer/Staff/Manager] Hoàn thành đơn hàng (Đóng đơn).",
+        "description": "Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Staff/Manager chỉ được bấm sau 3 ngày kể từ khi Delivered.",
+        "operationId": "PatchApiOrderComplete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -2073,8 +2127,8 @@
         "tags": [
           "Shipment"
         ],
-        "summary": "[Staff/Manager] Truy vấn danh sách tài khoản.",
-        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered' ",
+        "summary": "[Staff/Manager] Truy vấn danh sách vận đơn.",
+        "description": "Hỗ trợ tìm kiếm, lọc theo trạng thái và phân trang. Sắp xếp: 'Tracking', 'Fee', 'Created', 'Shipped', 'Delivered'.",
         "operationId": "PostApiShipmentQuery",
         "requestBody": {
           "x-name": "command",
@@ -2095,13 +2149,199 @@
         }
       }
     },
-    "/api/shipment/{id}/update": {
+    "/api/shipment/{id}/detail": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[All] Lấy thông tin chi tiết vận đơn theo ID.",
+        "description": "Khách hàng chỉ xem được vận đơn của mình. Staff/Manager xem được tất cả.",
+        "operationId": "GetApiShipmentDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{orderId}/detail-by-order-id": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[All] Lấy thông tin vận đơn thông qua Order ID.",
+        "operationId": "GetApiShipmentDetailByOrderId",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/mark-ready": {
       "patch": {
         "tags": [
           "Shipment"
         ],
-        "summary": "[Staff/Manager] Cập nhật thông tin đơn vận có ID.",
-        "operationId": "PatchApiShipmentUpdate",
+        "summary": "[Staff] Xác nhận đóng gói xong, chờ gửi hàng.",
+        "description": "Chuyển trạng thái sang 'ReadyForPickup'. Chỉ thực hiện được khi toàn bộ vật phẩm trong đơn đã sản xuất xong.",
+        "operationId": "PatchApiShipmentMarkReady",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/mark-in-transit": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff] Xác nhận đã giao cho đơn vị vận chuyển.",
+        "description": "Chuyển trạng thái sang 'InTransit'. Yêu cầu nhập CarrierName và TrackingNumber.",
+        "operationId": "PatchApiShipmentMarkInTransit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkShipmentAsInTransitCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/confirm-delivered": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff] Xác nhận shipper đã giao hàng thành công.",
+        "description": "Chuyển trạng thái sang 'Delivered'. Ghi nhận thời điểm giao hàng để tính thời hạn bảo hành/khiếu nại.",
+        "operationId": "PatchApiShipmentConfirmDelivered",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/mark-failed": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff] Báo cáo sự cố giao hàng thất bại.",
+        "description": "Chuyển trạng thái sang 'Failed'. Yêu cầu nhập lý do để làm căn cứ xử lý (giao lại hoặc hoàn hàng).",
+        "operationId": "PatchApiShipmentMarkFailed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkShipmentAsFailedCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/update-info": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin hành chính của vận đơn.",
+        "description": "Sửa đổi phí ship, địa chỉ hoặc thời gian dự kiến giao hàng.",
+        "operationId": "PatchApiShipmentUpdateInfo",
         "parameters": [
           {
             "name": "id",
@@ -2126,59 +2366,6 @@
           "required": true,
           "x-position": 2
         },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/shipment/{orderId}/detail-by-order-id": {
-      "get": {
-        "tags": [
-          "Shipment"
-        ],
-        "summary": "[All] Lấy thông tin đơn vận có đơn hàng ID.",
-        "operationId": "GetApiShipmentDetailByOrderId",
-        "parameters": [
-          {
-            "name": "orderId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/shipment/{id}/detail": {
-      "get": {
-        "tags": [
-          "Shipment"
-        ],
-        "summary": "[Customer/Staff/Manager] Lấy thông tin đơn vận có ID.",
-        "description": "Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ\n Manager và Staff có quyền xem mọi vận đơn",
-        "operationId": "GetApiShipmentDetail",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
         "responses": {
           "200": {
             "description": ""
@@ -3550,6 +3737,35 @@
             }
           }
         ]
+      },
+      "MarkShipmentAsInTransitCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "carrierName": {
+            "type": "string"
+          },
+          "trackingNumber": {
+            "type": "string"
+          },
+          "shippedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarkShipmentAsFailedCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
       },
       "UpdateShipmentCommand": {
         "type": "object",

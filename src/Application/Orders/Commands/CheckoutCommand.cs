@@ -55,7 +55,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
         var shipment = new Shipment
         {
             Id = Guid.NewGuid(),
-            Order = order, // Quan trọng: Gán Object
+            Order = order, 
+            OrderId = order.Id,
             ShippingAddressId = request.ShippingAddressId,
             ShippingFee = 0,
             ShipmentStatus = ShipmentStatuses.Preparing,
@@ -68,7 +69,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            Order = order, // Quan trọng: Gán Object
+            Order = order,
+            OrderId = order.Id,
             InvoiceCode = $"INV-{DateTime.UtcNow.Ticks}",
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
