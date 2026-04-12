@@ -30,8 +30,7 @@ public class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
 
         // 1. Shipment -> Order (1-1 hoặc N-1 tùy logic của bạn, thường là 1 đơn có 1 lần giao)
         builder.HasOne(s => s.Order)
-            .WithMany() // Nếu một đơn có thể giao nhiều lần (tách part)
-                        // .WithOne(o => o.Shipment) // Nếu 1 đơn chỉ có 1 shipment duy nhất
+            .WithMany(o => o.Shipments) 
             .HasForeignKey(s => s.OrderId)
             .OnDelete(DeleteBehavior.Cascade);
 
