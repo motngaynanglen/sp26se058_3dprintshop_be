@@ -15,143 +15,122 @@ public class DesignTemplateEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/design-template")
-                       .WithTags("DesignTemplate")
+                       .WithTags("Design Template")
                        .WithOpenApi();
+
+        // --- CÁC ENDPOINT TRUY VẤN (READ) ---
+
         group.MapPost("/query", Query)
-            .WithSummary("Lấy danh sách Thiết kế theo Filter có phân trang");
+            .WithSummary("[All] Truy vấn danh sách mẫu thiết kế có phân trang")
+            .WithDescription("Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.");
+
+        group.MapGet("{id}/detail", GetDetail)
+            .WithSummary("[All] Xem chi tiết một mẫu thiết kế")
+            .WithDescription("Trả về thông tin chi tiết cùng các thuộc tính cơ bản của mẫu thiết kế.");
+
+        group.MapGet("/{id}/tags", GetTags)
+            .WithSummary("[All] Lấy danh sách các Tag của mẫu thiết kế")
+            .WithDescription("Trả về danh sách các nhãn (tags) được gắn cho mẫu thiết kế này.");
+
+
+        // --- CÁC ENDPOINT THAY ĐỔI DỮ LIỆU (WRITE) ---
+
         group.MapPost("/add", Create)
-            .WithSummary("Tạo mới Thiết kế");
-        group.MapGet("/{id}/detail", GetDetail)
-            .WithSummary("Xem chi tiết mẫu thiết kế");
-        group.MapGet("/tags/{id}", GetTags)
-            .WithSummary("Lấy danh sách Thiết kế theo Tag");
-        group.MapPut("/{id}/update", Update)
-            .WithSummary("Cập nhật thiết kế");
-        group.MapDelete("/{id}/delete", Delete);
+            .WithSummary("[Staff/Manager] Tạo mới mẫu thiết kế")
+            .WithDescription("Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.");
+
+        group.MapPatch("/{id}/update", Update)
+            .WithSummary("[Staff/Manager] Cập nhật thông tin mẫu thiết kế")
+            .WithDescription("Cập nhật từng phần (Partial Update). Ghi đè ID từ URL vào Command.");
+
+        group.MapDelete("/{id}/delete", Delete)
+            .WithSummary("[Staff/Manager] Xóa mềm mẫu thiết kế")
+            .WithDescription("Chuyển trạng thái sang Deleted. Lưu vết người xóa.");
     }
 
     public async Task<IResult> GetTags([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetDesignTagsListQuery
-            {
-                DesignTemplateId = id
-            });
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTagDTO>>.OkResponseModel(
-                    data: result,
-                    message: "Lấy tags mẫu thiết kế thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                    data: ex.Message,
-                    message: "Lấy tags mẫu thiết kế thất bại!"
-                ));
-        }
-    }
 
+        var result = await sender.Send(new GetDesignTagsListQuery
+        {
+            DesignTemplateId = id
+        });
+        bool isEmpty = result.Any();
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTagDTO>>.OkResponseModel(
+                data: result,
+                message: isEmpty ? "Lấy tags mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
+                code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
+            ));
+
+    }
+    /// <summary>
+    /// Lấy danh sách phân trang mẫu thiết kế.
+    /// Nếu danh sách trống, trả về mảng rỗng [] và 200 OK theo logic Search.
+    /// </summary>
     public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetDesignTemplatesWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTemplateDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { pagination = result.Metadata },
-                    message: "Truy vấn mẫu thiết kế thành công!"
-                ));
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                    data: ex.Message,
-                    message: "Truy vấn mẫu thiết kế thất bại!"
-                ));
-        }
+        var result = await sender.Send(query);
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTemplateDTO>>.OkResponseModel(
+                code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+                data: result.Items,
+                additionalData: new { pagination = result.Metadata },
+                message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
+            ));
+
+
     }
 
     public async Task<IResult> Create([FromServices] ISender sender, [FromBody] CreateDesignTemplateCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
-                    data: result,
-                    message: "Tạo mẫu thiết kế thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }catch(Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                    data: ex.Message,
-                    message: "Tạo mẫu thiết kế thất bại!"
-                ));
-        }
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
+                data: result,
+                message: "Tạo mẫu thiết kế thành công!",
+                code: ResponseCodeConstants.CREATED
+            ));
+
+
     }
 
     public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
+
+        var result = await sender.Send(new GetDesignTemplateDetailQuery
         {
-            var result = await sender.Send(new GetDesignTemplateDetailQuery
-            {
-                Id = id
-            });
-            return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
-                    data: result,
-                    message: "Lấy chi tiết mẫu thiết kế thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<object>.NotFoundResponseModel(null));
-        }
+            Id = id
+        });
+        return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy chi tiết mẫu thiết kế thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+
     }
 
     public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignTemplateCommand command)
     {
-        try
-        {
-            var finalCmd = command with { Id = id };
-            var result = await sender.Send(finalCmd);
-            return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
-                    data: result,
-                    message: "Cập nhật mẫu thiết kế thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                    data: ex.Message,
-                    message: "Cập nhật mẫu thiết kế thất bại!"
-                ));
-        }
+
+        var finalCmd = command with { Id = id };
+        var result = await sender.Send(finalCmd);
+        return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
+                data: result,
+                message: "Cập nhật mẫu thiết kế thành công!",
+                code: ResponseCodeConstants.UPDATED
+            ));
+
     }
 
-    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteDesignTemplateCommand command) {
-        try
-        {
-            var finalCmd = command with { Id = id };
-            var result = await sender.Send(finalCmd);
-            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-                    data: result,
-                    message: "Xoá mềm mẫu thiết kế thành công!",
-                    code: ResponseCodeConstants.SUCCESS
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                    data: ex.Message,
-                    message: "Xoá mềm mẫu thiết kế thất bại!"
-                ));
-        }
+    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+
+        var result = await sender.Send(new DeleteDesignTemplateCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: result,
+                message: "Xoá mềm mẫu thiết kế thành công!",
+                code: ResponseCodeConstants.DELETED
+            ));
+
     }
 }

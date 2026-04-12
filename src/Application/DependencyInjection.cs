@@ -1,14 +1,7 @@
 ﻿using System.Reflection;
-using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Behaviours;
 using sp26se058_3dprintshop_be.Application.Common.Config;
-using sp26se058_3dprintshop_be.Application.DesignTags.Queries;
-using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
-using sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
-using sp26se058_3dprintshop_be.Application.Materials.Queries;
-using sp26se058_3dprintshop_be.Application.Orders.Queries;
-using sp26se058_3dprintshop_be.Application.Shipments.Queries;
-using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
+
 
 namespace Microsoft.Extensions.DependencyInjection;
 

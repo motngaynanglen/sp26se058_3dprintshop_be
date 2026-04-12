@@ -787,9 +787,10 @@
     "/api/design-template/query": {
       "post": {
         "tags": [
-          "DesignTemplate"
+          "Design Template"
         ],
-        "summary": "Lấy danh sách Thiết kế theo Filter có phân trang",
+        "summary": "[All] Truy vấn danh sách mẫu thiết kế có phân trang",
+        "description": "Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.",
         "operationId": "PostApiDesignTemplateQuery",
         "requestBody": {
           "x-name": "query",
@@ -810,38 +811,13 @@
         }
       }
     },
-    "/api/design-template/add": {
-      "post": {
-        "tags": [
-          "DesignTemplate"
-        ],
-        "summary": "Tạo mới Thiết kế",
-        "operationId": "PostApiDesignTemplateAdd",
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDesignTemplateCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/design-template/{id}/detail": {
       "get": {
         "tags": [
-          "DesignTemplate"
+          "Design Template"
         ],
-        "summary": "Xem chi tiết mẫu thiết kế",
+        "summary": "[All] Xem chi tiết một mẫu thiết kế",
+        "description": "Trả về thông tin chi tiết cùng các thuộc tính cơ bản của mẫu thiết kế.",
         "operationId": "GetApiDesignTemplateDetail",
         "parameters": [
           {
@@ -862,12 +838,13 @@
         }
       }
     },
-    "/api/design-template/tags/{id}": {
+    "/api/design-template/{id}/tags": {
       "get": {
         "tags": [
-          "DesignTemplate"
+          "Design Template"
         ],
-        "summary": "Lấy danh sách Thiết kế theo Tag",
+        "summary": "[All] Lấy danh sách các Tag của mẫu thiết kế",
+        "description": "Trả về danh sách các nhãn (tags) được gắn cho mẫu thiết kế này.",
         "operationId": "GetApiDesignTemplateTags",
         "parameters": [
           {
@@ -888,13 +865,41 @@
         }
       }
     },
-    "/api/design-template/{id}/update": {
-      "put": {
+    "/api/design-template/add": {
+      "post": {
         "tags": [
-          "DesignTemplate"
+          "Design Template"
         ],
-        "summary": "Cập nhật thiết kế",
-        "operationId": "PutApiDesignTemplateUpdate",
+        "summary": "[Staff/Manager] Tạo mới mẫu thiết kế",
+        "description": "Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.",
+        "operationId": "PostApiDesignTemplateAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignTemplateCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-template/{id}/update": {
+      "patch": {
+        "tags": [
+          "Design Template"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin mẫu thiết kế",
+        "description": "Cập nhật từng phần (Partial Update). Ghi đè ID từ URL vào Command.",
+        "operationId": "PatchApiDesignTemplateUpdate",
         "parameters": [
           {
             "name": "id",
@@ -929,8 +934,10 @@
     "/api/design-template/{id}/delete": {
       "delete": {
         "tags": [
-          "DesignTemplate"
+          "Design Template"
         ],
+        "summary": "[Staff/Manager] Xóa mềm mẫu thiết kế",
+        "description": "Chuyển trạng thái sang Deleted. Lưu vết người xóa.",
         "operationId": "DeleteApiDesignTemplateDelete",
         "parameters": [
           {
@@ -944,18 +951,6 @@
             "x-position": 1
           }
         ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteDesignTemplateCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
         "responses": {
           "200": {
             "description": ""
@@ -963,13 +958,14 @@
         }
       }
     },
-    "/api/design-variant": {
+    "/api/design-variant/query": {
       "post": {
         "tags": [
           "Design Variant"
         ],
-        "summary": "Lấy danh sách Biến thể",
-        "operationId": "PostApiDesignVariant",
+        "summary": "[All] Truy vấn danh sách Biến thể",
+        "description": "Hỗ trợ lọc theo TemplateId, MaterialId. Tự động ẩn hàng IsActive=false đối với Customer.",
+        "operationId": "PostApiDesignVariantQuery",
         "requestBody": {
           "x-name": "query",
           "content": {
@@ -994,7 +990,8 @@
         "tags": [
           "Design Variant"
         ],
-        "summary": "Thêm mới biến thể",
+        "summary": "[Staff/Manager] Thêm mới biến thể",
+        "description": "Tạo biến thể mới cho mẫu thiết kế. Tự động kiểm tra trùng Code và sự tồn tại của Material.",
         "operationId": "PostApiDesignVariantAdd",
         "requestBody": {
           "x-name": "command",
@@ -1015,13 +1012,26 @@
         }
       }
     },
-    "/api/design-variant/update": {
-      "put": {
+    "/api/design-variant/{id}/update": {
+      "patch": {
         "tags": [
           "Design Variant"
         ],
-        "summary": "Cập nhật biến thể",
-        "operationId": "PutApiDesignVariantUpdate",
+        "summary": "[Staff/Manager] Cập nhật thông tin biến thể",
+        "description": "Cập nhật từng phần (Partial Update). ID từ URL sẽ ghi đè ID trong body.",
+        "operationId": "PatchApiDesignVariantUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
         "requestBody": {
           "x-name": "command",
           "content": {
@@ -1032,33 +1042,7 @@
             }
           },
           "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/api/design-variant/quantity": {
-      "put": {
-        "tags": [
-          "Design Variant"
-        ],
-        "summary": "Cộng số lượng biến thể vào kho",
-        "operationId": "PutApiDesignVariantQuantity",
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateDesignVariantQuantityCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
+          "x-position": 2
         },
         "responses": {
           "200": {
@@ -1072,7 +1056,8 @@
         "tags": [
           "Design Variant"
         ],
-        "summary": "Xoá biến thể",
+        "summary": "[Staff/Manager] Xoá biến thể (Soft Delete)",
+        "description": "Chuyển trạng thái xóa mềm. Ngăn xóa nếu đã có OrderItems.",
         "operationId": "DeleteApiDesignVariantDelete",
         "parameters": [
           {
@@ -3027,6 +3012,7 @@
             "properties": {
               "search": {
                 "type": "string",
+                "default": "",
                 "nullable": true
               },
               "isActive": {
@@ -3037,6 +3023,7 @@
               },
               "sortBy": {
                 "type": "string",
+                "default": "Name",
                 "nullable": true
               }
             }
@@ -3048,19 +3035,28 @@
         "additionalProperties": false,
         "properties": {
           "code": {
-            "type": "string"
+            "type": "string",
+            "default": "CODE_DEFAULT"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "Product Name"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Description here"
           },
           "fileUrl": {
-            "type": "string"
+            "type": "string",
+            "default": "https://example.com/file.stl"
           },
           "thumbnailUrl": {
-            "type": "string"
+            "type": "string",
+            "default": "https://example.com/thumbnail.png"
+          },
+          "isAcitve": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -3069,25 +3065,36 @@
         "additionalProperties": false,
         "properties": {
           "code": {
-            "type": "string"
+            "type": "string",
+            "default": "CODE_DEFAULT",
+            "nullable": true
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "Product Name",
+            "nullable": true
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Description here",
+            "nullable": true
           },
           "fileUrl": {
-            "type": "string"
+            "type": "string",
+            "default": "https://example.com/file.stl",
+            "nullable": true
           },
           "thumbnailUrl": {
-            "type": "string"
+            "type": "string",
+            "default": "https://example.com/thumbnail.png",
+            "nullable": true
+          },
+          "isAcitve": {
+            "type": "boolean",
+            "default": true,
+            "nullable": true
           }
         }
-      },
-      "DeleteDesignTemplateCommand": {
-        "type": "object",
-        "additionalProperties": false
       },
       "GetDesignVariantListQuery": {
         "type": "object",
@@ -3096,17 +3103,18 @@
           "designTemplateId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000",
+            "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
           "materialId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000",
+            "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
           "isActive": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -3116,40 +3124,54 @@
         "properties": {
           "designTemplateId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "materialId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "default": "VAR-001"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "Biến thể mặc định"
           },
           "sizeScale": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "default": 1.0
           },
           "stockQuantity": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "default": 100
           },
           "price": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "default": 50000.0
           },
           "isAllowPreOrder": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "estimatedWeightPerUnit": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "default": 0.5
           },
           "estimatedPrintTimePerUnit": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "default": 120.0
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -3160,65 +3182,63 @@
           "id": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000"
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "materialId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000",
+            "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
           "code": {
             "type": "string",
+            "default": "VAR-002",
             "nullable": true
           },
           "name": {
             "type": "string",
+            "default": "Biến thể mặc định 2",
             "nullable": true
           },
           "sizeScale": {
             "type": "number",
             "format": "decimal",
+            "default": 1.0,
             "nullable": true
           },
           "stockQuantity": {
             "type": "integer",
             "format": "int32",
+            "default": 100,
             "nullable": true
           },
           "price": {
             "type": "number",
             "format": "decimal",
+            "default": 50000.0,
             "nullable": true
           },
           "isAllowPreOrder": {
             "type": "boolean",
+            "default": false,
             "nullable": true
           },
           "estimatedWeightPerUnit": {
             "type": "number",
             "format": "decimal",
+            "default": 0.5,
             "nullable": true
           },
           "estimatedPrintTimePerUnit": {
             "type": "number",
             "format": "decimal",
+            "default": 120.0,
             "nullable": true
-          }
-        }
-      },
-      "UpdateDesignVariantQuantityCommand": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000"
           },
-          "additionalQuantity": {
-            "type": "integer",
-            "format": "int32"
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "nullable": true
           }
         }
       },
@@ -3390,15 +3410,18 @@
           },
           "baseCostPerGram": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "nullable": true
           },
           "totalServiceCostPerGram": {
             "type": "number",
-            "format": "decimal"
+            "format": "decimal",
+            "nullable": true
           },
           "effectiveDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           }
         }
       },
