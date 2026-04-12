@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
-public record UpdateMaterialPriceCommand : IRequest<object>
+public record UpdateMaterialPriceCommand : IRequest<MaterialDTO>
 {
+    [JsonIgnore]
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid MaterialId { get; init; }
+    [DefaultValue("10.0")]
     public decimal BaseCostPerGram { get; init; }
+    [DefaultValue("10.0")]
     public decimal TotalServiceCostPerGram { get; init; }
     public DateTime EffectiveDate { get; init; }
 }
 
-public class UpdateMaterialPriceCommandHandler : IRequestHandler<UpdateMaterialPriceCommand, object>
+public class UpdateMaterialPriceCommandHandler : IRequestHandler<UpdateMaterialPriceCommand, MaterialDTO>
 {
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
@@ -27,7 +33,7 @@ public class UpdateMaterialPriceCommandHandler : IRequestHandler<UpdateMaterialP
         _mapper = mapper;
         _user = user;
     }
-    public async Task<object> Handle(UpdateMaterialPriceCommand request, CancellationToken cancellationToken)
+    public async Task<MaterialDTO> Handle(UpdateMaterialPriceCommand request, CancellationToken cancellationToken)
     {
         var material = await _context.Materials
             .Include(m => m.PriceHistories)

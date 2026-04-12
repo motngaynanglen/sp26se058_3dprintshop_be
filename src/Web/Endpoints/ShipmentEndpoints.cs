@@ -51,9 +51,9 @@ public class ShipmentEndpoints : EndpointGroupBase
             .WithDescription("Chuyển trạng thái sang 'Failed'. Yêu cầu nhập lý do để làm căn cứ xử lý (giao lại hoặc hoàn hàng).");
 
         // --- NHÓM CẬP NHẬT HÀNH CHÍNH ---
-        group.MapPatch("/{id}/update-info", Update)
-            .WithSummary("[Staff/Manager] Cập nhật thông tin hành chính của vận đơn.")
-            .WithDescription("Sửa đổi phí ship, địa chỉ hoặc thời gian dự kiến giao hàng.");
+        group.MapPatch("/Add", Create)
+            .WithSummary("[Staff/Manager] Tạo mới một vận đơn.")
+            .WithDescription("Phòng trường hợp đơn gửi trước đó bị lỗi hoặc gặp vấn đề. Có thể tạo mới một lượt vận chuyển khác.");
 
 
     }
@@ -68,13 +68,13 @@ public class ShipmentEndpoints : EndpointGroupBase
                 message: "Lấy danh sách thành công"
             ));
     }
-    public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateShipmentCommand command)
+    public async Task<IResult> Create([FromServices] ISender sender,  [FromBody] CreateShipmentCommand command)
     {
 
-        var finalCommand = command with { Id = id };
-        var result = await sender.Send(finalCommand);
+     
+        var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             data: result,
             message: "Cập nhật địa chỉ thành công!",
             code: ResponseCodeConstants.SUCCESS));

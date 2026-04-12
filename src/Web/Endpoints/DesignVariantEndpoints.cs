@@ -81,7 +81,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
 
         return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
                 data: result,
-                message: isEmpty ? "Lấy tags mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
+                message: isEmpty ? "Lấy danh sách biến thể của mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
                 code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
             ));
     }

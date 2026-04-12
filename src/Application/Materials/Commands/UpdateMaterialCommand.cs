@@ -38,7 +38,7 @@ public record UpdateMaterialCommand : IRequest<MaterialDTO>
             // Validation
             if (request.BaseCostPerGram <= 0)
             {
-                throw new ValidationException("Đơn giá không hợp lệ.");
+                throw new Exception("Đơn giá không hợp lệ.");
             }
 
             var material = await _context.Materials
