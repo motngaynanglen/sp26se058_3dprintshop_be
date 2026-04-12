@@ -11,7 +11,6 @@ using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
-using ValidationException = sp26se058_3dprintshop_be.Application.Common.Exceptions.ValidationException;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
