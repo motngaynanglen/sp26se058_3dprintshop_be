@@ -13,7 +13,7 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
-[Authorize(Roles =  Roles.STAFF + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
 public record MarkOrderItemAsFinishedPackageCommand : IRequest<object>
 {
     [JsonIgnore]
@@ -25,7 +25,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
     private readonly IMapper _mapper;
     private readonly IUser _user;
 
-    public MarkOrderItemAsFinishedCommandHandler(IApplicationDbContext context,  IUser user, IMapper mapper )
+    public MarkOrderItemAsFinishedCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
         _user = user;
@@ -34,7 +34,6 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
 
     public async Task<object> Handle(MarkOrderItemAsFinishedPackageCommand request, CancellationToken cancellationToken)
     {
-        var failures = new List<ValidationFailure>();
 
         // 1. Load Item kèm Order và toàn bộ Items khác để check điều kiện gộp
         var item = await _context.OrderItems
@@ -46,15 +45,6 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
         {
             throw new DataNotFoundException(nameof(OrderItem), request.Id);
         }
-
-        // 2. Kiểm tra loại sản phẩm (Chỉ dành cho vật lý)
-        var physicalTypes = new[] { SourceTypes.InStock, SourceTypes.PreOrder, SourceTypes.PrintService };
-        if (!physicalTypes.Contains(item.SourceType))
-        {
-            failures.AddFailure(nameof(item.SourceType), "Sản phẩm này thuộc luồng thiết kế, không thể xử lý đóng gói vật lý.");
-        }
-        failures.ThrowIfAny();
-        // 3. Cập nhật trạng thái sang FINISHED
         // Nếu đã hoàn thành rồi thì không cho hoàn thành lại để tránh side-effect logic shipment
         if (item.FulfillmentStatus == OrderItemStatuses.Finished)
         {
@@ -63,14 +53,74 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                 ResponseCodeConstants.VAL_INVALID_STATE
             );
         }
+        // 2. Kiểm tra loại sản phẩm (Chỉ dành cho vật lý)
+        var physicalTypes = new[] { SourceTypes.InStock, SourceTypes.PreOrder, SourceTypes.PrintService };
+        if (!physicalTypes.Contains(item.SourceType))
+        {
+            throw new BusinessException(
+                "Sản phẩm này thuộc luồng thiết kế, không thể xử lý đóng gói vật lý.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+                );
+        }
+        // 3. Cập nhật trạng thái sang FINISHED
+        // --- XỬ LÝ KHO CHO PRE-ORDER (Tách lẻ theo SRP) ---
+        if (item.SourceType == SourceTypes.PreOrder && item.DesignVariantId.HasValue)
+        {
+            var variant = item.DesignVariant;
+            if (variant == null) throw new DataNotFoundException("Không tìm thấy biến thể sản phẩm.");
+
+            // Bước A: Ghi nhận hàng đã "về kho" từ xưởng sản xuất
+            var productionInLog = new InventoryTransaction
+            {
+                Id = Guid.NewGuid(),
+                DesignVariantId = variant.Id,
+                ReferenceId = item.Id, // Link trực tiếp tới OrderItem này
+                Quantity = item.QuantityOrdered, // Dương (+) : Nhập kho
+                Type = InventoryTransactionTypes.ProductionIn,
+                Note = $"[Nhập] Hoàn tất in 3D cho đơn Pre-order: {item.Order.Code}",
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username
+            };
+
+            // Bước B: Ghi nhận xuất kho ngay lập tức để đóng gói giao khách
+            var orderOutLog = new InventoryTransaction
+            {
+                Id = Guid.NewGuid(),
+                DesignVariantId = variant.Id,
+                ReferenceId = item.Order.Id, // Link tới Order tổng
+                Quantity = -item.QuantityOrdered, // Âm (-) : Xuất kho
+                Type = InventoryTransactionTypes.OrderOut,
+                Note = $"[Xuất] Đóng gói giao khách cho đơn Pre-order: {item.Order.Code}",
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username
+            };
+
+            // Thêm cả hai vào Context
+            _context.InventoryTransactions.Add(productionInLog);
+            _context.InventoryTransactions.Add(orderOutLog);
+
+            // Lưu ý: Với Pre-order, vì mình chưa trừ StockQuantity lúc Checkout, 
+            // nên ở đây ta có thể cập nhật StockQuantity (Nhập vào rồi lại Trừ đi -> Net = 0)
+        }
+
         item.FulfillmentStatus = OrderItemStatuses.Finished;
         item.LastModified = CoreHelper.SystemTimeNow;
         item.LastModifiedBy = _user.Username;
 
         // 4. KIỂM TRA TỰ ĐỘNG: Đơn hàng đã đủ điều kiện để giao chưa?
         // Một đơn hàng sẵn sàng giao khi TẤT CẢ các món đều ở trạng thái FINISHED
-        bool isOrderReadyToShip = item.Order.OrderItems
-            .All(x => x.FulfillmentStatus == OrderItemStatuses.Finished);
+        var physicalItems = item.Order.OrderItems
+            .Where(oi => oi.SourceType == SourceTypes.InStock ||
+                         oi.SourceType == SourceTypes.PreOrder ||
+                         oi.SourceType == SourceTypes.PrintService)
+            .ToList();
+
+        // Đơn hàng sẵn sàng giao khi:
+        // 1. Có ít nhất một món hàng vật lý.
+        // 2. TẤT CẢ các món hàng vật lý đó đều đã ở trạng thái Finished.
+        bool isOrderReadyToShip = physicalItems.Any() &&
+                          physicalItems.All(x => x.FulfillmentStatus == OrderItemStatuses.Finished);
+
 
         if (isOrderReadyToShip)
         {
@@ -81,7 +131,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
             var shipment = await _context.Shipments
                 .FirstOrDefaultAsync(s => s.OrderId == item.OrderId, cancellationToken);
 
-            if (shipment != null)
+            if (shipment != null && shipment.ShipmentStatus == ShipmentStatuses.Preparing)
             {
                 shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;
                 shipment.LastModified = CoreHelper.SystemTimeNow;
