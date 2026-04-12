@@ -27,6 +27,8 @@ public class MaterialEndpoints : EndpointGroupBase
             .WithSummary("[Manager] Cập nhật vật liệu");
         group.MapDelete("/{id}/toggle-active", Delete)
             .WithSummary("Chuyển đổi trạng thái Active của vật liệu");
+        group.MapPost("/{id}/update-price", UpdatePrice)
+            .WithSummary("[Manager] Cập nhật giá của vật liệu");
     }
 
     public async Task<IResult> Add(
@@ -48,7 +50,6 @@ public class MaterialEndpoints : EndpointGroupBase
                 BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
                 statusCode: StatusCodes.Status404NotFound);
         }
-
     }
 
     public async Task<IResult> GetAll(
@@ -136,5 +137,18 @@ public class MaterialEndpoints : EndpointGroupBase
                 message: "Lỗi trong quá trình cập nhật"
             ));
         }
+    }
+
+    public async Task<IResult> UpdatePrice(
+        [FromServices] ISender sender,
+        [FromRoute] Guid id,
+        [FromBody] UpdateMaterialPriceCommand command)
+    {
+        var finalCommand = command with { MaterialId = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+            data: result,
+            message: "Cập nhật giá chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
     }
 }
