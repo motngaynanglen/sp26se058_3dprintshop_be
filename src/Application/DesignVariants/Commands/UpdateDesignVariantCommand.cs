@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
@@ -13,6 +14,7 @@ namespace sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 [Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
 public record UpdateDesignVariantCommand : IRequest<DesignVariantDTO>
 {
+    [JsonIgnore]
     [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
     [DefaultValue("00000000-0000-0000-0000-000000000001")]
