@@ -2387,37 +2387,25 @@
         }
       }
     },
-    "/api/shipment/{id}/update-info": {
+    "/api/shipment/Add": {
       "patch": {
         "tags": [
           "Shipment"
         ],
-        "summary": "[Staff/Manager] Cập nhật thông tin hành chính của vận đơn.",
-        "description": "Sửa đổi phí ship, địa chỉ hoặc thời gian dự kiến giao hàng.",
-        "operationId": "PatchApiShipmentUpdateInfo",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
+        "summary": "[Staff/Manager] Tạo mới một vận đơn.",
+        "description": "Phòng trường hợp đơn gửi trước đó bị lỗi hoặc gặp vấn đề. Có thể tạo mới một lượt vận chuyển khác.",
+        "operationId": "PatchApiShipmentAdd",
         "requestBody": {
           "x-name": "command",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateShipmentCommand"
+                "$ref": "#/components/schemas/CreateShipmentCommand"
               }
             }
           },
           "required": true,
-          "x-position": 2
+          "x-position": 1
         },
         "responses": {
           "200": {
@@ -3549,11 +3537,11 @@
           "shippingAddressId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000"
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "sourceType": {
             "type": "string",
-            "default": "IN_STOCK"
+            "default": "IN_STOCK hoặc PRE_ORDER"
           },
           "note": {
             "type": "string",
@@ -3574,7 +3562,7 @@
           "designVariantId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000000",
+            "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
           "quantity": {
@@ -3849,12 +3837,18 @@
         "additionalProperties": false,
         "properties": {
           "carrierName": {
-            "type": "string"
+            "type": "string",
+            "default": "ViettelPost"
           },
           "trackingNumber": {
-            "type": "string"
+            "type": "string",
+            "default": "SPX123456789"
           },
           "shippedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedDeliveryTime": {
             "type": "string",
             "format": "date-time"
           }
@@ -3873,23 +3867,17 @@
           }
         }
       },
-      "UpdateShipmentCommand": {
+      "CreateShipmentCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "trackingNumber": {
+          "orderId": {
             "type": "string",
-            "default": "SPX123456789",
-            "nullable": true
+            "format": "guid"
           },
-          "shipmentStatus": {
+          "shippingAddressId": {
             "type": "string",
-            "default": "SHIPPED",
-            "nullable": true
-          },
-          "estimatedDeliveryTime": {
-            "type": "string",
-            "format": "date-time",
+            "format": "guid",
             "nullable": true
           }
         }
