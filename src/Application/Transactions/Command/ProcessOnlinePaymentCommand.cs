@@ -4,6 +4,7 @@ using PayOS.Models.Webhooks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Commands;
 
@@ -32,19 +33,19 @@ public class ProcessOnlinePaymentCommand : IRequest<string>
                      .Include(t => t.Invoice)
                      .ThenInclude(i => i.Order)
                      .FirstOrDefaultAsync(t => t.InternalCode == internalCode);
-            if (transaction == null || transaction.TransactionStatus == "SUCCESS")
+            if (transaction == null || transaction.TransactionStatus == TransactionStatuses.Success)
             {
                 return string.Empty; // Đã xử lý hoặc không tồn tại
             }
 
-            transaction.TransactionStatus = "SUCCESS";
+            transaction.TransactionStatus = TransactionStatuses.Success;
             transaction.ExternalTransactionId = verifiedData.Reference;
 
             Invoice invoice = transaction.Invoice;
             // Kiểm tra xem tổng các giao dịch thành công đã đủ tiền chưa
             // (Phòng trường hợp khách thanh toán nhiều lần cho 1 hóa đơn)
             var totalPaid = await _context.Transactions
-                .Where(t => t.InvoiceId == invoice.Id && t.TransactionStatus == "SUCCESS")
+                .Where(t => t.InvoiceId == invoice.Id && t.TransactionStatus == TransactionStatuses.Success)
                 .SumAsync(t => t.Amount);
 
             //if (totalPaid >= invoice.TotalAmount)
@@ -52,7 +53,7 @@ public class ProcessOnlinePaymentCommand : IRequest<string>
             invoice.PaymentStatus = InvoiceStatuses.Paid;
             var order = invoice.Order;
             order.OrderStatus = OrderStatuses.Processing;
-            order.DeliveredAt = DateTimeOffset.UtcNow;
+            order.DepositedAt = CoreHelper.SystemTimeNow;
             //}
             //else
             //{

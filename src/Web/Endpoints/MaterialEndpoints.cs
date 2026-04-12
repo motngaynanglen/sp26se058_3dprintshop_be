@@ -35,41 +35,27 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromServices] ISender sender,
         [FromBody] CreateMaterialCommand command)
     {
-        try
-        {
+        
             var result = await sender.Send(command);
 
             return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
                 data: result,
                 message: "Tạo chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+       
     }
 
     public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
-        try
-        {
+       
             var result = await sender.Send(new GetMaterialListQuery());
 
             return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.OkResponseModel(
                 data: result,
                 message: "Lấy danh sách chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        
 
     }
 
@@ -77,21 +63,14 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromServices] ISender sender,
         [FromRoute] Guid id)
     {
-        try
-        {
+        
             var result = await sender.Send(new GetMaterialDetailQuery { Id = id });
 
             return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
                 data: result,
                 message: "Lấy thông tin chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        
         
     }
 
@@ -101,8 +80,7 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromBody] UpdateMaterialCommand command)
     {
         
-        try
-        {
+        
             var finalCommand = command with { Id = id };
             var result = await sender.Send(finalCommand);
 
@@ -110,33 +88,19 @@ public class MaterialEndpoints : EndpointGroupBase
                 data: result,
                 message: "Cập nhật chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
-        }
+        
     }
 
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteMaterialCommand command)
     {
-        try
-        {
+       
             var finalCommand = command with { Id = id };
             var result = await sender.Send(finalCommand);
             return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
                 data: result,
                 message: "Cập nhật IsActive của chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
-                data: ex.Message,
-                message: "Lỗi trong quá trình cập nhật"
-            ));
-        }
+        
     }
 
     public async Task<IResult> UpdatePrice(

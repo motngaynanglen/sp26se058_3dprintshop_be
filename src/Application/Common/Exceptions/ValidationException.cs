@@ -5,7 +5,7 @@ namespace sp26se058_3dprintshop_be.Application.Common.Exceptions;
 public class ValidationException : Exception
 {
     public ValidationException()
-        : base("Một hoặc nhiều lỗi đã xảy ra trong khâu kiểm tra dữ liệu đầu vào.")
+        : base("Dữ liệu đầu vào không hợp lệ.")
     {
         Errors = new Dictionary<string, string[]>();
     }
