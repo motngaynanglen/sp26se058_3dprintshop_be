@@ -13,6 +13,7 @@ public static class ShipmentStatuses
     public const string ReadyForPickup = "READY_FOR_PICKUP";
     public const string InTransit = "IN_TRANSIT";
     public const string Delivered = "DELIVERED";
+    public const string Cancelled = "CANCELLED";
     // Các trạng thái cân nhắc thêm vào:
     public const string Failed = "FAILED";
     public const string Returned = "RETURNED";
@@ -24,7 +25,7 @@ public static class ShipmentStatuses
         new(ReadyForPickup, "Chờ lấy hàng", "#FF9800", "Đã sẵn sàng, chờ đơn vị vận chuyển hoặc khách đến lấy."),
         new(InTransit, "Đang giao", "#03A9F4", "Đơn hàng đang trong quá trình vận chuyển."),
         new(Delivered, "Giao thành công", "#4CAF50", "Khách hàng đã nhận hàng và ký xác nhận."),
-
+        new(Cancelled, "Đã hủy", "#9E9E9E", "Yêu cầu giao hàng đã bị hủy bỏ."),
         new(Failed, "Giao thất bại", "#F44336", "Không liên lạc được khách hoặc địa chỉ sai."),
         new(Returned, "Đã hoàn hàng", "#E91E63", "Hàng đã quay trở lại kho.")
 

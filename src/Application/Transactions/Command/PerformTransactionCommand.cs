@@ -12,6 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Commands;
 
@@ -40,10 +41,11 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
     public async Task<object> Handle(PerformTransactionCommand request, CancellationToken cancellationToken)
     {
-        //if (request.PaymentMethod == PaymentMethods.Cash && _user.Role == Roles.CUSTOMER)
-        //{
-        //    throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
-        //}
+        // 0. Kiểm tra quyền hạn 
+        if (request.PaymentMethod == PaymentMethods.Cash && _user.Role == Roles.CUSTOMER)
+        {
+            throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
+        }
 
         // 1. Lấy thông tin Order kèm theo Invoice và các Transaction liên quan
         var order = await GetOrderWithDetailsAsync(request.OrderId, cancellationToken);
@@ -62,14 +64,21 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         }
         if (request.PaymentMethod == PaymentMethods.Cash)
         {
-             ProcessOrderWorkflowAfterPayment(order);
+            ProcessOrderWorkflowAfterPayment(order);
         }
         // 5. Tạo Transaction mới dựa trên phương thức thanh toán
         var result = await CreateTransactionByMethodAsync(order, request.PaymentMethod, cancellationToken);
 
-        // 6. Lưu tất cả thay đổi (Invoice mới nếu có, Transaction cũ cập nhật, Transaction mới thêm)
-        await _context.SaveChangesAsync(cancellationToken);
-
+        // 6. Lưu thay đổi
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Lỗi khi lưu xuống DB
+            throw new UpdateFailureException($"Lỗi lưu dữ liệu giao dịch: {ex.Message}");
+        }
         return result;
     }
 
@@ -82,7 +91,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
                 .ThenInclude(i => i!.Transactions)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
 
-        if (order == null) throw new Exception("Không tìm thấy đơn hàng");
+        if (order == null) throw new DataNotFoundException(nameof(Order), orderId);
         return order;
     }
 
@@ -93,7 +102,11 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
         if (isNotPending || isPaid)
         {
-            throw new Exception("Đơn hàng đã được thanh toán hoặc không ở trạng thái chờ");
+            // Chuyển sang VAL_002: Vì đơn hàng tồn tại nhưng trạng thái không cho phép tạo giao dịch mới
+            throw new BusinessException(
+                "Đơn hàng đã được thanh toán hoặc không còn ở trạng thái chờ xử lý.",
+                ResponseCodeConstants.VAL_INVALID_STATE
+            );
         }
         return true;
     }
@@ -120,15 +133,17 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
     private PaymentResponse? TryGetValidPendingPayment(Invoice invoice)
     {
-        var pendingTransaction = invoice.Transactions.FirstOrDefault(t => t.TransactionStatus == "PENDING" && t.PaymentMethod == PaymentMethods.PAYOS);
+        var pendingTransaction = invoice.Transactions
+            .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending 
+                                    && t.PaymentMethod == PaymentMethods.PAYOS);
 
         if (pendingTransaction == null) return null;
 
         // Kiểm tra thời hạn 10 phút
-        bool isTimeOut = pendingTransaction.Created.AddMinutes(10) > CoreHelper.SystemTimeNow;
+        bool isTimeOut = CoreHelper.SystemTimeNow > pendingTransaction.Created.AddMinutes(10);
         if (isTimeOut)
         {
-            pendingTransaction.TransactionStatus = "FAILED";
+            pendingTransaction.TransactionStatus = TransactionStatuses.Failed;
             pendingTransaction.Note = "Link cũ đã hết hạn";
             return null;
         }
@@ -162,7 +177,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             Amount = order.TotalPrice,
             PaymentMethod = method,
             InternalCode = string.Empty,
-            TransactionStatus = "PENDING",
+            TransactionStatus = TransactionStatuses.Pending,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,
@@ -173,10 +188,17 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         {
             // Xử lý tạo Link thanh toán online
             var paymentResponse = await _paymentService.CreatePaymentLink(order, _payOsSettings.ReturnUrl, _payOsSettings.CancelUrl);
-            if (paymentResponse == null) throw new Exception("Lỗi kết nối cổng thanh toán PayOS");
+            if (paymentResponse == null)
+            {
+                // Chuyển sang EXT_501: Lỗi cổng thanh toán bên thứ 3
+                throw new BusinessException(
+                    "Không thể kết nối với cổng thanh toán PayOS. Vui lòng thử lại sau.",
+                    ResponseCodeConstants.PAYOS_ERROR
+                );
+            }
 
             transaction.InternalCode = paymentResponse.PaymentCode.ToString();
-            transaction.TransactionStatus = "PENDING";
+            transaction.TransactionStatus = TransactionStatuses.Pending;
             transaction.PaymentLink = paymentResponse.PaymentLink;
             transaction.QrCode = paymentResponse.QrCode;
             transaction.Note = $"Tạo link thanh toán PayOS cho đơn hàng {order.Code}";
@@ -188,7 +210,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         {
             // Xử lý thanh toán tiền mặt trực tiếp
             transaction.InternalCode = $"CASH-{order.Code}-{DateTime.UtcNow.Ticks}";
-            transaction.TransactionStatus = "PAID"; // Trực tiếp thanh toán xong
+            transaction.TransactionStatus = TransactionStatuses.Success; // Trực tiếp thanh toán xong
             transaction.Note = $"Thanh toán trực tiếp bằng tiền mặt cho đơn hàng {order.Code}";
 
             // Cập nhật luôn trạng thái Invoice vì đã nhận tiền mặt
@@ -198,13 +220,16 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             return new { Message = "Thanh toán tiền mặt thành công", OrderCode = order.Code };
         }
 
-        throw new Exception("Phương thức thanh toán không hỗ trợ");
+        throw new BusinessException(
+            $"Phương thức thanh toán '{method}' hiện chưa được hệ thống hỗ trợ.",
+            ResponseCodeConstants.NOT_SUPPORTED
+        );
     }
     private bool ProcessOrderWorkflowAfterPayment(Order order)
     {
         // 1. Cập nhật Order sang PROCESSING
         order.OrderStatus = OrderStatuses.Processing;
-
+        order.DepositedAt = CoreHelper.SystemTimeNow;
         // 2. Cập nhật từng OrderItem dựa trên SourceType
         // Vì Checkout đang dùng SourceType cho toàn bộ Request
         foreach (var item in order.OrderItems)

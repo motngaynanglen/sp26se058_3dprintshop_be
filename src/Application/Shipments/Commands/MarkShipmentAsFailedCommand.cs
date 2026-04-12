@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Commands;
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
 public record MarkShipmentAsFailedCommand : IRequest<object>
 {
     public Guid Id { get; init; }
@@ -31,25 +36,23 @@ public class MarkShipmentAsFailedCommandHandler : IRequestHandler<MarkShipmentAs
             .Include(s => s.Order)
             .FirstOrDefaultAsync(s => s.Id == request.Id, ct);
 
-        if (shipment == null) throw new Exception("Không tìm thấy thông tin vận chuyển.");
+        if (shipment == null)
+            throw new DataNotFoundException(nameof(Shipment), request.Id);
 
         // Chỉ có thể thất bại khi đang đi giao
-        if (shipment.ShipmentStatus != ShipmentStatuses.InTransit)
+        var terminalStatuses = new[] { ShipmentStatuses.Delivered, ShipmentStatuses.Cancelled, ShipmentStatuses.Returned };
+        if (terminalStatuses.Contains(shipment.ShipmentStatus))
         {
-            throw new Exception("Trạng thái vận chuyển hiện tại không hợp lệ để báo thất bại.");
+            throw new BusinessException(
+                $"Kiện hàng đã ở trạng thái kết thúc ({shipment.ShipmentStatus}), không thể báo giao thất bại.",
+                ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
         // 1. Cập nhật trạng thái Shipment
         shipment.ShipmentStatus = ShipmentStatuses.Failed;
-        // Lưu lý do vào Note để Staff sau này xem lại
-        //shipment.Note = $"Giao hàng thất bại lúc {DateTime.Now:HH:mm dd/MM}. Lý do: {request.Reason}";
         shipment.LastModified = CoreHelper.SystemTimeNow;
         shipment.LastModifiedBy = _user.Username;
 
-        // 2. Xử lý Order (Tùy chọn)
-        // Thông thường, chúng ta giữ đơn ở Processing để Staff có thể:
-        // - Hoặc là bấm "Giao lại" (API MarkReady) 
-        // - Hoặc là bấm "Hủy đơn" (API Cancel)
 
         await _context.SaveChangesAsync(ct);
         return true;

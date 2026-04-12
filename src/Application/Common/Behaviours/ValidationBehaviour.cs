@@ -1,5 +1,4 @@
-﻿using ValidationException = sp26se058_3dprintshop_be.Application.Common.Exceptions.ValidationException;
-
+﻿
 namespace sp26se058_3dprintshop_be.Application.Common.Behaviours;
 
 public class ValidationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
