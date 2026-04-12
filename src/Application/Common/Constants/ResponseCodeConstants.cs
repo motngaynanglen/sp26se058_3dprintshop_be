@@ -29,6 +29,7 @@ public static class ResponseCodeConstants
     public const string TOKEN_INVALID = "AUTH_004";        // Token không hợp lệ
 
     // Lỗi CRUD (DATABASE)
+    public const string EMPTY_RESULT = "DB_000";           // Trạng thái 200 - Truy vấn thành công nhưng không có dữ liệu
     public const string DUPLICATE_ERROR = "DB_001";        // Trùng lặp dữ liệu (Unique constraint)
     public const string DELETE_FAILED = "DB_002";          // Không thể xóa (do ràng buộc khóa ngoại...)
     public const string UPDATE_FAILED = "DB_003";          // Không thể cập nhật

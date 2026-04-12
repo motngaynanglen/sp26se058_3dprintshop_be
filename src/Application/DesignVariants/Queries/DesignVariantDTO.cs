@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace sp26se058_3dprintshop_be.Application.DesignVariant.Queries;
+namespace sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 
 public class DesignVariantDTO
 {
