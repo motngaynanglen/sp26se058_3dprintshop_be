@@ -43,7 +43,7 @@ public static class DependencyInjection
                     .SelectMany(x => x.Errors)
                     .Select(x => x.ErrorMessage)
                     .FirstOrDefault();
-
+                Console.WriteLine($"[Factory Log]: Model Binding Error - {error}");
                 // Ném lỗi này ra để Middleware Exception bắt được
                 throw new BadHttpRequestException($"Lỗi định dạng: {error}");
             };
