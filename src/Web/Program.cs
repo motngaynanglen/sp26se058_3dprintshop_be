@@ -85,8 +85,8 @@ app.UseHealthChecks("/health");
 
 app.UseSwaggerUi(settings =>
 {
-    settings.Path = "/swagger";
-    settings.DocumentPath = "/swagger/specification.json";
+    settings.Path = "/api";
+    settings.DocumentPath = "/api/specification.json";
 });
 
 app.MapRazorPages();
