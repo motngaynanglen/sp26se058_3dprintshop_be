@@ -45,6 +45,7 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebServices(builder.Configuration); 
 
 var app = builder.Build();
+app.UseExceptionHandler(options => { });
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -86,7 +87,6 @@ app.MapRazorPages();
 
 app.MapFallbackToFile("index.html");
 
-app.UseExceptionHandler(options => { });
 
 app.Map("/", () => "3D Print Shop API is running...");
 
