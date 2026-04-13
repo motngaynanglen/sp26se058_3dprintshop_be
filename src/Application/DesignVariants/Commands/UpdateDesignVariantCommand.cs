@@ -23,12 +23,16 @@ public record UpdateDesignVariantCommand : IRequest<DesignVariantDTO>
     public string? Code { get; init; }
     [DefaultValue("Biến thể mặc định 2")]
     public string? Name { get; init; }
+    [DefaultValue("Biến thể mặc định 2 với chất liệu PLA")]
+    public string? Description { get; init; }
     [DefaultValue(1.0)]
     public decimal? SizeScale { get; init; }
     [DefaultValue(100)]
     public int? StockQuantity { get; init; }
     [DefaultValue(50000.0)]
     public decimal? Price { get; init; }
+    [DefaultValue("https://example.com/preview-model.stl")]
+    public string? PreviewModelUrl { get; init; }
     [DefaultValue(false)]
     public bool? IsAllowPreOrder { get; init; }
     [DefaultValue(0.5)]
@@ -94,6 +98,8 @@ public class UpdateDesignVariantCommandHandler : IRequestHandler<UpdateDesignVar
         if (request.EstimatedWeightPerUnit.HasValue) entity.EstimatedWeightPerUnit = request.EstimatedWeightPerUnit.Value;
         if (request.EstimatedPrintTimePerUnit.HasValue) entity.EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit.Value;
         if (request.IsActive.HasValue) entity.IsActive = request.IsActive.Value;
+        if(request.Description != null) entity.Description = request.Description;
+        if(request.PreviewModelUrl != null) entity.PreviewModelUrl = request.PreviewModelUrl;
 
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
