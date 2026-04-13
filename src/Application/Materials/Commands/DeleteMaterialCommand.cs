@@ -29,11 +29,11 @@ public class DeleteMaterialCommandHandler : IRequestHandler<DeleteMaterialComman
 
     public async Task<bool> Handle(DeleteMaterialCommand request, CancellationToken cancellationToken)
     {
-        var userId = _user.Id;
+        var userName = _user.Username;
         var material = await _context.Materials.FindAsync(request.Id);
         if (material == null)
         {
-            throw new Exception("Material not found");
+            throw new Exception("Không tìm thấy vật liệu.");
         }
         if (material.IsActive)
         {
@@ -44,9 +44,9 @@ public class DeleteMaterialCommandHandler : IRequestHandler<DeleteMaterialComman
         }
 
         material.Deleted = DateTimeOffset.Now;
-        material.DeletedBy = userId;
+        material.DeletedBy = userName;
         material.LastModified = DateTime.Now;
-        material.LastModifiedBy = userId;
+        material.LastModifiedBy = userName;
 
         await _context.SaveChangesAsync(cancellationToken);
         return true;
