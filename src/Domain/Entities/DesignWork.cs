@@ -10,9 +10,9 @@ namespace sp26se058_3dprintshop_be.Domain.Entities;
 public class DesignWork : BaseAuditableEntity
 {
     public string? Name { get; set; } = string.Empty;
-    public required string SourceType { get; set; } // 'FromTemplate' hoặc 'NewConcept'
+    //public required string SourceType { get; set; } // 'FromTemplate' hoặc 'NewConcept'
 
-    public Guid? TemplateId { get; set; }
+    //public Guid? TemplateId { get; set; }
     public Guid CustomerId { get; set; }
     public Guid? MainAssignedStaffId { get; set; }
     //public Guid? ServiceSelectionId { get; set; }
@@ -22,11 +22,9 @@ public class DesignWork : BaseAuditableEntity
 
     public required string Status { get; set; } // 'Pending', 'InProgress', etc.
 
-    //nativation
-    //public virtual ServicePackage ServicePackage { get; set; } = null!;
     public virtual Customer Customer { get; set; } = null!;
     public virtual Staff? MainAssignedStaff { get; set; }
-    public virtual DesignTemplate? Template { get; set; }
+    //public virtual DesignTemplate? Template { get; set; }
     public virtual ICollection<ServiceSelection> ServiceSelections { get; set; } = new List<ServiceSelection>();
     public virtual ICollection<DesignLog> DesignLogs { get; set; } = new List<DesignLog>();
     public virtual ICollection<DesignVersionHistory> VersionHistories { get; set; } = new List<DesignVersionHistory>();

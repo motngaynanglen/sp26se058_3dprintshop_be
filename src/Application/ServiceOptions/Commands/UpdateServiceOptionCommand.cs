@@ -13,7 +13,6 @@ public record UpdateServiceOptionCommand : IRequest<object>
     [JsonIgnore]
     public Guid Id { get; init; }
     public string? Name { get; init; }
-    public string? OptionType { get; init; }
     public decimal? DefaultPrice { get; init; }
     public bool? IsActive { get; init; }
 }
@@ -30,15 +29,22 @@ public class UpdateServiceOptionCommandHandler : IRequestHandler<UpdateServiceOp
 
     public async Task<object> Handle(UpdateServiceOptionCommand request, CancellationToken ct)
     {
-        var entity = await _context.ServiceOptions.Include(s => s.PackageOptions).FirstOrDefaultAsync(s => s.Id == request.Id);
+        /*var failures = new List<ValidationFailure>();
+        // Kiểm tra trùng mã Code (Tránh lỗi Unique Index ở DB)
+        var exists = await _context.ServiceOptions
+            .AnyAsync(x => x.Code == request.Code, ct);
 
-        if (entity == null) throw new Exception("Không tìm thấy tùy chọn dịch vụ.");
-        if (entity.PackageOptions.Any() && request.OptionType != null)
+        if (exists)
         {
-            throw new Exception("Không thể cập nhật OptionType vì đã được thêm vào service khác.");
+            failures.AddFailure(nameof(ServiceOption.Code), $"Mã tùy chọn '{request.Code}' đã tồn tại trong hệ thống.");
         }
+        failures.ThrowIfAny();*/
+        var entity = await _context.ServiceOptions.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.Id == request.Id);
+
+        if (entity == null) throw new DataNotFoundException(nameof(ServiceOption), request.Id);
+        if (entity.Deleted != null) throw new DuplicateException(nameof(ServiceOption.Code)+" trùng lặp với dữ liệu đang trong thùng rác.");
+
         entity.Name = request.Name ?? entity.Name;
-        entity.OptionType = request.OptionType ?? entity.OptionType;
         entity.DefaultPrice = request.DefaultPrice ?? entity.DefaultPrice;
         entity.IsActive = request.IsActive ?? entity.IsActive;
         entity.LastModified = CoreHelper.SystemTimeNow;

@@ -9,7 +9,6 @@ public class DesignWorkConfiguration : IEntityTypeConfiguration<DesignWork>
     public void Configure(EntityTypeBuilder<DesignWork> builder)
     {
         builder.Property(dw => dw.Status).IsRequired().HasMaxLength(30);
-        builder.Property(dw => dw.SourceType).IsRequired().HasMaxLength(50);
 
         builder.HasOne(dw => dw.Customer)
                .WithMany(c => c.DesignWorks)
