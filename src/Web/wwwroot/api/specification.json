@@ -3221,6 +3221,11 @@
             "default": "Biến thể mặc định 2",
             "nullable": true
           },
+          "description": {
+            "type": "string",
+            "default": "Biến thể mặc định 2 với chất liệu PLA",
+            "nullable": true
+          },
           "sizeScale": {
             "type": "number",
             "format": "decimal",
@@ -3237,6 +3242,11 @@
             "type": "number",
             "format": "decimal",
             "default": 50000.0,
+            "nullable": true
+          },
+          "previewModelUrl": {
+            "type": "string",
+            "default": "https://example.com/preview-model.stl",
             "nullable": true
           },
           "isAllowPreOrder": {
@@ -3455,6 +3465,9 @@
           },
           "description": {
             "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
           },
           "baseCostPerGram": {
             "type": "number",

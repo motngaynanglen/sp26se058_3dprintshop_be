@@ -46,7 +46,7 @@ public class CreateMaterialCommandValidator : AbstractValidator<CreateMaterialCo
 
         // 4. Kiểm tra Phí dịch vụ (Service Cost)
         RuleFor(v => v.TotalServiceCostPerGram)
-            .GreaterThanOrEqualTo(0).WithMessage("Phí dịch vụ không được là số âm.");
+            .GreaterThan(v => v.BaseCostPerGram).WithMessage("Phí dịch vụ phải cao hơn giá nhập (Base Cost).");
 
         // 5. Kiểm tra Ngày hiệu lực
         RuleFor(v => v.EffectiveDate)
