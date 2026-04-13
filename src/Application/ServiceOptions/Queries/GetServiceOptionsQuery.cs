@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.ServicePackages.Queries;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Queries;
@@ -23,7 +22,7 @@ public class GetServiceOptionsQueryHandler : IRequestHandler<GetServiceOptionsQu
     {
         return await _context.ServiceOptions
             .AsNoTracking()
-            .OrderBy(x => x.OptionType)
+            .OrderBy(x => x.Created)
             .ProjectTo<ServiceOptionDTO>(_mapper.ConfigurationProvider)
             .ToListAsync(ct);
     }

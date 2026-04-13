@@ -23,7 +23,7 @@ public class DeactiveServiceOptionCommandHandler : IRequestHandler<DeactiveServi
     public async Task<object> Handle(DeactiveServiceOptionCommand request, CancellationToken ct)
     {
         var entity = await _context.ServiceOptions.FindAsync(new object[] { request.Id }, ct);
-        if (entity == null) throw new Exception("Không tìm thấy tùy chọn.");
+        if (entity == null) throw new DataNotFoundException(nameof(ServiceOption), request.Id);
 
         // Chỉ tắt hoạt động để không cho khách hàng mới chọn
         entity.IsActive = false;
