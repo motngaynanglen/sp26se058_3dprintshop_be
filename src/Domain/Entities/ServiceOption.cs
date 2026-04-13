@@ -9,9 +9,8 @@ public class ServiceOption : BaseAuditableEntity
 {
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
-    public string OptionType { get; set; } = null!; // ADDON | CONFIG
-    public decimal DefaultPrice { get; set; }
+    public decimal DefaultPrice { get; set; }   
     public bool IsActive { get; set; } = true;
-    public virtual ICollection<PackageOption> PackageOptions { get; set; } = new List<PackageOption>();
+    public virtual ICollection<ServiceSelectedOption> ServiceSelectedOptions { get; set; } = new List<ServiceSelectedOption>();
 
 }

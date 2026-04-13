@@ -17,7 +17,7 @@ public interface IApplicationDbContext
     DbSet<Invoice> Invoices { get; }
     DbSet<Transaction> Transactions { get; }
     DbSet<DesignTemplate> DesignTemplates { get; }
-    DbSet<Domain.Entities.DesignVariant> DesignVariants { get; }
+    DbSet<DesignVariant> DesignVariants { get; }
     DbSet<ConceptTag> ConceptTags { get; }
     DbSet<DesignTag> DesignTags { get; }
     DbSet<Material> Materials { get; }
@@ -32,10 +32,8 @@ public interface IApplicationDbContext
     DbSet<Feedback> Feedbacks { get; }
     DbSet<FeedbackImage> FeedbackImages { get; }
     DbSet<ServiceOption> ServiceOptions { get; }
-    DbSet<ServicePackage> ServicePackages { get; }
-    DbSet<PackageOption> PackageOptions { get; }
     DbSet<ServiceSelection> ServiceSelections { get; }
-    DbSet<ServiceSelectionOption> ServiceSelectionOptions { get; }
+    DbSet<ServiceSelectedOption> ServiceSelectedOptions { get; }
 
     //DatabaseFacade Database { get; }
 

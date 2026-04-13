@@ -8,21 +8,21 @@ using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Infrastructure.Data.Configurations;
-public class ServiceSelectionOptionConfiguration : IEntityTypeConfiguration<ServiceSelectionOption>
+public class ServiceSelectedOptionConfiguration : IEntityTypeConfiguration<ServiceSelectedOption>
 {
-    public void Configure(EntityTypeBuilder<ServiceSelectionOption> builder)
+    public void Configure(EntityTypeBuilder<ServiceSelectedOption> builder)
     {
 
         // Quan hệ với bảng Selection chính
         builder.HasOne(x => x.ServiceSelection)
-            .WithMany(s => s.SelectedOptions)
+            .WithMany(s => s.ServiceSelectedOptions)
             .HasForeignKey(x => x.ServiceSelectionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Quan hệ với Option danh mục
         builder.HasOne(x => x.ServiceOption)
-            .WithMany()
-            .HasForeignKey(x => x.ServiceOptionId)
+            .WithMany(so => so.ServiceSelectedOptions)
+            .HasForeignKey(x => x.ServiceOptionId) 
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.AppliedPrice)
