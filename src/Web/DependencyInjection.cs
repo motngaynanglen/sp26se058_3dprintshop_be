@@ -35,7 +35,19 @@ public static class DependencyInjection
 
         // Customise default API behaviour
         services.Configure<ApiBehaviorOptions>(options =>
-            options.SuppressModelStateInvalidFilter = true);
+        {
+            //options.SuppressModelStateInvalidFilter = true;
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var error = context.ModelState.Values
+                    .SelectMany(x => x.Errors)
+                    .Select(x => x.ErrorMessage)
+                    .FirstOrDefault();
+
+                // Ném lỗi này ra để Middleware Exception bắt được
+                throw new BadHttpRequestException($"Lỗi định dạng: {error}");
+            };
+        });
 
         services.AddEndpointsApiExplorer();
         // --- CẤU HÌNH AUTHENTICATION THỰC TẾ ---
