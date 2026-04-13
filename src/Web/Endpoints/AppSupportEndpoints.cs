@@ -20,6 +20,8 @@ public class AppSupportEndpoints : EndpointGroupBase
         group.MapPost("/test-upload-to-b2", TestUploadToB2)
                 .WithSummary("[Dev Only] Test đẩy file trực tiếp lên B2 bằng Presigned URL.")
                 .DisableAntiforgery();
+
+        app.MapGet("/test-error", () => { throw new BadHttpRequestException("Manual Error"); });
     }
     public async Task<IResult> GetPresignedUploadUrl([FromQuery] string fileName, [FromServices] IS3StorageService s3Service)
     {
