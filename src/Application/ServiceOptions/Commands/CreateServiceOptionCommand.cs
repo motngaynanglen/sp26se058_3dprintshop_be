@@ -10,11 +10,11 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
 public record CreateServiceOptionCommand : IRequest<object>
 {
-    [DefaultValue("CodeAutoGenSau")]
+    [DefaultValue("CODE_A")]
     public string Code { get; init; } = null!;
+    [DefaultValue("Thiết kế quy chuẩn")]
     public string Name { get; init; } = null!;
-    [DefaultValue("ADDON Hoặc CONFIG")]
-    public string OptionType { get; init; } = null!; // ADDON | CONFIG
+    [DefaultValue(100)]
     public decimal DefaultPrice { get; init; }
 }
 public class CreateServiceOptionCommandValidator : AbstractValidator<CreateServiceOptionCommand>
@@ -32,9 +32,6 @@ public class CreateServiceOptionCommandValidator : AbstractValidator<CreateServi
         RuleFor(v => v.DefaultPrice)
             .GreaterThanOrEqualTo(0).WithMessage("Giá mặc định không được nhỏ hơn 0");
 
-        RuleFor(v => v.OptionType)
-            .Must(x => x == "ADDON" || x == "CONFIG")
-            .WithMessage("Loại tùy chọn phải là ADDON hoặc CONFIG");
     }
 }
 public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOptionCommand, object>
@@ -50,21 +47,22 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
 
     public async Task<object> Handle(CreateServiceOptionCommand request, CancellationToken ct)
     {
+        var failures = new List<ValidationFailure>();
+
         // Kiểm tra trùng mã Code (Tránh lỗi Unique Index ở DB)
         var exists = await _context.ServiceOptions
             .AnyAsync(x => x.Code == request.Code, ct);
 
         if (exists)
         {
-            throw new Exception($"Mã tùy chọn '{request.Code}' đã tồn tại trong hệ thống.");
+            failures.AddFailure(nameof(ServiceOption.Code), $"Mã tùy chọn '{request.Code}' đã tồn tại trong hệ thống.");
         }
-
+        failures.ThrowIfAny();
         var entity = new ServiceOption
         {
             Id = Guid.NewGuid(),
             Code = request.Code,
             Name = request.Name,
-            OptionType = request.OptionType,
             DefaultPrice = request.DefaultPrice,
             IsActive = true,
             Created = CoreHelper.SystemTimeNow,
