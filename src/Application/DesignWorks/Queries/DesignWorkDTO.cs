@@ -44,7 +44,7 @@ public class DesignWorkDetailDTO : DesignWorkDTO
     public Guid? ResultDraftId { get; set; }
 
     // Có thể bao gồm thêm thông tin Selection để FE hiển thị giá tiền
-    public ServiceSelectionDTO? Selection { get; init; }
+    public ICollection<ServiceSelectionDTO>? Selections { get; init; }
     private class Mapping : Profile
     {
         public Mapping()
@@ -54,7 +54,7 @@ public class DesignWorkDetailDTO : DesignWorkDTO
             .ForMember(d => d.TemplateName, opt => opt.MapFrom(s => s.Template != null
                 ? s.Template.Name
                 : null))
-            .ForMember(d => d.Selection, opt => opt.MapFrom(s => s.ServiceSelection));
+            .ForMember(d => d.Selections, opt => opt.MapFrom(s => s.ServiceSelections));
         }
     }
 }
