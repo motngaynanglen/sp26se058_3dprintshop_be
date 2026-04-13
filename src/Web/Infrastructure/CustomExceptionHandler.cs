@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using System;
-using DataNotFoundException = sp26se058_3dprintshop_be.Application.Common.Exceptions.DataNotFoundException;
 
 namespace sp26se058_3dprintshop_be.Web.Infrastructure;
 
@@ -26,6 +25,7 @@ public class CustomExceptionHandler : IExceptionHandler
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
+        Console.WriteLine($"[API Error]: {exception.GetType().Name} - {exception.Message}");
         if (exception is BusinessException businessEx)
         {
             await HandleBusinessException(httpContext, businessEx);
@@ -57,7 +57,7 @@ public class CustomExceptionHandler : IExceptionHandler
 
         await httpContext.Response.WriteAsJsonAsync(new BaseResponseModel(
             statusCode: statusCode,
-            data: businessEx.Details, 
+            data: businessEx.Details,
             message: businessEx.Message,
             code: businessEx.Code ?? ResponseCodeConstants.FAILED
         ));
