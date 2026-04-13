@@ -45,9 +45,8 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebServices(builder.Configuration); 
 
 var app = builder.Build();
-app.UseExceptionHandler(options => { });
 
-// Configure the HTTP request pipeline.
+/*// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     //await app.InitialiseDatabaseAsync();
@@ -56,8 +55,13 @@ else
 {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}*/
+// just use HttpsRedirection at Local (Development)
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection(); 
 }
-app.UseHttpsRedirection();
+app.UseExceptionHandler(options => { });
 app.UseStaticFiles();
 
 app.UseRouting();
