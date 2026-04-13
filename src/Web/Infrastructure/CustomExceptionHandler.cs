@@ -31,14 +31,25 @@ public class CustomExceptionHandler : IExceptionHandler
             await HandleBusinessException(httpContext, businessEx);
             return true;
         }
-
-        var exceptionType = exception.GetType();
-
-        if (_exceptionHandlers.ContainsKey(exceptionType))
+        if (exception is BadHttpRequestException || exception.GetType().Name.Contains("BadHttpRequestException"))
         {
-            await _exceptionHandlers[exceptionType].Invoke(httpContext, exception);
+            await HandleBadHttpRequestException(httpContext, exception);
+            return true; 
+        }
+        var handlerEntry = _exceptionHandlers.FirstOrDefault(h => h.Key.IsAssignableFrom(exception.GetType()));
+
+        if (handlerEntry.Value != null)
+        {
+            await handlerEntry.Value.Invoke(httpContext, exception);
             return true;
         }
+        //var exceptionType = exception.GetType();
+
+        //if (_exceptionHandlers.ContainsKey(exceptionType))
+        //{
+        //    await _exceptionHandlers[exceptionType].Invoke(httpContext, exception);
+        //    return true;
+        //}
         await HandleUnknownException(httpContext, exception);
         return true;
     }
