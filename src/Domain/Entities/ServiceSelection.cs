@@ -12,6 +12,7 @@ public class ServiceSelection : BaseAuditableEntity
     public Guid? ServicePackageId { get; set; }
 
     public string SelectionType { get; set; } = null!; // FREE_AI | PAID
+    public string? Note { get; set; }
     public bool IsLocked { get; set; }
     public virtual DesignWork DesignWork { get; set; } = null!;
     public virtual ServicePackage? ServicePackage { get; set; }

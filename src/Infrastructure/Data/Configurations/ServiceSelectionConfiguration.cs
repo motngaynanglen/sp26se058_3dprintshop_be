@@ -14,12 +14,13 @@ public class ServiceSelectionConfiguration : IEntityTypeConfiguration<ServiceSel
     {
         // One-to-One giữa DesignWork và Selection
         builder.HasOne(x => x.DesignWork)
-            .WithOne(x => x.ServiceSelection)
-            .HasForeignKey<ServiceSelection>(x => x.DesignWorkId)
+            .WithMany(x => x.ServiceSelections)
+            .HasForeignKey(x => x.DesignWorkId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.ServicePackage)
             .WithMany()
-            .HasForeignKey(x => x.ServicePackageId);
+            .HasForeignKey(x => x.ServicePackageId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
