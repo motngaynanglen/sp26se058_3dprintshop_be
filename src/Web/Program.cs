@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Options;
@@ -37,6 +38,11 @@ builder.Services.AddHttpClient<IAIService, AIService>();
 builder.Services.Configure<BackblazeB2Options>(
     builder.Configuration.GetSection("BackblazeB2"));
 builder.Services.AddScoped<IBackblazeB2Service, BackblazeB2Service>();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 
 builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
 
