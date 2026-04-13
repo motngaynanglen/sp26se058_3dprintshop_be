@@ -3,7 +3,6 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
 using sp26se058_3dprintshop_be.Application.ServiceOptions.Queries;
-using sp26se058_3dprintshop_be.Application.ServicePackages.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 

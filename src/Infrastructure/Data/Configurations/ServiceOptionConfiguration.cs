@@ -26,8 +26,6 @@ public class ServiceOptionConfiguration : IEntityTypeConfiguration<ServiceOption
         builder.Property(x => x.DefaultPrice)
             .HasPrecision(18, 2);
 
-        builder.Property(x => x.OptionType)
-            .HasMaxLength(20)
-            .IsRequired(); // ADDON | CONFIG
+        
     }
 }
