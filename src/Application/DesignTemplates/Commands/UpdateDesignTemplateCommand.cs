@@ -70,6 +70,8 @@ public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTe
                 throw new DuplicateException(nameof(DesignTemplate), nameof(request.Code), request.Code);
             }
         }
+
+        designTemplate.Code = !string.IsNullOrEmpty(request.Code) ? request.Code : designTemplate.Code;
         // Cập nhật thông tin
         if (!string.IsNullOrEmpty(request.Name))
             designTemplate.Name = request.Name;
