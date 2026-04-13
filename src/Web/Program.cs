@@ -81,24 +81,18 @@ app.UseHealthChecks("/health");
 //app.UseHttpsRedirection();
 //app.UseStaticFiles();
 
-app.UseCors("AllowAll");
-
-// Authen then Author
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseCors("AllowAll");
 
 app.UseSwaggerUi(settings =>
 {
-    settings.Path = "/api";
-    settings.DocumentPath = "/api/specification.json";
+    settings.Path = "/swagger";
+    settings.DocumentPath = "/swagger/specification.json";
 });
 
 app.MapRazorPages();
 
-app.MapFallbackToFile("index.html");
-
-
 app.Map("/", () => "3D Print Shop API is running...");
+app.MapFallbackToFile("index.html");
 
 app.MapMethods("{*path}", new[] { "OPTIONS" }, () => Results.Ok())
    .RequireCors("AllowFrontend");
