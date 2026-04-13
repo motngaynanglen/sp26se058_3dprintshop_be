@@ -16,6 +16,16 @@
         }
       }
     },
+    "/test-error": {
+      "get": {
+        "operationId": "GetTestError",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/query": {
       "post": {
         "tags": [
