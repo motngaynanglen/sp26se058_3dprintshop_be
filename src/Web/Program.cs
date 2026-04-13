@@ -67,6 +67,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection(); 
 }
+app.UseForwardedHeaders();
 app.UseExceptionHandler(options => { });
 app.UseStaticFiles();
 
