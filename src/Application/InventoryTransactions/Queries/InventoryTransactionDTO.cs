@@ -29,11 +29,7 @@ public class InventoryTransactionDTO
                         s.Staff != null && s.Staff.Account != null
                         ? s.Staff.Account.Fullname
                         : "Hệ thống"));
-                    // Lấy Metadata từ danh sách Constant All
-                    //.ForMember(d => d.TypeLabel, opt => opt.MapFrom(s =>
-                    //    InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Label))
-                    //.ForMember(d => d.TypeColor, opt => opt.MapFrom(s =>
-                    //    InventoryTransactionTypes.All.FirstOrDefault(t => t.Value == s.Type)!.Color));
+                   
         }
     }
 }

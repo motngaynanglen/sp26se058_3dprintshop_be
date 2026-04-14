@@ -25,6 +25,7 @@ public class PendingFeedbackDTO
         public Mapping()
         {
             CreateMap<OrderItem, PendingFeedbackDTO>()
+            .ForMember(d => d.OrderItemId, opt => opt.MapFrom(s => s.Id))
             // Xử lý tên sản phẩm: Nếu không có Variant, lấy từ thông tin khác (ví dụ ProductName lưu trực tiếp ở OrderItem)
             .ForMember(d => d.ProductName, opt => opt.MapFrom(s =>
                 s.DesignVariant != null
@@ -40,7 +41,6 @@ public class PendingFeedbackDTO
                 s.DesignVariant != null
                 ? (s.DesignVariant.PreviewModelUrl ?? s.DesignVariant.DesignTemplate.ThumbnailUrl)
                 : "")) // Giả sử bạn có lưu ảnh riêng cho món hàng custom
-
             .ForMember(d => d.Price, opt => opt.MapFrom(s => s.UnitPrice))
             .ForMember(d => d.OrderDate, opt => opt.MapFrom(s => s.Order.Created.DateTime));
         }

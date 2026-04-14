@@ -13,6 +13,8 @@ public class Feedback : BaseAuditableEntity
     public int Rating { get; set; }
     public string? Comment { get; set; }
     public string? StaffReply { get; set; }
+    public DateTimeOffset? RepliedDate { get; set; }
+
     public bool IsHidden { get; set; } = false;
 
     // Navigation Properties

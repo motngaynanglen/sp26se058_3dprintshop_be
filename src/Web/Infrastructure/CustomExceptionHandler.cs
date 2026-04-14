@@ -16,7 +16,7 @@ public class CustomExceptionHandler : IExceptionHandler
         // Register known exception types and handlers.
         _exceptionHandlers = new()
             {
-                { typeof(ValidationException), HandleValidationException },
+                { typeof(BaseValidationException), HandleBaseValidationException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
                 { typeof(BadHttpRequestException), HandleBadHttpRequestException },
                 { typeof(BusinessException), HandleBusinessException },
@@ -43,13 +43,8 @@ public class CustomExceptionHandler : IExceptionHandler
             await handlerEntry.Value.Invoke(httpContext, exception);
             return true;
         }
-        //var exceptionType = exception.GetType();
+ 
 
-        //if (_exceptionHandlers.ContainsKey(exceptionType))
-        //{
-        //    await _exceptionHandlers[exceptionType].Invoke(httpContext, exception);
-        //    return true;
-        //}
         await HandleUnknownException(httpContext, exception);
         return true;
     }
@@ -60,7 +55,6 @@ public class CustomExceptionHandler : IExceptionHandler
         {
             DataNotFoundException => StatusCodes.Status404NotFound,
             ForbiddenAccessException => StatusCodes.Status403Forbidden,
-            DuplicateException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status400BadRequest
         };
 
@@ -88,18 +82,24 @@ public class CustomExceptionHandler : IExceptionHandler
         );
     }
 
-    private async Task HandleValidationException(HttpContext httpContext, Exception ex)
+    private async Task HandleBaseValidationException(HttpContext httpContext, Exception ex)
     {
-        var exception = (ValidationException)ex;
+        var exception = (BaseValidationException)ex;
 
-        httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        int statusCode = exception is DuplicateException
+            ? StatusCodes.Status409Conflict
+            : StatusCodes.Status422UnprocessableEntity;
+
+        httpContext.Response.StatusCode = statusCode;
 
         await httpContext.Response.WriteAsJsonAsync(
             new BaseResponseModel<IDictionary<string, string[]>>(
-                statusCode: StatusCodes.Status422UnprocessableEntity,
+                statusCode: statusCode,
                 data: exception.Errors,
                 message: exception.Message,
-                code: ResponseCodeConstants.VAL_INVALID_INPUT
+                code: exception is DuplicateException
+                    ? ResponseCodeConstants.DUPLICATE_ERROR
+                    : ResponseCodeConstants.VAL_INVALID_INPUT
                 )
             );
     }
@@ -126,8 +126,8 @@ public class CustomExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(
             new BaseResponseModel(
                 statusCode: StatusCodes.Status404NotFound,
-                data: ex.Message,
-                message: "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
+                data: null,
+                message: ex.Message ?? "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
                 code: ResponseCodeConstants.UNAUTHORIZED
                 )
             );
