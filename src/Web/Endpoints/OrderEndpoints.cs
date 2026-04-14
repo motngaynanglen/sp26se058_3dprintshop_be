@@ -33,6 +33,10 @@ public class OrderEndpoints : EndpointGroupBase
                 .WithSummary("[Customer] Tạo đơn hàng mới từ giỏ hàng.")
                 .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.ListString);
 
+        group.MapPost("/checkoutdesign", CheckOutDesignAsync)
+                .WithSummary("[Customer] Tạo đơn hàng mới từ thiết kế.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.ListString);
+
         group.MapPatch("/{id}/cancel", CancelOrder)
                 .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng.")
                 .WithDescription("Chỉ hỗ trợ khi đơn hàng chưa thanh toán hoặc chưa đi vào sản xuất.");
@@ -86,6 +90,17 @@ public class OrderEndpoints : EndpointGroupBase
             ));
 
     }
+
+    public async Task<IResult> CheckOutDesignAsync([FromServices] ISender sender, [FromBody] CheckoutDesignWorkCommand command)
+    {
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Tạo đơn hàng từ thiết kế"
+            ));
+    }
+
     public async Task<IResult> CancelOrder([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelOrderCommand command)
     {
 
