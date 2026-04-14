@@ -78,12 +78,16 @@ public class FeedbackEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
-            ));
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result.Items,
+        //        additionalData: new { paging = result.Metadata },
+        //        message: "Lấy danh sách thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<FeedbackDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
 
 
     }
