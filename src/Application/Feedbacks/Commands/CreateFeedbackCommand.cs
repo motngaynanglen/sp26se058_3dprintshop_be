@@ -9,6 +9,7 @@ using sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Feedbacks.Commands;
 [Authorize(Roles = Roles.CUSTOMER)]
@@ -79,13 +80,19 @@ public class CreateFeedbackCommandHandler : IRequestHandler<CreateFeedbackComman
 
         var entity = new Feedback
         {
+            CustomerId = item.Order.CustomerId,
             OrderItemId = request.OrderItemId,
             DesignTemplateId = item.DesignVariant.DesignTemplateId,
             Rating = request.Rating,
             Comment = request.Comment,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified= CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
             FeedbackImages = request.ImageUrls?.Select(url => new FeedbackImage
             {
                 ImageUrl = url
+
             }).ToList() ?? new()
         };
 
