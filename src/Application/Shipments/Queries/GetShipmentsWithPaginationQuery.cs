@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Mappings;
 using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
-public class GetShipmentsWithPaginationQuery : PaginationRequest,IRequest<PaginatedList<ShipmentDTO>>
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
+public class GetShipmentsWithPaginationQuery : PaginationRequest, IRequest<PaginatedList<ShipmentDTO>>
 {
     [DefaultValue("PENDING")]
     public string? Status { get; init; }

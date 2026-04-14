@@ -3,13 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
 public record GetInventoryTransactionsByReferenceQuery : IRequest<List<InventoryTransactionDTO>>
 {
-    public Guid ReferenceId { get; set; }
+    public Guid ReferenceId { get; init; }
 }
-
+public class GetInventoryTransactionsByReferenceQueryValidator : AbstractValidator<GetInventoryTransactionsByReferenceQuery>
+{
+    public GetInventoryTransactionsByReferenceQueryValidator()
+    {
+        RuleFor(x => x.ReferenceId).NotEmpty().WithMessage("ReferenceId không được để trống.");
+    }
+}
 public class GetInventoryTransactionsByReferenceQueryHandler: IRequestHandler<GetInventoryTransactionsByReferenceQuery, List<InventoryTransactionDTO>>
 {
     private readonly IApplicationDbContext _context;
@@ -23,13 +31,13 @@ public class GetInventoryTransactionsByReferenceQueryHandler: IRequestHandler<Ge
 
     public async Task<List<InventoryTransactionDTO>> Handle(GetInventoryTransactionsByReferenceQuery request, CancellationToken ct)
     {
-        return await _context.InventoryTransactions
+        var transactions = await _context.InventoryTransactions
             .AsNoTracking()
-            .Include(x => x.DesignVariant)
-            .Include(x => x.Staff)
             .Where(x => x.ReferenceId == request.ReferenceId)
             .OrderByDescending(x => x.Created)
             .ProjectTo<InventoryTransactionDTO>(_mapper.ConfigurationProvider)
             .ToListAsync(ct);
+
+        return transactions;
     }
 }

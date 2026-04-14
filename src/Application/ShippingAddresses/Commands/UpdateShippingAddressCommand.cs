@@ -6,9 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Utils;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
-public record UpdateShippingAddressCommand : IRequest<Guid>
+[Authorize(Roles = Roles.CUSTOMER)]
+public record UpdateShippingAddressCommand : IRequest<ShippingAddressDTO>
 {
     [Required]
     [JsonIgnore]
@@ -22,7 +26,7 @@ public record UpdateShippingAddressCommand : IRequest<Guid>
     public string? Phone { get; set; }
 
     [Required]
-    [DefaultValue("123 Đường ABC, Phường 5")]
+    [DefaultValue("123 Đường ABC")]
     public string? AddressLine { get; set; }
 
     [DefaultValue("Phường Bến Nghé")]
@@ -36,32 +40,47 @@ public record UpdateShippingAddressCommand : IRequest<Guid>
 
     [DefaultValue("Việt Nam")]
     public string? Province { get; set; }
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool? IsDefault { get; set; }
 }
-public class UpdateShippingAddressCommandHandler : IRequestHandler<UpdateShippingAddressCommand, Guid>
+public class UpdateShippingAddressCommandHandler : IRequestHandler<UpdateShippingAddressCommand, ShippingAddressDTO>
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
-    public UpdateShippingAddressCommandHandler(IApplicationDbContext context, IUser user)
+    private readonly IMapper _mapper;
+    public UpdateShippingAddressCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
         _user = user;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(UpdateShippingAddressCommand request, CancellationToken cancellationToken)
+    public async Task<ShippingAddressDTO> Handle(UpdateShippingAddressCommand request, CancellationToken cancellationToken)
     {
         Guid userId = _user.Id.ToGuid();
         var entity = await _context.ShippingAddresses
-              .FirstOrDefaultAsync(x => x.Id == request.Id && x.Customer.AccountId == userId, cancellationToken);
+            .Include(x => x.Customer) // Load Customer để check AccountId
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-        if (entity == null) throw new Exception("Không tìm thấy địa chỉ hoặc bạn không có quyền sửa!");
-
+        // BÁO LỖI NOT FOUND: Không tồn tại Id này trong hệ thống
+        if (entity == null)
+        {
+            throw new DataNotFoundException(nameof(ShippingAddress), request.Id);
+        }
+        // BÁO LỖI FORBIDDEN: Có tồn tại địa chỉ, nhưng nó không thuộc về user đang đăng nhập
+        if (entity.Customer.AccountId != userId)
+        {
+            throw new ForbiddenAccessException("Bạn không có quyền chỉnh sửa địa chỉ giao hàng này.");
+        }
         if (request.IsDefault == true && !entity.IsDefault)
         {
             var existingDefaults = await _context.ShippingAddresses
-                .Where(s => s.CustomerId == entity.CustomerId && s.IsDefault)
-                .ToListAsync(cancellationToken);
-            existingDefaults.ForEach(x => x.IsDefault = false);
+            .Where(s => s.CustomerId == entity.CustomerId && s.IsDefault)
+            .ToListAsync(cancellationToken);
+
+            foreach (var addr in existingDefaults)
+            {
+                addr.IsDefault = false;
+            }
             entity.IsDefault = true;
         }
         entity.ReceiverName = request.ReceiverName ?? entity.ReceiverName;
@@ -71,10 +90,18 @@ public class UpdateShippingAddressCommandHandler : IRequestHandler<UpdateShippin
         entity.District = request.District ?? entity.District;
         entity.City = request.City ?? entity.City;
         entity.Province = request.Province ?? entity.Province;
-        
+
+        entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
 
-        await _context.SaveChangesAsync(cancellationToken);
-        return entity.Id;
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(ShippingAddress), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
+        return _mapper.Map<ShippingAddressDTO>(entity);
     }
 }

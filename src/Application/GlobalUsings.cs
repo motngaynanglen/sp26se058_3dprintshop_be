@@ -5,6 +5,7 @@ global using Microsoft.EntityFrameworkCore;
 global using FluentValidation;
 global using FluentValidation.Results;
 global using MediatR;
+global using sp26se058_3dprintshop_be.Application.Common.Security;
 global using sp26se058_3dprintshop_be.Application.Common.Extensions;
 global using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 global using sp26se058_3dprintshop_be.Application.Common.Exceptions;

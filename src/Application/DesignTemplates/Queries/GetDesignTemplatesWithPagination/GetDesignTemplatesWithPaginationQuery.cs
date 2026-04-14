@@ -57,8 +57,8 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
                 {
                 query = request.SortBy?.ToLower() switch
                 {
-                    "Name" => query.OrderByDescending(dt => dt.Name),
-                    "Code" => query.OrderByDescending(dt => dt.Code),
+                    "name" => query.OrderByDescending(dt => dt.Name),
+                    "code" => query.OrderByDescending(dt => dt.Code),
                     _ => query.OrderByDescending(dt => dt.Created)
                 };
             }
@@ -66,7 +66,7 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
             {
                 query = request.SortBy?.ToLower() switch
                 {
-                    "Created" => query.OrderBy(dt => dt.Created),
+                    "created" => query.OrderBy(dt => dt.Created),
                     _ => query.OrderBy(dt => dt.Id)
                 };
             }

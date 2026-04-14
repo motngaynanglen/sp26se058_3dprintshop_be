@@ -6,9 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
-public record CreateShippingAddressCommand : IRequest<CreateShippingAddressCommand>
+[Authorize(Roles = Roles.CUSTOMER)]
+public record CreateShippingAddressCommand : IRequest<ShippingAddressDTO>
 {
     [Required]
     [DefaultValue("Nguyễn Văn A")]
@@ -37,16 +41,18 @@ public record CreateShippingAddressCommand : IRequest<CreateShippingAddressComma
     [DefaultValue(false)]
     public bool IsDefault { get; set; } = false;
 }
-public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, CreateShippingAddressCommand>
+public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, ShippingAddressDTO>
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
-    public CreateShippingAddressHandler(IApplicationDbContext context, IUser user)
+    private readonly IMapper _mapper;
+    public CreateShippingAddressHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
         _user = user;
+        _mapper = mapper;
     }
-    public async Task<CreateShippingAddressCommand> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
+    public async Task<ShippingAddressDTO> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
     {
         Guid userId= _user.Id.ToGuid();
         // Nếu IsDefault = true, phải bỏ default của các địa chỉ cũ
@@ -60,12 +66,12 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
         var account = await _context.Accounts.Include(a => a.Customer).FirstOrDefaultAsync(a => a.Id == userId);
         if (account == null)
         {
-            throw new Exception("Hãy đăng nhập!");
+            throw new UnauthorizedAccessException("Hãy đăng nhập!");
         }
         var customer = account.Customer;
         if (customer == null)
         {
-            throw new Exception("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
+            throw new ForbiddenAccessException("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
         }
         var entity = new ShippingAddress
         {
@@ -83,7 +89,15 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
         };
 
         _context.ShippingAddresses.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
-        return request;
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new CreateFailureException(nameof(ShippingAddress), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
+        return _mapper.Map<ShippingAddressDTO>(entity);
     }
 }

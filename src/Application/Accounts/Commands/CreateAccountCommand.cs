@@ -30,6 +30,24 @@ public record CreateAccountCommand : IRequest<Guid>
     [DefaultValue("CUSTOMER")]
     public string Role { get; init; } = Roles.CUSTOMER; // Mặc định là Customer
 }
+//public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
+//{
+//    public CreateAccountCommandValidator(IApplicationDbContext context)
+//    {
+//        RuleFor(x => x.Username).CustomAsync(async (username, ctx, ct) => {
+//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Username == username, "Tài khoản", "Username", username, ct: ct);
+//            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
+//        });
+
+//        RuleFor(x => x.Email).CustomAsync(async (email, ctx, ct) => {
+//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Email == email, "Tài khoản", "Email", email, ct: ct);
+//            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
+//        });
+
+//        RuleFor(x => x.Role).Must(role => new[] { Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER }.Contains(role.ToUpper()))
+//            .WithMessage("Vai trò không tồn tại.");
+//    }
+//}
 public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
@@ -46,33 +64,29 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         var usernameClean = request.Username.Trim().ToLower();
         var emailClean = request.Email.Trim().ToLower();
 
-        // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var existAccount = await _context.Accounts.IgnoreQueryFilters() //lấy luôn đã xóa
-            .Where(a => a.Username.ToLower() == usernameClean || a.Email.ToLower() == emailClean)
-            .ToListAsync(cancellationToken);
+        var userDup = await _context.Accounts.GetDuplicateResultAsync(
+        x => x.Username == request.Username, nameof(Account), nameof(request.Username), request.Username, ct: cancellationToken);
+        if (userDup.IsDuplicate) failures.AddFailure(nameof(request.Username), userDup.GetErrorMessage());
 
-        if (existAccount.Any())
-        {
-            if (existAccount.Any(a => a.Username.ToLower() == usernameClean))
-                failures.Add(new ValidationFailure(nameof(request.Username), "Tên đăng nhập hoặc Email đã tồn tại."));
-            if (existAccount.Any(a => a.Email.ToLower() == emailClean))
-                failures.Add(new ValidationFailure(nameof(request.Email), "Email này đã được sử dụng."));
-        }
+        var emailDup = await _context.Accounts.GetDuplicateResultAsync(
+        x => x.Email == request.Email, nameof(Account), nameof(request.Email), request.Email, ct: cancellationToken);
+        if (emailDup.IsDuplicate) failures.AddFailure(nameof(request.Email), emailDup.GetErrorMessage());
+
         if (request.Role.ToUpper() is not (Roles.MANAGER or Roles.STAFF or Roles.CUSTOMER))
         {
-            failures.Add(new ValidationFailure(nameof(request.Role), "Vai trò không tồn tại trong hệ thống."));
+            failures.AddFailure(nameof(request.Role), "Vai trò không tồn tại trong hệ thống.");
         }
         if (failures.Any()) throw new ValidationException(failures);
         // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new Exception("Không thể tạo mã băm mật khẩu.");
+            throw new BusinessException("Không thể mã hóa mật khẩu.");
         }
         var newAccount = new Account
         {
             Username = request.Username.ToLower(),
-            PasswordHash = passwordHash, // Lưu ý: Nên Hash password ở đây
+            PasswordHash = passwordHash, 
             Fullname = request.Fullname,
             Email = request.Email.ToLower(),
             ContactPhone = request.ContactPhone,
