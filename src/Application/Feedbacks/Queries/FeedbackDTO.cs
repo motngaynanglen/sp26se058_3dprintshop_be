@@ -18,13 +18,14 @@ public class FeedbackDTO
     public string? StaffReply { get; set; }
     public DateTimeOffset? RepliedDate { get; set; }
     // Thông tin định danh người dùng (Lấy từ Account thông qua Customer)
-    public string CustomerFullName { get; set; } = string.Empty;
+    public string? RawCustomerName { get; init; }
+    public string CustomerFullName => MaskName(RawCustomerName ?? "Người dùng ẩn danh");
     public string? CustomerAvatar { get; set; }
     public Guid? AccountId { get; set; } // để hỗ trợ FE cho người dùng biết đâu là của bản thân
     // Trạng thái & Thời gian
     public bool IsHidden { get; set; }
-    public DateTime Created { get; set; }
-    public DateTime? LastModified { get; set; }
+    public DateTimeOffset Created { get; set; }
+    public DateTimeOffset? LastModified { get; set; }
 
     // Danh sách ảnh thực tế của sản phẩm
     public List<string> ImageUrls { get; set; } = new();
@@ -36,11 +37,11 @@ public class FeedbackDTO
             CreateMap<Feedback, FeedbackDTO>()
             // Lấy Tên hiển thị: Ưu tiên Fullname, nếu null lấy Username
             // Thêm logic ẩn danh ở đây: "Nguyễn Văn A" -> "N*** A"
-            .ForMember(dest => dest.CustomerFullName, opt => opt.MapFrom(src =>
-                src.Customer.Account != null ? (MaskName(src.Customer.Account.Fullname ?? src.Customer.Account.Username)) : "Người dùng ẩn danh"))
+            .ForMember(dest => dest.RawCustomerName, opt => opt.MapFrom(src =>
+                src.Customer.Account.Fullname ?? src.Customer.Account.Username))
 
-            .ForMember(dest => dest.AccountId, opt => opt.MapFrom(src => src.Customer.AccountId))
-
+            .ForMember(dest => dest.AccountId, opt => opt.MapFrom(src => 
+                src.Customer != null ? src.Customer.AccountId : (Guid?)null))
             // Lấy Avatar từ Account
             .ForMember(dest => dest.CustomerAvatar, opt => opt.MapFrom(src =>
                 src.Customer.Account != null ? src.Customer.Account.ProfileImageURL : null))
@@ -49,10 +50,12 @@ public class FeedbackDTO
             .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src =>
                 src.FeedbackImages.Select(x => x.ImageUrl).ToList()));
         }
-        private string MaskName(string name)
-        {
-            if (string.IsNullOrEmpty(name) || name.Length <= 2) return name;
-            return name[0] + new string('*', name.Length - 2) + name[^1];
-        }
+
+    }
+    private string MaskName(string name)
+    {
+        if (string.IsNullOrEmpty(name) || name == "Người dùng ẩn danh") return name;
+        if (name.Length <= 2) return name;
+        return name[2] + new string('*', name.Length - 4) + name[^1];
     }
 }
