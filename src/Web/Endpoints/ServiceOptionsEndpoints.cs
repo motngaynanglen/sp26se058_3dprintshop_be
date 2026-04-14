@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
 using sp26se058_3dprintshop_be.Application.ServiceOptions.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -41,28 +42,32 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
     // 1. Tạo mới
     public async Task<IResult> CreateServiceOption([FromServices] ISender sender, [FromBody] CreateServiceOptionCommand command)
     {
-       
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Thêm thành công!"
-                ));
+        var result = await sender.Send(command);
 
-        
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
+                data: result,
+                message: "Thêm thành công!"
+            ));
+
+
     }
     // 2. Truy vấn danh sách
     public async Task<IResult> QueryAllServiceOptions([FromServices] ISender sender)
     {
-        
-            var result = await sender.Send(new GetServiceOptionsQuery());
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Lấy danh sách tùy chọn thành công"
-                ));
-        
+
+        var result = await sender.Send(new GetServiceOptionsQuery());
+        //return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result,
+        //        message: "Lấy danh sách tùy chọn thành công"
+        //    ));
+        return TypedResults.Ok(
+                BaseResponseModel<IEnumerable<object>>
+                    .ListResponseModel(data: result, successMessage: "Lấy danh sách tùy chọn thành công")
+                );
+
     }
     // 3. Cập nhật
     public async Task<IResult> UpdateServiceOption(Guid id, [FromServices] ISender sender, [FromBody] UpdateServiceOptionCommand command)
@@ -72,7 +77,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
         var result = await sender.Send(finalCommand);
 
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Cập nhật thành công!"
             ));
@@ -84,7 +89,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new DeleteServiceOptionCommand(id));
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.DELETED,
                 data: result,
                 message: "Xóa thành công!"
             ));
@@ -98,7 +103,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new ActiveServiceOptionCommand(id));
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Đã kích hoạt tùy chọn!"
             ));
@@ -112,7 +117,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new DeactiveServiceOptionCommand(id));
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Đã ngưng kích hoạt tùy chọn!"
             ));

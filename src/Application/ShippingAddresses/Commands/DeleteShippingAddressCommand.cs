@@ -7,8 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json.Serialization;
 using sp26se058_3dprintshop_be.Domain.Utils;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
+[Authorize(Roles = Roles.CUSTOMER)]
 public record DeleteShippingAddressCommand : IRequest<bool>
 {
     [Required]
@@ -32,13 +34,21 @@ public class DeleteShippingAddressHandler : IRequestHandler<DeleteShippingAddres
         var entity = await _context.ShippingAddresses
             .FirstOrDefaultAsync(x => x.Id == request.Id && x.Customer.AccountId == userId, cancellationToken);
 
-        if (entity == null) throw new Exception("Không tìm thấy địa chỉ để xóa!");
+        if (entity == null) throw new DataNotFoundException("Không tìm thấy địa chỉ để xóa!");
 
+        entity.IsDefault = false;
         entity.Deleted = CoreHelper.SystemTimeNow;
         entity.DeletedBy = _user.Username;
         // Nếu xóa địa chỉ mặc định, bạn có thể chọn địa chỉ khác làm mặc định hoặc để trống
         //_context.ShippingAddresses.Remove(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new DeleteFailureException(nameof(ShippingAddress), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
         return true;
     }
 }

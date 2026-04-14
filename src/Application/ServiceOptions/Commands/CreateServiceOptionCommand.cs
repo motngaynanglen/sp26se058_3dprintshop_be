@@ -72,7 +72,14 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
         };
 
         _context.ServiceOptions.Add(entity);
-        await _context.SaveChangesAsync(ct);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new CreateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
 
         return request;
     }

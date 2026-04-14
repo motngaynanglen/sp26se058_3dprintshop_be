@@ -60,7 +60,14 @@ public class UpdateServiceOptionCommandHandler : IRequestHandler<UpdateServiceOp
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
 
-        await _context.SaveChangesAsync(ct);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
         return request;
     }
 }
