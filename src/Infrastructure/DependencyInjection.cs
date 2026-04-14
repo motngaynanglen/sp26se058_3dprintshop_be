@@ -28,7 +28,17 @@ public static class DependencyInjection
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
 
-            options.UseSqlServer(connectionString);
+            //options.UseSqlServer(connectionString);
+            options.UseMySql(connectionString,
+                ServerVersion.AutoDetect(connectionString), // Tự động nhận diện bản MySQL/MariaDB
+                mysqlOptions =>
+                {
+                    // Quan trọng nhất để fix lỗi bạn đang gặp
+                    mysqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                });
         });
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -62,7 +72,8 @@ public static class DependencyInjection
         // Cấu hình PayOS
 
         services.Configure<PayOsSettings>(configuration.GetSection(PayOsSettings.SectionName));
-        services.AddSingleton(sp => {
+        services.AddSingleton(sp =>
+        {
             var settings = sp.GetRequiredService<IOptions<PayOsSettings>>().Value;
             return new PayOSClient(settings.ClientId, settings.ApiKey, settings.ChecksumKey);
         });
