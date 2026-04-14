@@ -31,7 +31,7 @@ public class GetMyFeedbackHistoryQueryHandler : IRequestHandler<GetMyFeedbackHis
         // Lấy danh sách feedback dựa trên CustomerId của người đang đăng nhập
         return await _context.Feedbacks
             .AsNoTracking() // Luôn dùng cho API Query để tối ưu hiệu năng
-            .Where(f => f.CustomerId == userId)
+            .Where(f => f.Customer.AccountId == userId)
             // Lưu ý: Nếu Bách không dùng Global Query Filter cho Deleted, hãy thêm .Where(f => f.Deleted == null)
             .OrderByDescending(f => f.Created)
             .ProjectTo<FeedbackDTO>(_mapper.ConfigurationProvider)

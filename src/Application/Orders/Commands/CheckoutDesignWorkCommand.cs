@@ -14,8 +14,8 @@ namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 
 public record CheckoutDesignWorkCommand : IRequest<OrderDTO>
 {
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
-    public Guid ShippingAddressId { get; init; }
+    //[DefaultValue("00000000-0000-0000-0000-000000000001")]
+    //public Guid ShippingAddressId { get; init; }
 
     [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid? DesignWorkId { get; init; }
@@ -172,16 +172,16 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
             CreatedBy = _user.Username ?? "System"
         };
 
-        var shipment = new Shipment
-        {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            Order = order,
-            ShippingAddressId = request.ShippingAddressId,
-            ShipmentStatus = ShipmentStatuses.Preparing,
-            Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username ?? "System"
-        };
+        //var shipment = new Shipment
+        //{
+        //    Id = Guid.NewGuid(),
+        //    OrderId = order.Id,
+        //    Order = order,
+        //    ShippingAddressId = request.ShippingAddressId,
+        //    ShipmentStatus = ShipmentStatuses.Preparing,
+        //    Created = CoreHelper.SystemTimeNow,
+        //    CreatedBy = _user.Username ?? "System"
+        //};
 
         var invoice = new Invoice
         {
@@ -199,7 +199,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
         _context.ServiceSelections.Add(serviceSelection);
         _context.Orders.Add(order);
         _context.OrderItems.Add(orderItem);
-        _context.Shipments.Add(shipment);
+        //_context.Shipments.Add(shipment);
         _context.Invoices.Add(invoice);
 
         try
