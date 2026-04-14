@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
 public record ActiveServiceOptionCommand(Guid Id) : IRequest<object>;
 public class ActiveServiceOptionCommandHandler : IRequestHandler<ActiveServiceOptionCommand, object>
 {
