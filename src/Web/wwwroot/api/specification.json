@@ -1196,33 +1196,6 @@
         }
       }
     },
-    "/api/design-work/{id}/detail": {
-      "get": {
-        "tags": [
-          "Design Work"
-        ],
-        "summary": "[All] Xem chi tiết một công việc thiết kế",
-        "description": "Trả về thông tin chi tiết cùng các thuộc tính cơ bản của công việc thiết kế.",
-        "operationId": "GetApiDesignWorkDetail",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "guid"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/design-work/add": {
       "post": {
         "tags": [
@@ -3729,15 +3702,18 @@
             "properties": {
               "search": {
                 "type": "string",
+                "default": "",
                 "nullable": true
               },
               "status": {
                 "type": "string",
+                "default": "COMPLETED",
                 "nullable": true
               },
               "priority": {
                 "type": "integer",
                 "format": "int32",
+                "default": 0,
                 "nullable": true
               },
               "sortDescending": {
