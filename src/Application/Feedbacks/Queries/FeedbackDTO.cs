@@ -16,15 +16,15 @@ public class FeedbackDTO
     public int Rating { get; set; }
     public string? Comment { get; set; }
     public string? StaffReply { get; set; }
-
+    public DateTimeOffset? RepliedDate { get; set; }
     // Thông tin định danh người dùng (Lấy từ Account thông qua Customer)
     public string CustomerFullName { get; set; } = string.Empty;
     public string? CustomerAvatar { get; set; }
-
+    public Guid? AccountId { get; set; } // để hỗ trợ FE cho người dùng biết đâu là của bản thân
     // Trạng thái & Thời gian
     public bool IsHidden { get; set; }
     public DateTime Created { get; set; }
-    public DateTime? Updated { get; set; }
+    public DateTime? LastModified { get; set; }
 
     // Danh sách ảnh thực tế của sản phẩm
     public List<string> ImageUrls { get; set; } = new();
@@ -38,6 +38,8 @@ public class FeedbackDTO
             // Thêm logic ẩn danh ở đây: "Nguyễn Văn A" -> "N*** A"
             .ForMember(dest => dest.CustomerFullName, opt => opt.MapFrom(src =>
                 src.Customer.Account != null ? (MaskName(src.Customer.Account.Fullname ?? src.Customer.Account.Username)) : "Người dùng ẩn danh"))
+
+            .ForMember(dest => dest.AccountId, opt => opt.MapFrom(src => src.Customer.AccountId))
 
             // Lấy Avatar từ Account
             .ForMember(dest => dest.CustomerAvatar, opt => opt.MapFrom(src =>
