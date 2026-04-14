@@ -3,6 +3,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.InventoryTransactions.Commands;
 using sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
+using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -29,13 +30,16 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<InventoryTransactionDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách biến động kho thành công"
-            ));
-
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<InventoryTransactionDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result.Items,
+        //        additionalData: new { paging = result.Metadata },
+        //        message: "Lấy danh sách biến động kho thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<InventoryTransactionDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
     }
 
     public async Task<IResult> GetByReference([FromServices] ISender sender, [FromRoute] Guid orderId)
@@ -43,12 +47,15 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new GetInventoryTransactionsByReferenceQuery { ReferenceId = orderId });
 
-        return TypedResults.Ok(BaseResponseModel<List<InventoryTransactionDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result,
-                message: "Truy vết dữ liệu thành công"
-            ));
-
+        //return TypedResults.Ok(BaseResponseModel<List<InventoryTransactionDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result,
+        //        message: "Truy vết dữ liệu thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<InventoryTransactionDTO>>
+                .ListResponseModel(data: result, successMessage: "Truy vết dữ liệu thành công")
+                );
     }
 
     public async Task<IResult> CreateTransaction([FromServices] ISender sender, [FromBody] CreateInventoryTransactionCommand command)
@@ -57,7 +64,7 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
         var result = await sender.Send(command);
 
         return TypedResults.Ok(BaseResponseModel<CreateInventoryTransactionCommand>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.CREATED,
                 data: result,
                 message: "Thực hiện giao dịch kho thành công!"
             ));

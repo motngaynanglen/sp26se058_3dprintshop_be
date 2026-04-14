@@ -654,6 +654,87 @@
         }
       }
     },
+    "/api/design-log/createChatLog": {
+      "post": {
+        "tags": [
+          "Design Log"
+        ],
+        "summary": "[Staff/Manager] Tạo log giao tiếp",
+        "description": "Tạo log giao tiếp liên quan đến công việc thiết kế. Chỉ dành cho Staff, Manager, Customer.",
+        "operationId": "PostApiDesignLogCreateChatLog",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignLogCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-log/createNewVersionUpdateLog": {
+      "post": {
+        "tags": [
+          "Design Log"
+        ],
+        "summary": "[Staff/Manager] Tạo log ghi chú nội bộ",
+        "description": "Cập nhật phiên bản mới của thiết kế. Chỉ dành cho Staff hoặc Manager.",
+        "operationId": "PostApiDesignLogCreateNewVersionUpdateLog",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVersionUpdateLogCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-log/{designWorkId}/getLogsByWork": {
+      "get": {
+        "tags": [
+          "Design Log"
+        ],
+        "summary": "[All Roles] Lấy danh sách log theo công việc thiết kế",
+        "description": "Lấy danh sách log liên quan đến một công việc thiết kế. Dành cho tất cả các vai trò.",
+        "operationId": "GetApiDesignLogGetLogsByWork",
+        "parameters": [
+          {
+            "name": "designWorkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-tag/{templateId}/tags": {
       "get": {
         "tags": [
@@ -1081,6 +1162,204 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/query": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[All] Truy vấn danh sách công việc thiết kế có phân trang",
+        "description": "Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.",
+        "operationId": "PostApiDesignWorkQuery",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetPaginationDesignWorkQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/detail": {
+      "get": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[All] Xem chi tiết một công việc thiết kế",
+        "description": "Trả về thông tin chi tiết cùng các thuộc tính cơ bản của công việc thiết kế.",
+        "operationId": "GetApiDesignWorkDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/add": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Staff/Manager] Tạo mới công việc thiết kế",
+        "description": "Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.",
+        "operationId": "PostApiDesignWorkAdd",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDesignWorkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/update": {
+      "patch": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Staff/Manager] Cập nhật thông tin công việc thiết kế",
+        "description": "Cập nhật từng phần (Partial Update). Ghi đè ID nếu có.",
+        "operationId": "PatchApiDesignWorkUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignWorkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/mark-approve": {
+      "patch": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Staff/Manager] Cập nhật trạng thái phê duyệt công việc thiết kế",
+        "description": "Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái phê duyệt của công việc thiết kế.",
+        "operationId": "PatchApiDesignWorkMarkApprove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignWorkIsApproveCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/mark-printable": {
+      "patch": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế",
+        "description": "Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái có thể in của công việc thiết kế.",
+        "operationId": "PatchApiDesignWorkMarkPrintable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignVersionHistoryIsPrintableCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1665,6 +1944,33 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CheckoutCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/checkoutdesign": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer] Tạo đơn hàng mới từ thiết kế.",
+        "description": "Hỗ trợ các loại nguồn hàng: IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
+        "operationId": "PostApiOrderCheckoutdesign",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutDesignWorkCommand"
               }
             }
           },
@@ -2719,6 +3025,65 @@
           }
         }
       },
+      "CreateDesignLogCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designWorkId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "content": {
+            "type": "string",
+            "default": "Nội dung log",
+            "nullable": true
+          },
+          "imageUrls": {
+            "type": "array",
+            "default": "[\"https://f005.backblazeb2.com/file/3dprintshop/models/62b1ae312d6a48b69972d17e8058fe4c.glb\"]",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "logType": {
+            "type": "string",
+            "default": "COMMUNICATION hoặc INTERNAL_NOTE"
+          }
+        }
+      },
+      "CreateVersionUpdateLogCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designWorkId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "content": {
+            "type": "string",
+            "default": "Đã cập nhật bản vẽ 3D chi tiết phần khớp nối",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "default": "Bản vẽ kỹ thuật v2",
+            "nullable": true
+          },
+          "fileUrl": {
+            "type": "string",
+            "default": "https://storage.com/design-v2.stl"
+          },
+          "isPreviewable": {
+            "type": "boolean",
+            "default": true
+          },
+          "isPrintable": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "SyncDesignTagCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -3024,6 +3389,100 @@
             "nullable": true
           }
         }
+      },
+      "GetPaginationDesignWorkQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "default": "",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "default": "'Pending', 'InProgress', 'Reviewing', 'Completed'"
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "Name",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "CreateDesignWorkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "default": "Thiết kế mô hình nhân vật Custom"
+          },
+          "baseImageUrl": {
+            "type": "string",
+            "default": "https://example.com/image-mo-ta.png",
+            "nullable": true
+          },
+          "initialFileUrl": {
+            "type": "string",
+            "default": "https://example.com/initial-file.stl",
+            "nullable": true
+          },
+          "versionTitle": {
+            "type": "string",
+            "default": "Bản phác thảo ban đầu",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateDesignWorkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "default": "Tên yêu cầu mới",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "default": "InProgress",
+            "nullable": true
+          },
+          "baseImageUrl": {
+            "type": "string",
+            "default": "https://example.com/new-base-image.png",
+            "nullable": true
+          },
+          "mainAssignedStaffId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "resultDraftId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateDesignWorkIsApproveCommand": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "UpdateDesignVersionHistoryIsPrintableCommand": {
+        "type": "object",
+        "additionalProperties": false
       },
       "GetPendingFeedbacksQuery": {
         "allOf": [
@@ -3336,6 +3795,47 @@
           }
         }
       },
+      "CheckoutDesignWorkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shippingAddressId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "designWorkId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001",
+            "nullable": true
+          },
+          "newDesignName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "default": "Ghi chú yêu cầu thêm cho đơn thiết kế",
+            "nullable": true
+          },
+          "serviceOptionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "guid"
+            }
+          }
+        }
+      },
       "CancelOrderCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -3370,6 +3870,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string",
             "nullable": true
@@ -3533,7 +4037,7 @@
           },
           "addressLine": {
             "type": "string",
-            "default": "123 Đường ABC, Phường 5",
+            "default": "123 Đường ABC",
             "minLength": 1
           },
           "ward": {
@@ -3558,7 +4062,7 @@
           },
           "isDefault": {
             "type": "boolean",
-            "default": true,
+            "default": false,
             "nullable": true
           }
         }

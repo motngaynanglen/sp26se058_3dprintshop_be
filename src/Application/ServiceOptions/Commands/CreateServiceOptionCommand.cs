@@ -4,10 +4,13 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
 public record CreateServiceOptionCommand : IRequest<object>
 {
     [DefaultValue("CODE_A")]
@@ -72,7 +75,14 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
         };
 
         _context.ServiceOptions.Add(entity);
-        await _context.SaveChangesAsync(ct);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new CreateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
 
         return request;
     }
