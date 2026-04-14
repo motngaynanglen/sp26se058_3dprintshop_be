@@ -2,6 +2,7 @@
 using Mysqlx.Crud;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 using sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -77,13 +78,18 @@ public class DesignVariantEndpoints : EndpointGroupBase
     public async Task<IResult> GetAll([FromServices] ISender sender, [FromBody] GetDesignVariantListQuery query)
     {
         var result = await sender.Send(query);
-        bool isEmpty = result.Any();
-
-        return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
-                data: result,
-                message: isEmpty ? "Lấy danh sách biến thể của mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
-                code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
-            ));
+        //bool isEmpty = result.Any();
+        //return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
+        //        data: result,
+        //        message: isEmpty ? "Lấy danh sách biến thể của mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
+        //        code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
+        //    ));
+        return TypedResults.Ok(
+               BaseResponseModel<IEnumerable<DesignVariantDTO>>
+                   .ListResponseModel(data: result, 
+                   successMessage: "Lấy danh sách biến thể của mẫu thiết kế thành công!"
+                   )
+               );
     }
 
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
@@ -92,7 +98,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
                 data: result,
                 message: "Xoá biến thể thành công!",
-                code: ResponseCodeConstants.SUCCESS
+                code: ResponseCodeConstants.DELETED
             ));
     }
 }
