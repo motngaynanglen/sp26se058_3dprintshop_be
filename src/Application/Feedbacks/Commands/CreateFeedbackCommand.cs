@@ -57,7 +57,7 @@ public class CreateFeedbackCommandHandler : IRequestHandler<CreateFeedbackComman
         Guid userId = _user.Id.ToGuid();
         // 1. Lấy OrderItem và kiểm tra quyền sở hữu + Trạng thái đơn hàng
         var item = await _context.OrderItems
-            .Include(oi => oi.Order)
+            .Include(oi => oi.Order).ThenInclude(o=>o.Customer)
             .Include(oi => oi.DesignVariant)
             .FirstOrDefaultAsync(oi => oi.Id == request.OrderItemId, ct);
 
