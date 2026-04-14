@@ -15,7 +15,7 @@ public class DesignLog : BaseAuditableEntity
     public Guid? AccountId { get; set; }
     public string? Content { get; set; }
     public string? Metadata { get; set; } // Lưu JSON: ["url1.jpg", "url2.jpg"]
-    public required string LogType { get; set; }
+    public required string LogType { get; set; } //COMMUNICATION, VERSION_UPDATE, INTERNAL_NOTE
 
     public virtual Account? Account { get; set; }
     public virtual DesignWork DesignWork { get; set; } = null!;
