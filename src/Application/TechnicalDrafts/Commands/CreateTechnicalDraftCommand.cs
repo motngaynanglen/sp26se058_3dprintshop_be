@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 using PayOS.Exceptions;
 using sp26se058_3dprintshop_be.Application.TechnicalDrafts.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
+using static Amazon.S3.Util.S3EventNotification;
 
 namespace sp26se058_3dprintshop_be.Application.TechnicalDrafts.Commands;
 [Authorize(Roles = Roles.STAFF)]
@@ -27,7 +30,8 @@ public record CreateTechnicalDraftCommand : IRequest<object>
 
     [DefaultValue(120)]
     public decimal? EstimatedPrintTimePerUnit { get; init; }
-
+    [DefaultValue(10000)]
+    public decimal UnitPrice { get; set; }
     [DefaultValue(10)]
     public decimal MarkupPercentage { get; init; }
     [DefaultValue("")]
@@ -67,19 +71,25 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         if (version == null)
             throw new DataNotFoundException(nameof(DesignVersionHistory), request.DesignVersionHistoryId);
 
-        // Không dùng logic kiểm tra ai đc asign mới có thể tạo draft
-        //if (version.DesignWork.MainAssignedStaffId.ToString() != _user.Id)
-        //{
-        //    throw new ForbiddenAccessException("Bạn không có quyền tạo bản nháp kỹ thuật cho thiết kế này.");
-        //}
+        var material = await _context.Materials.Include(m => m.PriceHistories.FirstOrDefault(ph => ph.IsCurrent))
+            .FirstOrDefaultAsync(m => m.Id == request.MaterialId, ct);
 
-        // 3. Kiểm tra logic trạng thái (Business Rule) suy nghĩ về việc thiết kế cái này
-        //if (version.DesignWork.Status == "Completed")
-        //{
-        //    throw new BadRequestException("Thiết kế đã hoàn thành, không thể tạo thêm bản nháp kỹ thuật.");
-        //}
+        if (material == null)
+            throw new DataNotFoundException(nameof(Material), request.MaterialId);
 
-        // 4. Khởi tạo Entity
+        // 2. Kiểm tra Logic trạng thái (State Machine Validation)
+        // Cho phép tạo Draft nếu dự án đã thanh toán (không còn ở SKETCHING/PENDING)
+        var allowedStatuses = new[] {
+            DesignWorkStatus.InProgress,
+            DesignWorkStatus.Reviewing,
+            DesignWorkStatus.Completed
+        };
+        if (!allowedStatuses.Contains(version.DesignWork.Status))
+        {
+            throw new BadRequestException($"Dự án đang ở trạng thái {version.DesignWork.Status}, chưa thể tạo bản thông số kỹ thuật.");
+        }
+
+        // 3.Khởi tạo Entity TechnicalDraft
         var entity = new TechnicalDraft
         {
             Id = Guid.NewGuid(),
@@ -89,6 +99,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             LayerHeight = request.LayerHeight,
             EstimatedWeightPerUnit = request.EstimatedWeightPerUnit,
             EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit,
+            UnitPrice = request.UnitPrice,
             MarkupPercentage = request.MarkupPercentage,
             TechnicalNote = request.TechnicalNote,
 
@@ -96,15 +107,36 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,
-            LastModifiedBy = _user.Username
+            LastModifiedBy = _user.Username 
         };
 
-        // 5. Đồng bộ hóa: Gán Draft này làm kết quả hiện tại cho DesignWork
+        // 4. Đồng bộ hóa với DesignWork
+        // Gán Draft này làm kết quả kỹ thuật mới nhất
         version.DesignWork.ResultDraftId = entity.Id;
-        // Có thể update Status của DesignWork lên 'Reviewing' để khách vào xem giá
-        version.DesignWork.Status = "Reviewing";
+
+        // CHUYỂN TRẠNG THÁI: Progressing -> Reviewing
+        // Nếu dự án đã Completed (đã chốt xong xuôi), chúng ta giữ nguyên trạng thái Completed
+        if (version.DesignWork.Status == DesignWorkStatus.InProgress)
+        {
+            version.DesignWork.Status = DesignWorkStatus.Reviewing;
+        }
+        version.DesignWork.LastModified = CoreHelper.SystemTimeNow;
+        version.DesignWork.LastModifiedBy = _user.Username;
+
+        // 5. Tự động tạo Log thông báo cho Khách hàng
+        var systemLog = new DesignLog
+        {
+            Id = Guid.NewGuid(),
+            DesignWorkId = version.DesignWorkId,
+            Content = version.DesignWork.Status == DesignWorkStatus.Completed
+            ? $"[Sản xuất] Cập nhật thông số kỹ thuật mới cho phiên bản in."
+            : $"Đã tạo bản nháp kỹ thuật và báo giá dự kiến.",
+            LogType = DesignLogType.VersionUpdate,
+            Created = CoreHelper.SystemTimeNow
+        };
 
         _context.TechnicalDrafts.Add(entity);
+        _context.DesignLogs.Add(systemLog);
 
         try
         {
