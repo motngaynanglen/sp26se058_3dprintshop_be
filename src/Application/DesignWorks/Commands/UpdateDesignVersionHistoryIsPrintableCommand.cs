@@ -26,7 +26,7 @@ public class UpdateDesignVersionHistoryIsPrintableCommandHandler : IRequestHandl
             .FirstOrDefaultAsync(dw => dw.Id == request.Id, cancellationToken);
         if (entity == null)
         {
-            throw new NotFoundException(nameof(DesignWork), "Không tìm thấy công việc thiết kế với id " + request.Id);
+            throw new DataNotFoundException(nameof(DesignWork),  request.Id);
         }
         // Cập nhật trạng thái có thể in
         entity.IsPrintable = true; // Hoặc false tùy theo yêu cầu

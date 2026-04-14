@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial_Design_SystemV2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,6 +34,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     PasswordHash = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: true),
+                    PasswordResetToken = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ResetTokenExpires = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -136,20 +139,16 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "ServicePackage",
+                name: "ServiceOptions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Code = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                    Code = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "longtext", nullable: false)
+                    Name = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    BasePrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Description = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    IsSupported = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    HtmlRaw = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DefaultPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -162,7 +161,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServicePackage", x => x.Id);
+                    table.PrimaryKey("PK_ServiceOptions", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -369,23 +368,68 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ShippingAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CustomerId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ReceiverName = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Phone = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AddressLine = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Ward = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    District = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    City = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Province = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsDefault = table.Column<bool>(type: "tinyint(1)", nullable: false, defaultValue: false),
+                    Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastModified = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Deleted = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShippingAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShippingAddresses_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "DesignWorks",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    Name = table.Column<string>(type: "longtext", nullable: true)
+                    Name = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ServicePackageId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    SourceType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                    ParentDesignWorkId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    RootDesignWorkId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    RelationshipType = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false, defaultValue: "ORIGINAL")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TemplateId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     CustomerId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MainAssignedStaffId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     BaseImageUrl = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ResultDraftId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    Status = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
+                    Status = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false, defaultValue: "SKETCHING")
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsLocked = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    StaffId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -404,20 +448,22 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         column: x => x.CustomerId,
                         principalTable: "Customers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_DesignWorks_DesignTemplates_TemplateId",
-                        column: x => x.TemplateId,
-                        principalTable: "DesignTemplates",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_DesignWorks_ServicePackage_ServicePackageId",
-                        column: x => x.ServicePackageId,
-                        principalTable: "ServicePackage",
-                        principalColumn: "Id");
+                        name: "FK_DesignWorks_DesignWorks_ParentDesignWorkId",
+                        column: x => x.ParentDesignWorkId,
+                        principalTable: "DesignWorks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_DesignWorks_Staffs_MainAssignedStaffId",
                         column: x => x.MainAssignedStaffId,
+                        principalTable: "Staffs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_DesignWorks_Staffs_StaffId",
+                        column: x => x.StaffId,
                         principalTable: "Staffs",
                         principalColumn: "Id");
                 })
@@ -436,6 +482,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     OrderStatus = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false, defaultValue: "PENDING")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Priority = table.Column<int>(type: "int", nullable: false),
+                    DepositedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeliveredAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    CompletedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -469,14 +518,16 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     DesignWorkId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    IsAI = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ParentLogId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     AccountId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    IsAI = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Content = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Metadata = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LogType = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsRead = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -496,11 +547,49 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         principalTable: "Accounts",
                         principalColumn: "Id");
                     table.ForeignKey(
+                        name: "FK_DesignLogs_DesignLogs_ParentLogId",
+                        column: x => x.ParentLogId,
+                        principalTable: "DesignLogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_DesignLogs_DesignWorks_DesignWorkId",
                         column: x => x.DesignWorkId,
                         principalTable: "DesignWorks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ServiceSelections",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DesignWorkId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    TotalPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    Note = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsLocked = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastModified = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Deleted = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceSelections", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceSelections_DesignWorks_DesignWorkId",
+                        column: x => x.DesignWorkId,
+                        principalTable: "DesignWorks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -541,6 +630,51 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Shipments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ShippingAddressId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ShippingFee = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false, defaultValue: 0m),
+                    CarrierName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TrackingNumber = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    EstimatedDeliveryTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    ShipmentStatus = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, defaultValue: "PENDING")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ShippedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    DeliveredAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastModified = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Deleted = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Shipments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Shipments_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Shipments_ShippingAddresses_ShippingAddressId",
+                        column: x => x.ShippingAddressId,
+                        principalTable: "ShippingAddresses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "DesignVersionHistorys",
                 columns: table => new
                 {
@@ -554,6 +688,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     VersionNumber = table.Column<int>(type: "int", nullable: false),
                     IsPreviewable = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsApproved = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsPrintable = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
@@ -587,6 +722,45 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ServiceSelectedOptions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ServiceSelectionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ServiceOptionId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OptionNameSnapshot = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Quantity = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    AppliedPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastModified = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Deleted = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceSelectedOptions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceSelectedOptions_ServiceOptions_ServiceOptionId",
+                        column: x => x.ServiceOptionId,
+                        principalTable: "ServiceOptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ServiceSelectedOptions_ServiceSelections_ServiceSelectionId",
+                        column: x => x.ServiceSelectionId,
+                        principalTable: "ServiceSelections",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -595,12 +769,19 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PaymentMethod = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    InternalCode = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     ExternalTransactionId = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Note = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TransactionStatus = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false, defaultValue: "PENDING")
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    PaymentLink = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    QrCode = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PaidAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -640,6 +821,8 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     MarkupPercentage = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TechnicalNote = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsConfirmed = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     DesignVersionHistoryId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaterialId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
@@ -678,9 +861,12 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     OrderId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     SourceType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DesignWorkId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     DesignVariantId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ServiceSelectionId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    DesignWorkId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     TechnicalDraftId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ItemName = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     QuantityOrdered = table.Column<int>(type: "int", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
@@ -716,10 +902,64 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_OrderItems_ServiceSelections_ServiceSelectionId",
+                        column: x => x.ServiceSelectionId,
+                        principalTable: "ServiceSelections",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_OrderItems_TechnicalDrafts_TechnicalDraftId",
                         column: x => x.TechnicalDraftId,
                         principalTable: "TechnicalDrafts",
                         principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Feedbacks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    CustomerId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    DesignTemplateId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    OrderItemId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StaffReply = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RepliedDate = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    IsHidden = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Created = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    CreatedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    LastModified = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Deleted = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: true),
+                    DeletedBy = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Feedbacks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Feedbacks_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Feedbacks_DesignTemplates_DesignTemplateId",
+                        column: x => x.DesignTemplateId,
+                        principalTable: "DesignTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Feedbacks_OrderItems_OrderItemId",
+                        column: x => x.OrderItemId,
+                        principalTable: "OrderItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -766,6 +1006,27 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         column: x => x.StaffId,
                         principalTable: "Staffs",
                         principalColumn: "Id");
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "FeedbackImages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    FeedbackId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
+                    ImageUrl = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FeedbackImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FeedbackImages_Feedbacks_FeedbackId",
+                        column: x => x.FeedbackId,
+                        principalTable: "Feedbacks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -819,9 +1080,14 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 column: "Deleted");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DesignLogs_DesignWorkId",
+                name: "IX_DesignLogs_DesignWorkId_Created",
                 table: "DesignLogs",
-                column: "DesignWorkId");
+                columns: new[] { "DesignWorkId", "Created" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DesignLogs_ParentLogId",
+                table: "DesignLogs",
+                column: "ParentLogId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DesignTags_ConceptTagId",
@@ -906,14 +1172,45 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 column: "MainAssignedStaffId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DesignWorks_ServicePackageId",
+                name: "IX_DesignWorks_ParentDesignWorkId",
                 table: "DesignWorks",
-                column: "ServicePackageId");
+                column: "ParentDesignWorkId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DesignWorks_TemplateId",
+                name: "IX_DesignWorks_RootDesignWorkId",
                 table: "DesignWorks",
-                column: "TemplateId");
+                column: "RootDesignWorkId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DesignWorks_StaffId",
+                table: "DesignWorks",
+                column: "StaffId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FeedbackImages_FeedbackId",
+                table: "FeedbackImages",
+                column: "FeedbackId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Feedbacks_CustomerId",
+                table: "Feedbacks",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Feedbacks_Deleted",
+                table: "Feedbacks",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Feedbacks_DesignTemplateId",
+                table: "Feedbacks",
+                column: "DesignTemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Feedbacks_OrderItemId",
+                table: "Feedbacks",
+                column: "OrderItemId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_InventoryTransactions_Deleted",
@@ -999,6 +1296,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderItems_ServiceSelectionId",
+                table: "OrderItems",
+                column: "ServiceSelectionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_TechnicalDraftId",
                 table: "OrderItems",
                 column: "TechnicalDraftId");
@@ -1019,14 +1321,64 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 column: "StaffId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServicePackage_Code",
-                table: "ServicePackage",
+                name: "IX_ServiceOptions_Code",
+                table: "ServiceOptions",
                 column: "Code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServicePackage_Deleted",
-                table: "ServicePackage",
+                name: "IX_ServiceOptions_Deleted",
+                table: "ServiceOptions",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceSelectedOptions_Deleted",
+                table: "ServiceSelectedOptions",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceSelectedOptions_ServiceOptionId",
+                table: "ServiceSelectedOptions",
+                column: "ServiceOptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceSelectedOptions_ServiceSelectionId",
+                table: "ServiceSelectedOptions",
+                column: "ServiceSelectionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceSelections_Deleted",
+                table: "ServiceSelections",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceSelections_DesignWorkId",
+                table: "ServiceSelections",
+                column: "DesignWorkId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Shipments_Deleted",
+                table: "Shipments",
+                column: "Deleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Shipments_OrderId",
+                table: "Shipments",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Shipments_ShippingAddressId",
+                table: "Shipments",
+                column: "ShippingAddressId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShippingAddresses_CustomerId",
+                table: "ShippingAddresses",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShippingAddresses_Deleted",
+                table: "ShippingAddresses",
                 column: "Deleted");
 
             migrationBuilder.CreateIndex(
@@ -1078,6 +1430,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 name: "DesignTags");
 
             migrationBuilder.DropTable(
+                name: "FeedbackImages");
+
+            migrationBuilder.DropTable(
                 name: "InventoryTransactions");
 
             migrationBuilder.DropTable(
@@ -1087,25 +1442,46 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                 name: "MaterialPriceHistories");
 
             migrationBuilder.DropTable(
+                name: "ServiceSelectedOptions");
+
+            migrationBuilder.DropTable(
+                name: "Shipments");
+
+            migrationBuilder.DropTable(
                 name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "ConceptTags");
 
             migrationBuilder.DropTable(
-                name: "OrderItems");
+                name: "Feedbacks");
+
+            migrationBuilder.DropTable(
+                name: "ServiceOptions");
+
+            migrationBuilder.DropTable(
+                name: "ShippingAddresses");
 
             migrationBuilder.DropTable(
                 name: "Invoices");
 
             migrationBuilder.DropTable(
+                name: "OrderItems");
+
+            migrationBuilder.DropTable(
                 name: "DesignVariants");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "ServiceSelections");
 
             migrationBuilder.DropTable(
                 name: "TechnicalDrafts");
 
             migrationBuilder.DropTable(
-                name: "Orders");
+                name: "DesignTemplates");
 
             migrationBuilder.DropTable(
                 name: "DesignVersionHistorys");
@@ -1121,12 +1497,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Customers");
-
-            migrationBuilder.DropTable(
-                name: "DesignTemplates");
-
-            migrationBuilder.DropTable(
-                name: "ServicePackage");
 
             migrationBuilder.DropTable(
                 name: "Staffs");
