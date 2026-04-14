@@ -54,7 +54,7 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
 
         if (entity == null)
         {
-            throw new NotFoundException(nameof(DesignWork), "Không tìm thấy công việc thiết kế với id " + request.Id);
+            throw new DataNotFoundException(nameof(DesignWork),  request.Id);//"Không tìm thấy công việc thiết kế với id " +
         }
 
         // 1. Kiểm tra quyền (Ví dụ: Customer chỉ được sửa yêu cầu của chính mình)
@@ -79,7 +79,7 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
                 Content = $"Trạng thái yêu cầu được thay đổi thành: {request.Status}",
                 AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
                 Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username ?? "System"
+                CreatedBy = _user.Username ?? "SYSTEM"
             };
             _context.DesignLogs.Add(statusLog);
         }
