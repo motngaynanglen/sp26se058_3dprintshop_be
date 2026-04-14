@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.ServiceOptions.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
@@ -41,26 +42,25 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
+    private readonly IMapper _mapper;
 
-    public CreateServiceOptionCommandHandler(IApplicationDbContext context, IUser user)
+    public CreateServiceOptionCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
         _user = user;
+        _mapper = mapper;
     }
 
     public async Task<object> Handle(CreateServiceOptionCommand request, CancellationToken ct)
     {
-        var failures = new List<ValidationFailure>();
+        var checkResult = await _context.ServiceOptions.GetDuplicateResultAsync(
+                 x => x.Code == request.Code,
+                 nameof(ServiceOption),
+                 nameof(request.Code),
+                 request.Code,
+                 ct: ct);
+        checkResult.ThrowIfDuplicate();
 
-        // Kiểm tra trùng mã Code (Tránh lỗi Unique Index ở DB)
-        var exists = await _context.ServiceOptions
-            .AnyAsync(x => x.Code == request.Code, ct);
-
-        if (exists)
-        {
-            failures.AddFailure(nameof(ServiceOption.Code), $"Mã tùy chọn '{request.Code}' đã tồn tại trong hệ thống.");
-        }
-        failures.ThrowIfAny();
         var entity = new ServiceOption
         {
             Id = Guid.NewGuid(),
@@ -84,6 +84,6 @@ public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOp
             throw new CreateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
         }
 
-        return request;
+        return _mapper.Map<ServiceOptionDTO>(entity);
     }
 }
