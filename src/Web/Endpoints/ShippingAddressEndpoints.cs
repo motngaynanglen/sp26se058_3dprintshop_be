@@ -39,10 +39,10 @@ public class ShippingAddressEndpoints : EndpointGroupBase
 
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<CreateShippingAddressCommand>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<ShippingAddressDTO>.OkResponseModel(
             data: result,
             message: "Thêm địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            code: ResponseCodeConstants.CREATED));
 
     }
 
@@ -51,10 +51,10 @@ public class ShippingAddressEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new GetMyShippingAddressesQuery());
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<ShippingAddressDTO>>.OkResponseModel(
-            data: result,
-            message: "Lấy danh sách địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<ShippingAddressDTO>>
+                .ListResponseModel(data: result)
+            );
 
 
     }
@@ -67,7 +67,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
             data: result,
             message: "Loại bỏ địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            code: ResponseCodeConstants.DELETED));
 
 
     }
@@ -78,10 +78,10 @@ public class ShippingAddressEndpoints : EndpointGroupBase
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<ShippingAddressDTO>.OkResponseModel(
             data: result,
             message: "Cập nhật địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            code: ResponseCodeConstants.UPDATED));
 
 
     }

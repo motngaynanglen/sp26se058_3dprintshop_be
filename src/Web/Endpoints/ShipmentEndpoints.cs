@@ -61,23 +61,21 @@ public class ShipmentEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<ShipmentDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
-            ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<ShipmentDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
     }
-    public async Task<IResult> Create([FromServices] ISender sender,  [FromBody] CreateShipmentCommand command)
+    public async Task<IResult> Create([FromServices] ISender sender, [FromBody] CreateShipmentCommand command)
     {
 
-     
+
         var result = await sender.Send(command);
 
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             data: result,
-            message: "Cập nhật địa chỉ thành công!",
-            code: ResponseCodeConstants.SUCCESS));
+            message: "Thêm địa chỉ thành công!",
+            code: ResponseCodeConstants.CREATED));
 
     }
     public async Task<IResult> GetByOrderId([FromServices] ISender sender, [FromRoute] Guid orderId)
@@ -104,9 +102,9 @@ public class ShipmentEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(new MarkShipmentAsReadyCommand { Id = id });
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-            data: result, 
-            message: "Kiện hàng đã sẵn sàng để giao!", 
-            code: ResponseCodeConstants.SUCCESS));
+            data: result,
+            message: "Kiện hàng đã sẵn sàng để giao!",
+            code: ResponseCodeConstants.UPDATED));
     }
 
     public async Task<IResult> StartInTransit([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsInTransitCommand command)
@@ -114,18 +112,18 @@ public class ShipmentEndpoints : EndpointGroupBase
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-            data: result, 
-            message: "Đã bắt đầu quá trình vận chuyển.", 
-            code: ResponseCodeConstants.SUCCESS));
+            data: result,
+            message: "Đã bắt đầu quá trình vận chuyển.",
+            code: ResponseCodeConstants.UPDATED));
     }
 
     public async Task<IResult> ConfirmDelivered([FromServices] ISender sender, [FromRoute] Guid id)
     {
         var result = await sender.Send(new ConfirmShipmentDeliveredCommand { Id = id });
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-            data: result, 
-            message: "Giao hàng thành công!", 
-            code: ResponseCodeConstants.SUCCESS));
+            data: result,
+            message: "Giao hàng thành công!",
+            code: ResponseCodeConstants.UPDATED));
     }
 
     public async Task<IResult> MarkFailed([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsFailedCommand command)
@@ -133,8 +131,8 @@ public class ShipmentEndpoints : EndpointGroupBase
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-            data: result, 
-            message: "Đã ghi nhận sự cố giao hàng.", 
-            code: ResponseCodeConstants.SUCCESS));
+            data: result,
+            message: "Đã ghi nhận sự cố giao hàng.",
+            code: ResponseCodeConstants.UPDATED));
     }
 }

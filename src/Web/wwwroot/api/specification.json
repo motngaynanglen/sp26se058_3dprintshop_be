@@ -3537,7 +3537,7 @@
           },
           "addressLine": {
             "type": "string",
-            "default": "123 Đường ABC, Phường 5",
+            "default": "123 Đường ABC",
             "minLength": 1
           },
           "ward": {
@@ -3562,7 +3562,7 @@
           },
           "isDefault": {
             "type": "boolean",
-            "default": true,
+            "default": false,
             "nullable": true
           }
         }

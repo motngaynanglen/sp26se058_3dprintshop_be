@@ -28,7 +28,7 @@ public class GetShipmentByOrderIdQuery : IRequest<ShipmentDTO>
                 .ProjectTo<ShipmentDTO>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (shipment == null) throw new Exception("Đơn hàng chưa được tạo vận đơn");
+            if (shipment == null) throw new DataNotFoundException("Đơn hàng không có đơn vận chuyển.");
             return shipment;
         }
     }

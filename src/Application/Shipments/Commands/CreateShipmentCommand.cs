@@ -123,7 +123,7 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
         }
         catch (Exception ex)
         {
-            throw new UpdateFailureException($"Lỗi tạo vận đơn: {ex.InnerException?.Message ?? ex.Message}");
+            throw new CreateFailureException(nameof(Shipment),$"{ex.InnerException?.Message ?? ex.Message}");
         }
 
         return _mapper.Map<ShipmentDTO>(shipment);

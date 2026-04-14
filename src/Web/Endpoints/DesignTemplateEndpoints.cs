@@ -7,6 +7,7 @@ using sp26se058_3dprintshop_be.Application.DesignTags.Queries;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
+using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -71,12 +72,16 @@ public class DesignTemplateEndpoints : EndpointGroupBase
     {
 
         var result = await sender.Send(query);
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTemplateDTO>>.OkResponseModel(
-                code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
-                data: result.Items,
-                additionalData: new { pagination = result.Metadata },
-                message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
-            ));
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTemplateDTO>>.OkResponseModel(
+        //        code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        //        data: result.Items,
+        //        additionalData: new { pagination = result.Metadata },
+        //        message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
+        //    ));
+        return TypedResults.Ok(
+                BaseResponseModel<IEnumerable<DesignTemplateDTO>>
+                    .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
 
 
     }
