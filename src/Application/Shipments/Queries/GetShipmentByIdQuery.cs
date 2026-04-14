@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
+
+[Authorize(Roles = Roles.CUSTOMER + ","+Roles.STAFF + "," + Roles.MANAGER)]
+
 public class GetShipmentByIdQuery : IRequest<ShipmentDTO>
 {
     public Guid Id { get; set; }
