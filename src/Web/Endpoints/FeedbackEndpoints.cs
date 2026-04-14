@@ -3,6 +3,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Feedbacks.Commands;
 using sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
+using sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -46,12 +47,16 @@ public class FeedbackEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<PendingFeedbackDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
-            ));
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<PendingFeedbackDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result.Items,
+        //        additionalData: new { paging = result.Metadata },
+        //        message: "Lấy danh sách thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<PendingFeedbackDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
 
 
     }
@@ -60,8 +65,8 @@ public class FeedbackEndpoints : EndpointGroupBase
 
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<FeedbackDTO>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
                 data: result,
                 message: "Gửi phản hồi thành công!"
             ));
@@ -87,12 +92,16 @@ public class FeedbackEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
-            ));
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result.Items,
+        //        additionalData: new { paging = result.Metadata },
+        //        message: "Lấy danh sách thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<FeedbackDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
 
 
     }
@@ -101,13 +110,16 @@ public class FeedbackEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
-            ));
-
+        //return TypedResults.Ok(BaseResponseModel<IEnumerable<FeedbackDTO>>.OkResponseModel(
+        //        code: ResponseCodeConstants.SUCCESS,
+        //        data: result.Items,
+        //        additionalData: new { paging = result.Metadata },
+        //        message: "Lấy danh sách thành công"
+        //    ));
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<FeedbackDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+                );
 
     }
     public async Task<IResult> ReplyFeedback([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ReplyFeedbackCommand command)
@@ -116,21 +128,19 @@ public class FeedbackEndpoints : EndpointGroupBase
         var finalCommand = command with { Id = id };
         var result = await sender.Send(finalCommand);
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<FeedbackDTO>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Trả lời thành công."
             ));
-
-
     }
     public async Task<IResult> SwitchStatus([FromServices] ISender sender, [FromRoute] Guid id)
     {
 
         var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<FeedbackDTO>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Đổi trạng thái thành công"
             ));
@@ -140,10 +150,10 @@ public class FeedbackEndpoints : EndpointGroupBase
     public async Task<IResult> DeleteFeedback([FromServices] ISender sender, [FromRoute] Guid id)
     {
 
-        var result = await sender.Send(new SwitchFeedbackStatusCommand { Id = id });
+        var result = await sender.Send(new DeleteFeedbackStatusCommand { Id = id });
 
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                code: ResponseCodeConstants.DELETED,
                 data: result,
                 message: "Đổi trạng thái thành công"
             ));

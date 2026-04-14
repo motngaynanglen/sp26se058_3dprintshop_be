@@ -12,6 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
+[Authorize(Roles = Roles.MANAGER + "," + Roles.STAFF)]
 public class GetInventoryTransactionsWithPaginationQuery : PaginationRequest, IRequest<PaginatedList<InventoryTransactionDTO>>
 {
     public Guid? DesignVariantId { get; init; }
@@ -33,7 +34,7 @@ public class GetInventoryTransactionsWithPaginationQuery : PaginationRequest, IR
             var query = _context.InventoryTransactions.AsNoTracking();
 
             // 1. Filter theo Variant
-            if (request.DesignVariantId.HasValue)
+            if (request.DesignVariantId.HasValue && request.DesignVariantId != Guid.Empty)
             {
                 query = query.Where(x => x.DesignVariantId == request.DesignVariantId);
             }
@@ -41,12 +42,10 @@ public class GetInventoryTransactionsWithPaginationQuery : PaginationRequest, IR
             // 2. Filter theo Type (So sánh string)
             if (!string.IsNullOrEmpty(request.Type))
             {
-                query = query.Where(x => x.Type == request.Type);
+                query = query.Where(x => x.Type.ToUpper() == request.Type);
             }
+
             return await query
-                .Include(x => x.DesignVariant)
-                .Include(x => x.Staff)
-                    .ThenInclude(s => s!.Account)
                 .OrderByDescending(x => x.Created)
                 // ProjectTo sẽ tự xử lý các logic null-check trong Mapping thành SQL
                 .ProjectTo<InventoryTransactionDTO>(_mapper.ConfigurationProvider)

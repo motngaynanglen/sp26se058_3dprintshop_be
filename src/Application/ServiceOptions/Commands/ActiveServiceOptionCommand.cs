@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
 public record ActiveServiceOptionCommand(Guid Id) : IRequest<object>;
 public class ActiveServiceOptionCommandHandler : IRequestHandler<ActiveServiceOptionCommand, object>
 {
@@ -30,7 +33,14 @@ public class ActiveServiceOptionCommandHandler : IRequestHandler<ActiveServiceOp
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
 
-        await _context.SaveChangesAsync(ct);
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
         return true;
         //return new { Message = "Đã ngưng hoạt động tùy chọn này" };
     }

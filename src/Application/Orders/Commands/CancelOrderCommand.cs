@@ -124,7 +124,7 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
                             DesignVariantId = variant.Id,
                             ReferenceId = order.Id,
                             Quantity = item.QuantityOrdered,
-                            Type = "OrderCancelReturn",
+                            Type = InventoryTransactionTypes.OrderCancelReturn,
                             Note = $"Hoàn kho do hủy đơn {order.Code}. Lý do: {request.Reason}",
                             Created = CoreHelper.SystemTimeNow,
                             CreatedBy = _user.Username

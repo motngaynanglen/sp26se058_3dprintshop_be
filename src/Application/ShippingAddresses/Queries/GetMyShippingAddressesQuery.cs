@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
+[Authorize(Roles = Roles.CUSTOMER)]
 public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
 {
 

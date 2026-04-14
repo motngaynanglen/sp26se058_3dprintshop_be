@@ -49,6 +49,23 @@ public class BaseResponseModel<T>
     {
         return new BaseResponseModel<T>(500, code, data, additionalData, message);
     }
+    public static BaseResponseModel<IEnumerable<TItem>> ListResponseModel<TItem>(
+        IEnumerable<TItem>? data,
+        object? additionalData = null,
+        string? successMessage = "Lấy danh sách thành công.",
+        string? emptyMessage = "Không tìm thấy kết quả nào.")
+    {
+        // Kiểm tra xem danh sách có dữ liệu hay không
+        bool hasData = data != null && data.Any();
+
+        return new BaseResponseModel<IEnumerable<TItem>>(
+            statusCode: 200,
+            code: hasData ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+            data: data ?? Enumerable.Empty<TItem>(),
+            additionalData: additionalData,
+            message: hasData ? successMessage : emptyMessage
+        );
+    }
 }
 
 public class BaseResponseModel : BaseResponseModel<object>
