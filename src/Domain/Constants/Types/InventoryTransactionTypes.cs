@@ -15,11 +15,11 @@ public static class InventoryTransactionTypes
 
     public static readonly List<StatusDefinition> All = new()
     {
-        new(PurchaseIn, "Nhập mua", "#4CAF50", "Nhập thêm nguyên liệu hoặc sản phẩm từ nhà cung cấp."),
-        new(ProductionIn, "Nhập sản xuất", "#2196F3", "Sản phẩm hoàn thành từ máy in 3D được đưa vào kho."),
-        new(OrderOut, "Xuất bán", "#FF9800", "Số lượng giảm đi do đơn hàng của khách đã thanh toán."),
-        new(OrderCancelReturn, "Hủy đơn trả hàng", "#E91E63", "Hoàn lại số lượng vào kho do đơn hàng đã hủy hoặc trả về."),
-        new(Adjustment, "Điều chỉnh", "#9C27B0", "Cân bằng kho do kiểm kê thực tế hoặc hàng lỗi.")
+        new(PurchaseIn, "Nhập mua", "Nhập thêm nguyên liệu hoặc sản phẩm từ nhà cung cấp."),
+        new(ProductionIn, "Nhập sản xuất", "Sản phẩm hoàn thành từ máy in 3D được đưa vào kho."),
+        new(OrderOut, "Xuất bán", "Số lượng giảm đi do đơn hàng của khách đã thanh toán."),
+        new(OrderCancelReturn, "Hủy đơn trả hàng", "Hoàn lại số lượng vào kho do đơn hàng đã hủy hoặc trả về."),
+        new(Adjustment, "Điều chỉnh", "Cân bằng kho do kiểm kê thực tế hoặc hàng lỗi.")
     };
     /// <summary>
     /// Các loại giao dịch bắt buộc phải là số DƯƠNG (Nhập kho)

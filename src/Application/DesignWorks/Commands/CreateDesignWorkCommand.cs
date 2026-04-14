@@ -9,6 +9,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
@@ -58,9 +59,9 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
             Name = request.Name,
             BaseImageUrl = request.BaseImageUrl,
             CustomerId = customer.Id,
-            Status = "Pending",
+            Status = DesignWorkStatus.Pending,
             Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username ?? "System"
+            CreatedBy = _user.Username ?? "SYSTEM"
         };
 
         // 2. Tạo Log đầu tiên cho hệ thống
@@ -73,7 +74,7 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
             IsAI = false,
             AccountId = Guid.Parse(currentUserId),
             Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username ?? "System"
+            CreatedBy = _user.Username ?? "SYSTEM"
         };
 
         _context.DesignWorks.Add(designWork);
@@ -95,7 +96,7 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
                 IsApproved = false,
                 IsPrintable = false,
                 Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username ?? "System"
+                CreatedBy = _user.Username ?? "SYSTEM"
             };
             _context.DesignVersionHistorys.Add(firstVersion);
         }

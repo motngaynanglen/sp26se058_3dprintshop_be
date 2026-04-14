@@ -15,7 +15,7 @@ public class GetPaginationDesignWorkQuery : PaginationRequest, IRequest<Paginate
 {
     [DefaultValue("")]
     public string? Search { get; init; }
-    [DefaultValue("'Pending', 'InProgress', 'Reviewing', 'Completed'")]
+    [DefaultValue($"'{DesignWorkStatus.Sketching}', '{DesignWorkStatus.Pending}', '{DesignWorkStatus.InProgress}', '{DesignWorkStatus.Reviewing}', '{DesignWorkStatus.Completed}'")]
     public string Status { get; init; } = "";
     public bool SortDescending { get; init; } = false;
     [DefaultValue("Name")]
