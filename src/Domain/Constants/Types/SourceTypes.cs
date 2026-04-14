@@ -14,10 +14,10 @@ public static class SourceTypes
 
     public static readonly List<StatusDefinition> All = new()
     {
-        new(InStock, "Hàng có sẵn", "#607D8B", "Sản phẩm lấy từ danh mục tồn kho của cửa hàng."),
-        new(PreOrder, "Hàng đặt trước", "#607D8B", "Sản phẩm lấy từ danh mục mẫu in của cửa hàng."),
-        new(DesignService, "Dịch vụ thiết kế", "#673AB7", "Yêu cầu vẽ mẫu hoặc chỉnh sửa 3D."),
-        new(PrintService, "File khách gửi", "#FF5722", "Khách hàng cung cấp file định dạng .STL/.OBJ để in.")
+        new(InStock, "Hàng có sẵn", "Sản phẩm lấy từ danh mục tồn kho của cửa hàng."),
+        new(PreOrder, "Hàng đặt trước", "Sản phẩm lấy từ danh mục mẫu in của cửa hàng."),
+        new(DesignService, "Dịch vụ thiết kế", "Yêu cầu vẽ mẫu hoặc chỉnh sửa 3D."),
+        new(PrintService, "File khách gửi", "Khách hàng cung cấp file định dạng .STL/.OBJ để in.")
     };
     public static readonly string ListString = InStock + ", " + PreOrder + ", " + DesignService + ", " + PrintService;
 }

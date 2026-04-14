@@ -16,10 +16,10 @@ public static class TransactionStatuses
     // --- Định nghĩa danh sách hiển thị (Metadata cho Frontend) ---
     public static readonly List<StatusDefinition> All = new()
     {
-        new(Pending, "Đang chờ", "#FF9800", "Giao dịch đã khởi tạo và đang chờ xác nhận từ hệ thống thanh toán."),
-        new(Success, "Thành công", "#4CAF50", "Giao dịch đã hoàn tất thành công."),
-        new(Failed, "Thất bại", "#F44336", "Giao dịch bị lỗi trong quá trình thực hiện."),
-        new(Cancelled, "Đã hủy", "#9E9E9E", "Giao dịch đã bị hủy bởi người dùng hoặc hệ thống."),
+        new(Pending, "Đang chờ", "Giao dịch đã khởi tạo và đang chờ xác nhận từ hệ thống thanh toán."),
+        new(Success, "Thành công", "Giao dịch đã hoàn tất thành công."),
+        new(Failed, "Thất bại", "Giao dịch bị lỗi trong quá trình thực hiện."),
+        new(Cancelled, "Đã hủy", "Giao dịch đã bị hủy bởi người dùng hoặc hệ thống."),
         //new(Refunded, "Đã hoàn tiền", "#2196F3", "Tiền của giao dịch này đã được hoàn lại cho khách hàng.")
     };
 }

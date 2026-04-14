@@ -8,11 +8,24 @@ public class DesignLogConfiguration : IEntityTypeConfiguration<DesignLog>
 {
     public void Configure(EntityTypeBuilder<DesignLog> builder)
     {
-        builder.Property(dl => dl.LogType).IsRequired().HasMaxLength(30);
+        builder.Property(x => x.LogType).HasMaxLength(30).IsRequired();
+        builder.Property(x => x.Content).IsRequired(false);
 
-        builder.HasOne(dl => dl.DesignWork)
-               .WithMany(dw => dw.DesignLogs)
-               .HasForeignKey(dl => dl.DesignWorkId)
-               .IsRequired();
+        // Cấu hình Threading (Self-referencing)
+        builder.HasOne(x => x.ParentLog)
+            .WithMany(x => x.Replies)
+            .HasForeignKey(x => x.ParentLogId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Liên kết với DesignWork
+        builder.HasOne(x => x.DesignWork)
+            .WithMany(x => x.DesignLogs)
+            .HasForeignKey(x => x.DesignWorkId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // === INDEXING ===
+        // Luôn tìm log theo dự án và sắp xếp theo thời gian
+        builder.HasIndex(x => new { x.DesignWorkId, x.Created });
     }
 }

@@ -3379,7 +3379,7 @@
               },
               "status": {
                 "type": "string",
-                "default": "'Pending', 'InProgress', 'Reviewing', 'Completed'"
+                "default": "'SKETCHING', 'PENDING', 'IN_PROGRESS', 'REVIEWING', 'COMPLETED'"
               },
               "sortDescending": {
                 "type": "boolean"
@@ -3775,11 +3775,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "shippingAddressId": {
-            "type": "string",
-            "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000001"
-          },
           "designWorkId": {
             "type": "string",
             "format": "guid",
