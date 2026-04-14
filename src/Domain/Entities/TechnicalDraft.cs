@@ -17,6 +17,11 @@ public class TechnicalDraft : BaseAuditableEntity
     public decimal MarkupPercentage { get; set; } = 0;
 
     public string? TechnicalNote { get; set; }
+
+    public bool IsConfirmed { get; set; } // Trạng thái khách đã duyệt bản này chưa
+    public decimal UnitPrice { get; set; } // Giá tiền cho sản phẩm khi dựa trên vật liệu
+
+
     public Guid DesignVersionHistoryId { get; set; }
     public Guid MaterialId { get; set; }
     public virtual Material Material { get; set; } = null!;

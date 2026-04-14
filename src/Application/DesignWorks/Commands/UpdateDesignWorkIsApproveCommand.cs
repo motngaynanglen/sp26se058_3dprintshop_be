@@ -27,7 +27,7 @@ public class UpdateDesignWorkIsApproveCommandHandler : IRequestHandler<UpdateDes
             .FirstOrDefaultAsync(dw => dw.Id == request.Id, cancellationToken);
         if (entity == null)
         {
-            throw new NotFoundException(nameof(DesignWork), "Không tìm thấy công việc thiết kế với id " + request.Id);
+            throw new DataNotFoundException(nameof(DesignWork), request.Id);
         }
         // Cập nhật trạng thái phê duyệt
         entity.IsApproved = true; // Hoặc false tùy theo yêu cầu
