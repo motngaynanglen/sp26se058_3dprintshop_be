@@ -16,16 +16,6 @@
         }
       }
     },
-    "/test-error": {
-      "get": {
-        "operationId": "GetTestError",
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/api/account/query": {
       "post": {
         "tags": [
@@ -328,13 +318,40 @@
         }
       }
     },
-    "/api/app-support/presigned-upload-url": {
+    "/api/app-support/presigned-image-url": {
       "get": {
         "tags": [
           "AppSupport"
         ],
-        "summary": "[Staff/Manager] Lấy link đăng kí trước cho upload",
-        "operationId": "GetApiAppSupportPresignedUploadUrl",
+        "summary": "Lấy link upload ảnh (Max 5MB); Trước mắt không bắt giới hạn.",
+        "description": "(Hỗ trợ: .jpg, .png, .webp); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
+        "operationId": "GetApiAppSupportPresignedImageUrl",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/presigned-model-url": {
+      "get": {
+        "tags": [
+          "AppSupport"
+        ],
+        "summary": "Lấy link upload file 3D (Max 100MB)",
+        "description": "(Hỗ trợ: .glb, .stl); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
+        "operationId": "GetApiAppSupportPresignedModelUrl",
         "parameters": [
           {
             "name": "fileName",
@@ -358,7 +375,6 @@
         "tags": [
           "AppSupport"
         ],
-        "summary": "[Dev Only] Test đẩy file trực tiếp lên B2 bằng Presigned URL.",
         "operationId": "PostApiAppSupportTestUploadToB2",
         "parameters": [
           {
@@ -1183,6 +1199,33 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GetPaginationDesignWorkQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/quick-print": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Customer] Gửi yêu cầu in 3D từ file có sẵn",
+        "description": "Khách hàng upload tối đa 5 file và gửi yêu cầu để nhân viên báo giá.",
+        "operationId": "PostApiDesignWorkQuickPrint",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutQuickPrintCommand"
               }
             }
           },
@@ -2616,6 +2659,53 @@
         }
       }
     },
+    "/api/technical-draft/my-drafts": {
+      "get": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Customer] Lấy danh sách bản thảo kỹ thuật của tôi",
+        "description": "Khách hàng xem các báo giá kỹ thuật mà nhân viên đã tạo cho mình.",
+        "operationId": "GetApiTechnicalDraftMyDrafts",
+        "parameters": [
+          {
+            "name": "DesignWorkId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/transaction/payos-webhook": {
       "post": {
         "tags": [
@@ -3446,6 +3536,28 @@
             }
           }
         ]
+      },
+      "CheckoutQuickPrintCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectName": {
+            "type": "string",
+            "default": "Dự án A",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "default": "Ghi chú yêu cầu về kỹ thuật in (màu sắc, độ mịn...)",
+            "nullable": true
+          },
+          "fileUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "CreateDesignWorkCommand": {
         "type": "object",
