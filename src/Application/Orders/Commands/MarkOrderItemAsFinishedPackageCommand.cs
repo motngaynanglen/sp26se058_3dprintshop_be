@@ -53,89 +53,154 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                 ResponseCodeConstants.VAL_INVALID_STATE
             );
         }
-        // 2. Kiểm tra loại sản phẩm (Chỉ dành cho vật lý)
-        var physicalTypes = new[] { SourceTypes.InStock, SourceTypes.PreOrder, SourceTypes.PrintService };
-        if (!physicalTypes.Contains(item.SourceType))
+        // --- PHÂN LUỒNG XỬ LÝ THEO 4 LOẠI ---
+        switch (item.SourceType)
         {
-            throw new BusinessException(
-                "Sản phẩm này thuộc luồng thiết kế, không thể xử lý đóng gói vật lý.",
-                ResponseCodeConstants.VAL_INVALID_STATE
-                );
+            case SourceTypes.InStock:
+                // Hàng có sẵn: Chỉ cần đổi trạng thái (vì Stock đã trừ lúc thanh toán/xác nhận)
+                item.FulfillmentStatus = OrderItemStatuses.Finished;
+                break;
+
+            case SourceTypes.PreOrder:
+                // Hàng đặt trước: Cần nghiệp vụ Nhập - Xuất ảo để cân bằng kho (như code cũ của bạn)
+                if (item.DesignVariantId.HasValue)
+                {
+                    var variant = item.DesignVariant;
+                    if (variant != null)
+                    {
+                        // Nhập kho từ xưởng
+                        _context.InventoryTransactions.Add(new InventoryTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignVariantId = variant.Id,
+                            ReferenceId = item.Id,
+                            Quantity = item.QuantityOrdered,
+                            Type = InventoryTransactionTypes.ProductionIn,
+                            Note = $"[Nhập] Hoàn tất sản xuất đơn Pre-order: {item.Order.Code}",
+                            Created = CoreHelper.SystemTimeNow,
+                            CreatedBy = _user.Username
+                        });
+
+                        // Xuất kho giao khách
+                        _context.InventoryTransactions.Add(new InventoryTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignVariantId = variant.Id,
+                            ReferenceId = item.Order.Id,
+                            Quantity = -item.QuantityOrdered,
+                            Type = InventoryTransactionTypes.OrderOut,
+                            Note = $"[Xuất] Đóng gói đơn Pre-order: {item.Order.Code}",
+                            Created = CoreHelper.SystemTimeNow,
+                            CreatedBy = _user.Username
+                        });
+                    }
+                }
+                item.FulfillmentStatus = OrderItemStatuses.Finished;
+                break;
+
+            case SourceTypes.PrintService:
+                // Dịch vụ in theo yêu cầu: Đánh dấu đã in xong và kiểm tra chất lượng (QC) xong
+                item.FulfillmentStatus = OrderItemStatuses.Finished;
+                break;
+
+            case SourceTypes.DesignService:
+                // Dịch vụ thiết kế: "Hoàn thành" ở đây nghĩa là Staff đã upload file cuối cùng 
+                // và xác nhận bàn giao quyền sở hữu file cho khách.
+
+                if (item.DesignWorkId.HasValue)
+                {
+                    var designWork = await _context.DesignWorks
+                        .FirstOrDefaultAsync(dw => dw.Id == item.DesignWorkId, cancellationToken);
+
+                    if (designWork == null)
+                    {
+                        throw new DataNotFoundException(nameof(DesignWork), item.DesignWorkId.Value);
+                    }
+
+                    var invalidStatuses = new[] {
+                            DesignWorkStatus.Sketching,
+                            DesignWorkStatus.Pending,
+                            DesignWorkStatus.InProgress
+                        };
+                    if (invalidStatuses.Contains(designWork.Status))
+                    {
+                        throw new BusinessException(
+                            $"Món hàng '{item.ItemName}' đang ở trạng thái {designWork.Status}. " +
+                            "Dự án phải được chuyển sang giai đoạn 'Đang xem xét' (Reviewing) và có file kết quả mới được hoàn thành.",
+                            ResponseCodeConstants.VAL_INVALID_STATE
+                        );
+                    }
+
+                    if (designWork.ResultDraftId == null || designWork.ResultDraftId == Guid.Empty)
+                    {
+                        throw new BusinessException(
+                            $"Món hàng '{item.ItemName}' chưa có bản thiết kế cuối cùng. Staff cần upload và chọn bản thảo hoàn tất trước khi đóng gói.",
+                            ResponseCodeConstants.VAL_INVALID_STATE
+                        );
+                    }
+                   
+                    // Cập nhật trạng thái DesignWork 
+                    // Khi đã xong, dự án thiết kế phải được khóa để đảm bảo tính Immutable (không sửa đổi lịch sử)
+                    if (designWork.Status != DesignWorkStatus.Completed)
+                    {
+                        designWork.Status = DesignWorkStatus.Completed;
+                        //designWork.IsLocked = true; 
+                        designWork.LastModified = CoreHelper.SystemTimeNow;
+                        designWork.LastModifiedBy = _user.Username;
+
+                        // 4. Ghi log hệ thống xác nhận bàn giao quyền sở hữu
+                        _context.DesignLogs.Add(new DesignLog
+                        {
+                            Id = Guid.NewGuid(),
+                            DesignWorkId = designWork.Id,
+                            LogType = DesignLogType.System,
+                            Content = $"Hệ thống: Bản thiết kế cuối cùng đã được bàn giao cho khách hàng. Trạng thái dịch vụ chuyển sang Hoàn thành.",
+                            Created = CoreHelper.SystemTimeNow
+                        });
+                    }
+                }
+                item.FulfillmentStatus = OrderItemStatuses.Finished;
+                break;
+
+            default:
+                throw new NotSupportedException("Loại sản phẩm không hỗ trợ trạng thái hoàn thành này.");
         }
-        // 3. Cập nhật trạng thái sang FINISHED
-        // --- XỬ LÝ KHO CHO PRE-ORDER (Tách lẻ theo SRP) ---
-        if (item.SourceType == SourceTypes.PreOrder && item.DesignVariantId.HasValue)
-        {
-            var variant = item.DesignVariant;
-            if (variant == null) throw new DataNotFoundException("Không tìm thấy biến thể sản phẩm.");
 
-            // Bước A: Ghi nhận hàng đã "về kho" từ xưởng sản xuất
-            var productionInLog = new InventoryTransaction
-            {
-                Id = Guid.NewGuid(),
-                DesignVariantId = variant.Id,
-                ReferenceId = item.Id, // Link trực tiếp tới OrderItem này
-                Quantity = item.QuantityOrdered, // Dương (+) : Nhập kho
-                Type = InventoryTransactionTypes.ProductionIn,
-                Note = $"[Nhập] Hoàn tất in 3D cho đơn Pre-order: {item.Order.Code}",
-                Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username
-            };
-
-            // Bước B: Ghi nhận xuất kho ngay lập tức để đóng gói giao khách
-            var orderOutLog = new InventoryTransaction
-            {
-                Id = Guid.NewGuid(),
-                DesignVariantId = variant.Id,
-                ReferenceId = item.Order.Id, // Link tới Order tổng
-                Quantity = -item.QuantityOrdered, // Âm (-) : Xuất kho
-                Type = InventoryTransactionTypes.OrderOut,
-                Note = $"[Xuất] Đóng gói giao khách cho đơn Pre-order: {item.Order.Code}",
-                Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username
-            };
-
-            // Thêm cả hai vào Context
-            _context.InventoryTransactions.Add(productionInLog);
-            _context.InventoryTransactions.Add(orderOutLog);
-
-            // Lưu ý: Với Pre-order, vì mình chưa trừ StockQuantity lúc Checkout, 
-            // nên ở đây ta có thể cập nhật StockQuantity (Nhập vào rồi lại Trừ đi -> Net = 0)
-        }
-
-        item.FulfillmentStatus = OrderItemStatuses.Finished;
         item.LastModified = CoreHelper.SystemTimeNow;
         item.LastModifiedBy = _user.Username;
 
-        // 4. KIỂM TRA TỰ ĐỘNG: Đơn hàng đã đủ điều kiện để giao chưa?
-        // Một đơn hàng sẵn sàng giao khi TẤT CẢ các món đều ở trạng thái FINISHED
-        var physicalItems = item.Order.OrderItems
-            .Where(oi => oi.SourceType == SourceTypes.InStock ||
-                         oi.SourceType == SourceTypes.PreOrder ||
-                         oi.SourceType == SourceTypes.PrintService)
-            .ToList();
+        // --- KIỂM TRA ĐIỀU KIỆN SHIPMENT (AUTO WORKFLOW) ---
+        // Đơn hàng sẵn sàng giao khi TẤT CẢ các món (bao gồm cả thiết kế) đều Finished
+        // Lưu ý: Nếu đơn chỉ có mỗi DesignService thì thường sẽ chuyển trạng thái Order sang Finished luôn 
+        // vì không cần Ship vật lý qua kho.
 
-        // Đơn hàng sẵn sàng giao khi:
-        // 1. Có ít nhất một món hàng vật lý.
-        // 2. TẤT CẢ các món hàng vật lý đó đều đã ở trạng thái Finished.
-        bool isOrderReadyToShip = physicalItems.Any() &&
-                          physicalItems.All(x => x.FulfillmentStatus == OrderItemStatuses.Finished);
+        var allItemsFinished = item.Order.OrderItems.All(x => x.FulfillmentStatus == OrderItemStatuses.Finished);
 
-
-        if (isOrderReadyToShip)
+        if (allItemsFinished)
         {
-            // Cập nhật trạng thái Order tổng
-            //item.Order.OrderStatus = OrderStatuses.Finished;
+            // Kiểm tra xem đơn có cần giao vận vật lý không
+            var hasPhysicalItem = item.Order.OrderItems.Any(oi =>
+                oi.SourceType == SourceTypes.InStock ||
+                oi.SourceType == SourceTypes.PreOrder ||
+                oi.SourceType == SourceTypes.PrintService);
 
-            // Cập nhật ghi chú Shipment để báo cho Staff kho
-            var shipment = await _context.Shipments
-                .FirstOrDefaultAsync(s => s.OrderId == item.OrderId, cancellationToken);
-
-            if (shipment != null && shipment.ShipmentStatus == ShipmentStatuses.Preparing)
+            if (hasPhysicalItem)
             {
-                shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;
-                shipment.LastModified = CoreHelper.SystemTimeNow;
-                shipment.LastModifiedBy = "SYSTEM_AUTO";
+                // Cập nhật Shipment sang ReadyForPickup
+                var shipment = await _context.Shipments
+                    .FirstOrDefaultAsync(s => s.OrderId == item.OrderId, cancellationToken);
+
+                if (shipment != null && shipment.ShipmentStatus == ShipmentStatuses.Preparing)
+                {
+                    shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;
+                    shipment.LastModified = CoreHelper.SystemTimeNow;
+                    shipment.LastModifiedBy = "SYSTEM_AUTO";
+                }
+            }
+            else
+            {
+                // Nếu toàn bộ là DesignService thì đơn hàng coi như hoàn tất (không cần ship)
+                item.Order.OrderStatus = OrderStatuses.Completed;
             }
         }
 

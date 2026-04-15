@@ -14,31 +14,47 @@ public class AppSupportEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/app-support")
                         .WithTags("AppSupport")
                         .WithOpenApi();
-        group.MapGet("/presigned-upload-url", GetPresignedUploadUrl)
-                .WithSummary("[Staff/Manager] Lấy link đăng kí trước cho upload");
+        // API dành riêng cho hình ảnh (Preview, Avatar, Minh họa)
+        group.MapGet("/presigned-image-url", GetPresignedImageUrl)
+                .WithSummary("Lấy link upload ảnh (Max 5MB); Trước mắt không bắt giới hạn.")
+                .WithDescription("(Hỗ trợ: .jpg, .png, .webp); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
+
+        // API dành cho file 3D nặng (GLB, STL)
+        group.MapGet("/presigned-model-url", GetPresignedModelUrl)
+                .WithSummary("Lấy link upload file 3D (Max 100MB)")
+                .WithDescription("(Hỗ trợ: .glb, .stl); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
 
         group.MapPost("/test-upload-to-b2", TestUploadToB2)
-                .WithSummary("[Dev Only] Test đẩy file trực tiếp lên B2 bằng Presigned URL.")
                 .DisableAntiforgery();
-
-        app.MapGet("/test-error", () => { throw new BadHttpRequestException("Manual Error"); });
     }
-    public async Task<IResult> GetPresignedUploadUrl([FromQuery] string fileName, [FromServices] IS3StorageService s3Service)
+    public async Task<IResult> GetPresignedImageUrl([FromQuery] string fileName, [FromServices] IS3StorageService s3Service)
     {
-
-        var uploadUrl = await s3Service.GetPresignedUploadUrlAsync(fileName, "sp26se058");
+        // Đăng ký giới hạn 5MB cho ảnh
+        long maxImageSize = 5 * 1024 * 1024; 
+        
+        var uploadUrl = await s3Service.GetPresignedUploadUrlAsync(fileName, "images", maxImageSize);
 
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             code: ResponseCodeConstants.SUCCESS,
-                data: new
-                {
-                    UploadUrl = uploadUrl,
-                    // Trả về luôn URL đích để Frontend lưu vào DB sau khi upload xong
-                    FileUrl = uploadUrl.Split('?')[0]
-                },
-                message: "Lấy URL thành công!"
-            ));
+            data: new { UploadUrl = uploadUrl, FileUrl = uploadUrl.Split('?')[0] },
+            message: "Lấy link upload ảnh thành công (Hỗ trợ: jpg, png, webp)"
+        ));
 
+    }
+    public async Task<IResult> GetPresignedModelUrl(
+        [FromQuery] string fileName,
+        [FromServices] IS3StorageService s3Service)
+    {
+        // Đăng ký giới hạn 100MB cho file 3D
+        long maxModelSize = 100 * 1024 * 1024;
+
+        var uploadUrl = await s3Service.GetPresignedUploadUrlAsync(fileName, "models", maxModelSize);
+
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            code: ResponseCodeConstants.SUCCESS,
+            data: new { UploadUrl = uploadUrl, FileUrl = uploadUrl.Split('?')[0] },
+            message: "Lấy link upload file 3D thành công (Hỗ trợ: .glb)"
+        ));
     }
     public async Task<IResult> TestUploadToB2([FromQuery] string uploadUrl, [FromForm] IFormFile file)
     {
