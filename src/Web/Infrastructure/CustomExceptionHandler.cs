@@ -125,7 +125,7 @@ public class CustomExceptionHandler : IExceptionHandler
 
         await httpContext.Response.WriteAsJsonAsync(
             new BaseResponseModel(
-                statusCode: StatusCodes.Status404NotFound,
+                statusCode: StatusCodes.Status401Unauthorized,
                 data: null,
                 message: ex.Message ?? "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
                 code: ResponseCodeConstants.UNAUTHORIZED
