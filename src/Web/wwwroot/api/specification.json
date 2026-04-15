@@ -1606,6 +1606,66 @@
       }
     },
     "/api/inventory-transaction/query": {
+      "get": {
+        "tags": [
+          "Inventory Transaction"
+        ],
+        "summary": "[Staff/Manager] Lấy danh sách lịch sử biến động kho (Paging, Filter).",
+        "operationId": "GetApiInventoryTransactionQuery",
+        "parameters": [
+          {
+            "name": "DesignVariantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true,
+              "enum": [
+                "PURCHASE_IN",
+                "PRODUCTION_IN",
+                "ORDER_OUT",
+                "CANCEL_RETURN",
+                "ADJUSTMENT"
+              ]
+            },
+            "x-position": 2
+          },
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 3
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
       "post": {
         "tags": [
           "Inventory Transaction"
@@ -3749,7 +3809,6 @@
               },
               "type": {
                 "type": "string",
-                "default": "ADJUSTMENT",
                 "nullable": true
               }
             }

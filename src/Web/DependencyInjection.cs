@@ -10,8 +10,7 @@ using NSwag.Generation.Processors.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using PayOS;
-using sp26se058_3dprintshop_be.Application.Common.Config;
+
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -79,7 +78,7 @@ public static class DependencyInjection
         services.AddOpenApiDocument((configure, sp) =>
         {
             configure.Title = "3D_printshop_API";
-
+            configure.SchemaSettings.SchemaProcessors.Add(new ConstantSchemaProcessor());
             // Add JWT
             configure.AddSecurity("JWT", Enumerable.Empty<string>(), new OpenApiSecurityScheme
             {
@@ -90,6 +89,8 @@ public static class DependencyInjection
             });
 
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
+            configure.OperationProcessors.Add(new ConstantOperationProcessor());
+
         });
 
         
