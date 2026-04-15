@@ -21,7 +21,7 @@ public record CheckoutDesignWorkCommand : IRequest<OrderDTO>
     //[DefaultValue("00000000-0000-0000-0000-000000000001")]
     //public Guid ShippingAddressId { get; init; }
 
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
+    [DefaultValue(null)]
     public Guid? DesignWorkId { get; init; }
     [DefaultValue(null)]
     public Guid? SourceLogId { get; init; }
@@ -53,7 +53,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
     {
         // 1. Xác thực người dùng và lấy thông tin Customer
         var userId = _user.Id.ToGuid();
-        if (userId != Guid.Empty) throw new UnauthorizedAccessException();
+        if (userId == Guid.Empty) throw new UnauthorizedAccessException();
 
         // Lấy Customer dựa trên AccountId liên kết
         var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId);
