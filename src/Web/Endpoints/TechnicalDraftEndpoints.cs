@@ -21,7 +21,9 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
              .WithSummary("[Staff] Tạo bản nháp kỹ thuật mới")
              .WithDescription("Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho Staff.");
 
-
+        group.MapGet("/my-drafts", GetMyDrafts)
+        .WithSummary("[Customer] Lấy danh sách bản thảo kỹ thuật của tôi")
+        .WithDescription("Khách hàng xem các báo giá kỹ thuật mà nhân viên đã tạo cho mình.");
         //group.MapGet("/version/{versionId}", GetByVersion)
         //     .WithSummary("[All Roles] Lấy danh sách draft theo phiên bản thiết kế")
         //     .WithDescription("Lấy tất cả các bản nháp kỹ thuật đã tạo cho một DesignVersionHistory cụ thể.");
@@ -40,7 +42,15 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
                 message: "Tạo bản nháp kỹ thuật và cập nhật trạng thái dự án thành công."
             ));
     }
-
+    public async Task<IResult> GetMyDrafts([FromServices] ISender sender, [FromBody] GetMyTechnicalDraftsQuery query)
+    {
+        var result = await sender.Send(query);
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<TechnicalDraftDTO>>.ListResponseModel(
+                data: result.Items,
+                additionalData: new { pagination = result.Metadata },
+                successMessage: "Lấy danh sách bản thảo thành công."
+            ));
+    }
     //public async Task<IResult> GetByVersion([FromServices] ISender sender, [FromRoute] Guid versionId)
     //{
     //    // Giả định bạn có Query này để lấy danh sách draft của 1 version
