@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IPaymentService, PayOsService>();
+        services.AddScoped<IOrderWorkflowService, OrderWorkflowService>();
 
         // Cấu hình Email
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
