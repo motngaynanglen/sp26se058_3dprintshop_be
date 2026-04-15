@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
@@ -42,7 +43,7 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
                 message: "Tạo bản nháp kỹ thuật và cập nhật trạng thái dự án thành công."
             ));
     }
-    public async Task<IResult> GetMyDrafts([FromServices] ISender sender, [FromBody] GetMyTechnicalDraftsQuery query)
+    public async Task<IResult> GetMyDrafts([FromServices] ISender sender, [AsParameters] GetMyTechnicalDraftsQuery query)
     {
         var result = await sender.Send(query);
         return TypedResults.Ok(BaseResponseModel<IEnumerable<TechnicalDraftDTO>>.ListResponseModel(
