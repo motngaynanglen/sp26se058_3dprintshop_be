@@ -31,11 +31,15 @@ public class OrderEndpoints : EndpointGroupBase
         // --- FLOW KHỞI TẠO & HỦY ---
         group.MapPost("/checkout", CheckOut)
                 .WithSummary("[Customer] Tạo đơn hàng mới từ giỏ hàng.")
-                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.ListString);
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.InStock +", " + SourceTypes.PreOrder);
 
-        group.MapPost("/checkoutdesign", CheckOutDesignAsync)
+        group.MapPost("/checkout-design", CheckOutDesignAsync)
                 .WithSummary("[Customer] Tạo đơn hàng mới từ thiết kế.")
-                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.ListString);
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.DesignService);
+
+        group.MapPost("/checkout-draft", CheckOutDraft)
+                .WithSummary("[Customer] Tạo đơn sản xuất các bản thiết kế từ dịch vụ thiết kế.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.PrintService);
 
         group.MapPatch("/{id}/cancel", CancelOrder)
                 .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng.")
@@ -84,7 +88,7 @@ public class OrderEndpoints : EndpointGroupBase
 
         var result = await sender.Send(command);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.CREATED,
                 data: result,
                 message: "Tạo đơn hàng thành công"
             ));
@@ -95,19 +99,27 @@ public class OrderEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(command);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.CREATED,
                 data: result,
                 message: "Tạo đơn hàng từ thiết kế"
             ));
     }
-
+    public async Task<IResult> CheckOutDraft([FromServices] ISender sender, [FromBody] CheckoutDraftsCommand command)
+    {
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
+                data: result,
+                message: "Tạo đơn hàng thành công."
+            ));
+    }
     public async Task<IResult> CancelOrder([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelOrderCommand command)
     {
 
         var finalCommand = command with { OrderId = id };
         var result = await sender.Send(finalCommand);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Hủy đơn hàng thành công"
             ));
@@ -117,7 +129,7 @@ public class OrderEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(new MarkOrderItemAsFinishedPackageCommand { Id = orderItemId});
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Xác nhận món hàng đã hoàn tất sản xuất/đóng gói."
             ));
@@ -128,7 +140,7 @@ public class OrderEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(new CompleteOrderCommand { Id = id });
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+                code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Đơn hàng đã hoàn thành và đóng lại thành công."
             ));

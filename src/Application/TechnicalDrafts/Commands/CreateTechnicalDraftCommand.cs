@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PayOS.Exceptions;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.TechnicalDrafts.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
@@ -30,8 +32,8 @@ public record CreateTechnicalDraftCommand : IRequest<object>
 
     [DefaultValue(120)]
     public decimal? EstimatedPrintTimePerUnit { get; init; }
-    [DefaultValue(10000)]
-    public decimal UnitPrice { get; set; }
+    [DefaultValue(null)]
+    public decimal? UnitPrice { get; set; }
     [DefaultValue(10)]
     public decimal MarkupPercentage { get; init; }
     [DefaultValue("")]
@@ -71,11 +73,17 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         if (version == null)
             throw new DataNotFoundException(nameof(DesignVersionHistory), request.DesignVersionHistoryId);
 
-        var material = await _context.Materials.Include(m => m.PriceHistories.FirstOrDefault(ph => ph.IsCurrent))
-            .FirstOrDefaultAsync(m => m.Id == request.MaterialId, ct);
+        var currentMaterialPrice = await _context.Materials.AsNoTracking()
+                .Where(m => m.Id == request.MaterialId)
+                .ProjectTo<MaterialDTO>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync(ct);
 
-        if (material == null)
+        if (currentMaterialPrice == null)
+        {
             throw new DataNotFoundException(nameof(Material), request.MaterialId);
+        }
+        decimal unitPrice = request.EstimatedWeightPerUnit * currentMaterialPrice.TotalServiceCostPerGram;
+                                
 
         // 2. Kiểm tra Logic trạng thái (State Machine Validation)
         // Cho phép tạo Draft nếu dự án đã thanh toán (không còn ở SKETCHING/PENDING)
@@ -86,7 +94,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         };
         if (!allowedStatuses.Contains(version.DesignWork.Status))
         {
-            throw new BadRequestException($"Dự án đang ở trạng thái {version.DesignWork.Status}, chưa thể tạo bản thông số kỹ thuật.");
+            throw new BusinessException($"Dự án đang ở trạng thái {version.DesignWork.Status}, chưa thể tạo bản thông số kỹ thuật.", ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
         // 3.Khởi tạo Entity TechnicalDraft
@@ -99,7 +107,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             LayerHeight = request.LayerHeight,
             EstimatedWeightPerUnit = request.EstimatedWeightPerUnit,
             EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit,
-            UnitPrice = request.UnitPrice,
+            UnitPrice = request.UnitPrice ?? unitPrice,
             MarkupPercentage = request.MarkupPercentage,
             TechnicalNote = request.TechnicalNote,
 
