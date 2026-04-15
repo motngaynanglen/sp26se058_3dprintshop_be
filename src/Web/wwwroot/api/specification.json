@@ -2562,6 +2562,33 @@
         }
       }
     },
+    "/api/technical-draft": {
+      "post": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Staff] Tạo bản nháp kỹ thuật mới",
+        "description": "Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho Staff.",
+        "operationId": "PostApiTechnicalDraft",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTechnicalDraftCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/transaction/payos-webhook": {
       "post": {
         "tags": [
@@ -3781,6 +3808,11 @@
             "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
+          "sourceLogId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
           "newDesignName": {
             "type": "string",
             "nullable": true
@@ -4041,6 +4073,56 @@
       "DeleteShippingAddressCommand": {
         "type": "object",
         "additionalProperties": false
+      },
+      "CreateTechnicalDraftCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designVersionHistoryId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "infillDensity": {
+            "type": "integer",
+            "format": "int32",
+            "default": 20
+          },
+          "layerHeight": {
+            "type": "number",
+            "format": "decimal",
+            "default": 0.2
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "default": 150.5
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "default": 120,
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "decimal",
+            "default": 10000
+          },
+          "markupPercentage": {
+            "type": "number",
+            "format": "decimal",
+            "default": 10
+          },
+          "technicalNote": {
+            "type": "string",
+            "default": "",
+            "nullable": true
+          }
+        }
       },
       "ProcessOnlinePaymentCommand": {
         "type": "object",
