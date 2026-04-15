@@ -26,6 +26,10 @@ public class DesignWorkEndpoints : EndpointGroupBase
         //group.MapGet("{id}/detail", GetDetail)
         //    .WithSummary("[All] Xem chi tiết một công việc thiết kế")
         //    .WithDescription("Trả về thông tin chi tiết cùng các thuộc tính cơ bản của công việc thiết kế.");
+        // Gắn API Quick Print cho khách hàng
+        group.MapPost("/quick-print", CreateQuickPrint)
+            .WithSummary("[Customer] Gửi yêu cầu in 3D từ file có sẵn")
+            .WithDescription("Khách hàng upload tối đa 5 file và gửi yêu cầu để nhân viên báo giá.");
         group.MapPost("/add", Create)
             .WithSummary("[Staff/Manager] Tạo mới công việc thiết kế")
             .WithDescription("Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.");
@@ -42,7 +46,7 @@ public class DesignWorkEndpoints : EndpointGroupBase
     }
 
     public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetPaginationDesignWorkQuery request)
-        {
+    {
         var result = await sender.Send(request);
         return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignWorkDTO>>.OkResponseModel(
                 code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
@@ -50,10 +54,10 @@ public class DesignWorkEndpoints : EndpointGroupBase
                 additionalData: new { pagination = result.Metadata },
                 message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
             ));
-     }
-    
-     public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
-     {
+    }
+
+    public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
+    {
         var result = await sender.Send(new GetDesignWorkDetailQuerry
         {
             Id = id
@@ -64,9 +68,9 @@ public class DesignWorkEndpoints : EndpointGroupBase
                 code: ResponseCodeConstants.SUCCESS
             ));
     }
-    
-     public async Task<IResult> Create([FromServices] ISender sender, [FromBody] CreateDesignWorkCommand request)
-     {
+
+    public async Task<IResult> Create([FromServices] ISender sender, [FromBody] CreateDesignWorkCommand request)
+    {
         var result = await sender.Send(request);
         return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
                 data: result,
@@ -74,9 +78,9 @@ public class DesignWorkEndpoints : EndpointGroupBase
                 code: ResponseCodeConstants.CREATED
             ));
     }
-    
-     public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignWorkCommand command)
-     {
+
+    public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignWorkCommand command)
+    {
         var finalCmd = command with { Id = id };
         var result = await sender.Send(finalCmd);
         return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
@@ -84,7 +88,7 @@ public class DesignWorkEndpoints : EndpointGroupBase
                 message: "Cập nhật công việc thiết kế thành công!",
                 code: ResponseCodeConstants.UPDATED
             ));
-     }
+    }
 
     public async Task<IResult> UpdateIsApprove([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignWorkIsApproveCommand command)
     {
@@ -108,13 +112,22 @@ public class DesignWorkEndpoints : EndpointGroupBase
          ));
     }
 
-        //public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
-        //{
-        //   var result = await sender.Send(new DeleteDesignWorkCommand { Id = id });
-        //   return TypedResults.Ok(BaseResponseModel<string>.OkResponseModel(
-        //           data: result,
-        //           message: "Xóa công việc thiết kế thành công!",
-        //           code: ResponseCodeConstants.DELETED
-        //       ));
-        //}
+    //public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
+    //{
+    //   var result = await sender.Send(new DeleteDesignWorkCommand { Id = id });
+    //   return TypedResults.Ok(BaseResponseModel<string>.OkResponseModel(
+    //           data: result,
+    //           message: "Xóa công việc thiết kế thành công!",
+    //           code: ResponseCodeConstants.DELETED
+    //       ));
+    //}
+    public async Task<IResult> CreateQuickPrint([FromServices] ISender sender, [FromBody] CheckoutQuickPrintCommand request)
+    {
+        var result = await sender.Send(request);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Gửi yêu cầu in thành công! Vui lòng chờ nhân viên kỹ thuật kiểm tra file và báo giá.",
+                code: ResponseCodeConstants.CREATED
+            ));
     }
+}
