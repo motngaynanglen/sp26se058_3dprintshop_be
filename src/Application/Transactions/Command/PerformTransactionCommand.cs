@@ -27,13 +27,15 @@ public record PerformTransactionCommand : IRequest<object>
 public class PerformTransactionCommandHandler : IRequestHandler<PerformTransactionCommand, object>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IOrderWorkflowService _orderWorkflowService;
     private readonly IPaymentService _paymentService;
     private readonly PayOsSettings _payOsSettings;
     private readonly IUser _user;
 
-    public PerformTransactionCommandHandler(IApplicationDbContext context, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings, IUser user)
+    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings, IUser user)
     {
         _context = context;
+        _orderWorkflowService = orderWorkflowService;
         _paymentService = paymentService;
         _payOsSettings = payOsSettings.Value;
         _user = user;
@@ -64,7 +66,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         }
         if (request.PaymentMethod == PaymentMethods.Cash)
         {
-            ProcessOrderWorkflowAfterPayment(order);
+            await _orderWorkflowService.ActivateOrderWorkflowAsync(order, cancellationToken);
         }
         // 5. Tạo Transaction mới dựa trên phương thức thanh toán
         var result = await CreateTransactionByMethodAsync(order, request.PaymentMethod, cancellationToken);
@@ -134,7 +136,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
     private PaymentResponse? TryGetValidPendingPayment(Invoice invoice)
     {
         var pendingTransaction = invoice.Transactions
-            .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending 
+            .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending
                                     && t.PaymentMethod == PaymentMethods.PAYOS);
 
         if (pendingTransaction == null) return null;
@@ -224,32 +226,6 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             $"Phương thức thanh toán '{method}' hiện chưa được hệ thống hỗ trợ.",
             ResponseCodeConstants.NOT_SUPPORTED
         );
-    }
-    private bool ProcessOrderWorkflowAfterPayment(Order order)
-    {
-        // 1. Cập nhật Order sang PROCESSING
-        order.OrderStatus = OrderStatuses.Processing;
-        order.DepositedAt = CoreHelper.SystemTimeNow;
-        // 2. Cập nhật từng OrderItem dựa trên SourceType
-        // Vì Checkout đang dùng SourceType cho toàn bộ Request
-        foreach (var item in order.OrderItems)
-        {
-            if (item.SourceType == SourceTypes.InStock)
-            {
-                // Hàng có sẵn thì chuyển sang "Đang nhặt hàng"
-                item.FulfillmentStatus = OrderItemStatuses.Picking;
-            }
-            if (item.SourceType == SourceTypes.DesignService)
-            {
-                // Hàng thiết kế/in theo yêu cầu
-                item.FulfillmentStatus = OrderItemStatuses.Designing;
-            }
-            if (item.SourceType == SourceTypes.PreOrder || item.SourceType == SourceTypes.PrintService)
-            {
-                item.FulfillmentStatus = OrderItemStatuses.Printing;
-            }
-        }
-        return true;
     }
     #endregion
 }
