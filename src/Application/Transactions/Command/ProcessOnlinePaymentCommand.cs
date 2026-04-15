@@ -3,6 +3,7 @@ using System.Text;
 using PayOS.Models.Webhooks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
@@ -15,9 +16,11 @@ public class ProcessOnlinePaymentCommand : IRequest<string>
     public class ProcessOnlinePaymentCommandHandler : IRequestHandler<ProcessOnlinePaymentCommand, string>
     {
         private readonly IPaymentService _paymentService;
+        private readonly IOrderWorkflowService _orderWorkflowService;
         private readonly IApplicationDbContext _context;
-        public ProcessOnlinePaymentCommandHandler(IPaymentService paymentService, IApplicationDbContext context)
+        public ProcessOnlinePaymentCommandHandler(IPaymentService paymentService,IOrderWorkflowService orderWorkflowService, IApplicationDbContext context)
         {
+            _orderWorkflowService = orderWorkflowService;
             _paymentService = paymentService;
             _context = context;
         }
@@ -31,7 +34,8 @@ public class ProcessOnlinePaymentCommand : IRequest<string>
 
             var transaction = await _context.Transactions
                      .Include(t => t.Invoice)
-                     .ThenInclude(i => i.Order)
+                        .ThenInclude(i => i.Order)
+                            .ThenInclude(o => o.OrderItems)
                      .FirstOrDefaultAsync(t => t.InternalCode == internalCode);
             if (transaction == null || transaction.TransactionStatus == TransactionStatuses.Success)
             {
@@ -40,26 +44,24 @@ public class ProcessOnlinePaymentCommand : IRequest<string>
 
             transaction.TransactionStatus = TransactionStatuses.Success;
             transaction.ExternalTransactionId = verifiedData.Reference;
+            transaction.LastModified = CoreHelper.SystemTimeNow;
 
-            Invoice invoice = transaction.Invoice;
-            // Kiểm tra xem tổng các giao dịch thành công đã đủ tiền chưa
-            // (Phòng trường hợp khách thanh toán nhiều lần cho 1 hóa đơn)
-            var totalPaid = await _context.Transactions
-                .Where(t => t.InvoiceId == invoice.Id && t.TransactionStatus == TransactionStatuses.Success)
-                .SumAsync(t => t.Amount);
-
-            //if (totalPaid >= invoice.TotalAmount)
-            //{
+            Invoice invoice = transaction.Invoice!;
             invoice.PaymentStatus = InvoiceStatuses.Paid;
+            invoice.LastModified = CoreHelper.SystemTimeNow;
+
             var order = invoice.Order;
-            order.OrderStatus = OrderStatuses.Processing;
-            order.DepositedAt = CoreHelper.SystemTimeNow;
-            //}
-            //else
-            //{
-            //    invoice.PaymentStatus = "Partially Paid";
-            //}
-            await _context.SaveChangesAsync(cancellationToken);
+            await _orderWorkflowService.ActivateOrderWorkflowAsync(order, cancellationToken);
+
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw new UpdateFailureException($"Lỗi cập nhật Webhook: {ex.Message}");
+            }
+
             return order.Code;
         }
     }

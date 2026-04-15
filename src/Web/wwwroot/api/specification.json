@@ -1909,7 +1909,7 @@
           "Order"
         ],
         "summary": "[Customer] Tạo đơn hàng mới từ giỏ hàng.",
-        "description": "Hỗ trợ các loại nguồn hàng: IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
+        "description": "Hỗ trợ các loại nguồn hàng: IN_STOCK, PRE_ORDER",
         "operationId": "PostApiOrderCheckout",
         "requestBody": {
           "x-name": "command",
@@ -1930,20 +1930,47 @@
         }
       }
     },
-    "/api/order/checkoutdesign": {
+    "/api/order/checkout-design": {
       "post": {
         "tags": [
           "Order"
         ],
         "summary": "[Customer] Tạo đơn hàng mới từ thiết kế.",
-        "description": "Hỗ trợ các loại nguồn hàng: IN_STOCK, PRE_ORDER, DESIGN_SERVICE, PRINT_SERVICE",
-        "operationId": "PostApiOrderCheckoutdesign",
+        "description": "Hỗ trợ các loại nguồn hàng: DESIGN_SERVICE",
+        "operationId": "PostApiOrderCheckoutDesign",
         "requestBody": {
           "x-name": "command",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CheckoutDesignWorkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/order/checkout-draft": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Customer] Tạo đơn sản xuất các bản thiết kế từ dịch vụ thiết kế.",
+        "description": "Hỗ trợ các loại nguồn hàng: PRINT_SERVICE",
+        "operationId": "PostApiOrderCheckoutDraft",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutDraftsCommand"
               }
             }
           },
@@ -3805,7 +3832,6 @@
           "designWorkId": {
             "type": "string",
             "format": "guid",
-            "default": "00000000-0000-0000-0000-000000000001",
             "nullable": true
           },
           "sourceLogId": {
@@ -3836,6 +3862,40 @@
               "type": "string",
               "format": "guid"
             }
+          }
+        }
+      },
+      "CheckoutDraftsCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shippingAddressId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckoutDraftsItemRequest"
+            }
+          }
+        }
+      },
+      "CheckoutDraftsItemRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "technicalDraftId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -4110,7 +4170,7 @@
           "unitPrice": {
             "type": "number",
             "format": "decimal",
-            "default": 10000
+            "nullable": true
           },
           "markupPercentage": {
             "type": "number",
