@@ -12,7 +12,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/concept-tag")
-                       .WithTags("ConceptTag")
+                       .WithTags("Concept Tag")
                        .WithOpenApi();
 
         group.MapGet("/all", GetAll)
