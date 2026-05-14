@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-[Authorize(Roles = Roles.SystemAdmin)]
+[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
 public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>>
 {
     [DefaultValue("CUSTOMER")]
@@ -19,11 +19,11 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
     [DefaultValue("Nguyen van a")]
     public string? Search { get; init; }
 
-    // S?p x?p
+    // Sorting
     [DefaultValue("Name")]
     public string? SortBy { get; init; } // "Name", "Phone", "Created", "Deleted"
     public bool SortDescending { get; init; } = false;
-    // Có d? li?u xóa m?m
+    // Include soft-deleted records
     public bool IncludeDeleted { get; init; } = false;
     // Paging
     public PaginationData Paging { get; init; } = new();
@@ -33,11 +33,13 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IUser _user;
 
-        public GetAccountsWithPaginationQueryHandler(IApplicationDbContext context, IMapper mapper)
+        public GetAccountsWithPaginationQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
         {
             _context = context;
             _mapper = mapper;
+            _user = user;
         }
 
         public async Task<PaginatedList<AccountDTO>> Handle(GetAccountsWithPaginationQuery request, CancellationToken cancellationToken)
@@ -47,7 +49,12 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
             {
                 query = query.IgnoreQueryFilters();
             }
-            // 1. Search theo thông tin co b?n trong b?ng Account
+
+            if (_user.Role == Roles.MANAGER)
+            {
+                query = query.Where(x => x.Staff != null);
+            }
+            // 1. Search by basic account information.
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var s = request.Search.ToLower();
@@ -56,7 +63,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                     x.Fullname.ToLower().Contains(s) ||
                     x.Email.ToLower().Contains(s));
             }
-            // 2. Filter theo Role (D?a trên quan h? 1-1)
+            // 2. Filter by role based on 1-1 relationships.
             if (!string.IsNullOrEmpty(request.Role))
             {
                 query = request.Role.ToUpper() switch
@@ -67,7 +74,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                     _ => query
                 };
             }
-            // 3. s?p x?p
+            // 3. Sort.
             query = request.SortBy switch
             {
                 "Name" => request.SortDescending ? query.OrderByDescending(x => x.Fullname) : query.OrderBy(x => x.Fullname),
@@ -75,7 +82,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                 "Phone" => request.SortDescending ? query.OrderByDescending(x => x.ContactPhone) : query.OrderBy(x => x.ContactPhone),
                 "Created" => request.SortDescending ? query.OrderByDescending(x => x.Created) : query.OrderBy(x => x.Created),
                 "Deleted" => request.SortDescending ? query.OrderByDescending(x => x.Deleted) : query.OrderBy(x => x.Deleted),
-                _ => query.OrderBy(x => x.Username) // M?c d?nh theo Username
+                _ => query.OrderBy(x => x.Username)
             };
 
             return await query
@@ -84,3 +91,5 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
         }
     }
 }
+
+
