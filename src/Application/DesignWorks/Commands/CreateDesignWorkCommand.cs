@@ -10,10 +10,11 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
-//[Authorize(Roles = Roles.CUSTOMER)]
+[Authorize(Roles = Roles.CUSTOMER)]
 public record CreateDesignWorkCommand : IRequest<DesignWorkDTO>
 {
     [DefaultValue("Thiết kế mô hình nhân vật Custom")]
@@ -52,14 +53,18 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
 
         if (customer == null) throw new NotFoundException(nameof(Customer), currentUserId);
 
+        var designWorkId = Guid.NewGuid();
+
         // 1. Khởi tạo DesignWork
         var designWork = new DesignWork
         {
-            Id = Guid.NewGuid(),
+            Id = designWorkId,
+            RootDesignWorkId = designWorkId,
+            RelationshipType = DesignRelationshipType.Original,
             Name = request.Name,
             BaseImageUrl = request.BaseImageUrl,
             CustomerId = customer.Id,
-            Status = DesignWorkStatus.Pending,
+            Status = DesignWorkStatus.Sketching,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "SYSTEM"
         };
@@ -69,7 +74,7 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
         {
             Id = Guid.NewGuid(),
             DesignWorkId = designWork.Id,
-            LogType = "COMMUNICATION",
+            LogType = DesignLogType.Communication,
             Content = $"Khách hàng đã tạo yêu cầu thiết kế: {request.Name}",
             IsAI = false,
             AccountId = Guid.Parse(currentUserId),
@@ -99,6 +104,9 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
                 CreatedBy = _user.Username ?? "SYSTEM"
             };
             _context.DesignVersionHistorys.Add(firstVersion);
+
+            initialLog.LogType = DesignLogType.VersionUpdate;
+            initialLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new List<string> { request.InitialFileUrl });
         }
 
         try

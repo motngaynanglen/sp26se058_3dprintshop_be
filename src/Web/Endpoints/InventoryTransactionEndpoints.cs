@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using sp26se058_3dprintshop_be.Application.Common.Attributes;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.InventoryTransactions.Commands;
 using sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -15,7 +17,9 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
                        .WithTags("Inventory Transaction")
                        .WithOpenApi();
 
-        group.MapPost("/query", QueryTransactions)
+        group.MapGet("/query", QueryTransactions)
+                .WithSummary("[Staff/Manager] Lấy danh sách lịch sử biến động kho (Paging, Filter).");
+        group.MapPost("/query", QueryTransactionsPost)
                 .WithSummary("[Staff/Manager] Lấy danh sách lịch sử biến động kho (Paging, Filter).");
 
         group.MapGet("/reference/{orderId}", GetByReference)
@@ -25,23 +29,40 @@ public class InventoryTransactionEndpoints : EndpointGroupBase
                 .WithSummary("[Staff/Manager] Tạo mới một giao dịch kho (Nhập/Xuất/Điều chỉnh).");
     }
 
-    public async Task<IResult> QueryTransactions([FromServices] ISender sender, [FromBody] GetInventoryTransactionsWithPaginationQuery query)
-    {
+    //public async Task<IResult> QueryTransactions([FromServices] ISender sender,  [AsParameters]  GetInventoryTransactionsWithPaginationQuery query)
+    //{
 
+    //    var result = await sender.Send(query);
+
+    //    return TypedResults.Ok(
+    //        BaseResponseModel<IEnumerable<InventoryTransactionDTO>>
+    //            .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+    //            );
+    //}
+    public async Task<IResult> QueryTransactions(
+    [FromServices] ISender sender,
+    [AsParameters] GetInventoryTransactionsWithPaginationQuery query) // Chỉ dùng một mình cái này
+    {
+        // Không cần gán query.Types = types nữa vì .NET đã tự map vào query.Types rồi
         var result = await sender.Send(query);
 
-        //return TypedResults.Ok(BaseResponseModel<IEnumerable<InventoryTransactionDTO>>.OkResponseModel(
-        //        code: ResponseCodeConstants.SUCCESS,
-        //        data: result.Items,
-        //        additionalData: new { paging = result.Metadata },
-        //        message: "Lấy danh sách biến động kho thành công"
-        //    ));
         return TypedResults.Ok(
             BaseResponseModel<IEnumerable<InventoryTransactionDTO>>
                 .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
-                );
+        );
     }
+    public async Task<IResult> QueryTransactionsPost(
+    [FromServices] ISender sender,
+    [FromBody] GetInventoryTransactionsWithPaginationQuery query) // Chỉ dùng một mình cái này
+    {
+        // Không cần gán query.Types = types nữa vì .NET đã tự map vào query.Types rồi
+        var result = await sender.Send(query);
 
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<InventoryTransactionDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+        );
+    }
     public async Task<IResult> GetByReference([FromServices] ISender sender, [FromRoute] Guid orderId)
     {
 

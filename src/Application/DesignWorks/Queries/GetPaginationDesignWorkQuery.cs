@@ -11,6 +11,7 @@ using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
 
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public class GetPaginationDesignWorkQuery : PaginationRequest, IRequest<PaginatedList<DesignWorkDTO>>
 {
     [DefaultValue("")]

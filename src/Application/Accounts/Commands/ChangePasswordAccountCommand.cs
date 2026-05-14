@@ -12,7 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.Authenticated)]
 public record ChangePasswordAccountCommand : IRequest<bool>
 {
     [DefaultValue("Matkhaucu123")]

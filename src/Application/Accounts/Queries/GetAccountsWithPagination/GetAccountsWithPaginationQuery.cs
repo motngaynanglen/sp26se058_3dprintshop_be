@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin)]
 public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>>
 {
     [DefaultValue("CUSTOMER")]
@@ -19,11 +19,11 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
     [DefaultValue("Nguyen van a")]
     public string? Search { get; init; }
 
-    // Sắp xếp
+    // S?p x?p
     [DefaultValue("Name")]
     public string? SortBy { get; init; } // "Name", "Phone", "Created", "Deleted"
     public bool SortDescending { get; init; } = false;
-    // Có dữ liệu xóa mềm
+    // C� d? li?u x�a m?m
     public bool IncludeDeleted { get; init; } = false;
     // Paging
     public PaginationData Paging { get; init; } = new();
@@ -47,7 +47,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
             {
                 query = query.IgnoreQueryFilters();
             }
-            // 1. Search theo thông tin cơ bản trong bảng Account
+            // 1. Search theo th�ng tin co b?n trong b?ng Account
             if (!string.IsNullOrEmpty(request.Search))
             {
                 var s = request.Search.ToLower();
@@ -56,7 +56,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                     x.Fullname.ToLower().Contains(s) ||
                     x.Email.ToLower().Contains(s));
             }
-            // 2. Filter theo Role (Dựa trên quan hệ 1-1)
+            // 2. Filter theo Role (D?a tr�n quan h? 1-1)
             if (!string.IsNullOrEmpty(request.Role))
             {
                 query = request.Role.ToUpper() switch
@@ -67,7 +67,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                     _ => query
                 };
             }
-            // 3. sắp xếp
+            // 3. s?p x?p
             query = request.SortBy switch
             {
                 "Name" => request.SortDescending ? query.OrderByDescending(x => x.Fullname) : query.OrderBy(x => x.Fullname),
@@ -75,7 +75,7 @@ public class GetAccountsWithPaginationQuery : IRequest<PaginatedList<AccountDTO>
                 "Phone" => request.SortDescending ? query.OrderByDescending(x => x.ContactPhone) : query.OrderBy(x => x.ContactPhone),
                 "Created" => request.SortDescending ? query.OrderByDescending(x => x.Created) : query.OrderBy(x => x.Created),
                 "Deleted" => request.SortDescending ? query.OrderByDescending(x => x.Deleted) : query.OrderBy(x => x.Deleted),
-                _ => query.OrderBy(x => x.Username) // Mặc định theo Username
+                _ => query.OrderBy(x => x.Username) // M?c d?nh theo Username
             };
 
             return await query

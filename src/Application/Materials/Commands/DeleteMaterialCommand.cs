@@ -5,10 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public record DeleteMaterialCommand : IRequest<bool>
 {
     [JsonIgnore] // Ẩn khỏi JSON Body và Swagger

@@ -20,7 +20,9 @@ public class ModelGenerateEndpoints : EndpointGroupBase
 
     public async Task<IResult> Generate(
     [FromServices] ISender sender,
-    [FromForm] IFormFile? Image)   // ← Truyền trực tiếp file, không qua Command
+    [FromForm] IFormFile? Image,
+    [FromForm] Guid? DesignWorkId,
+    [FromForm] string? Prompt)   // ← Truyền trực tiếp file, không qua Command
     {
         if (Image == null || Image.Length == 0)
             return TypedResults.BadRequest("Vui lòng chọn file ảnh");
@@ -28,7 +30,12 @@ public class ModelGenerateEndpoints : EndpointGroupBase
         try
         {
             // Tạo command từ file
-            var command = new GenerateModelCommand { Image = Image };
+            var command = new GenerateModelCommand
+            {
+                Image = Image,
+                DesignWorkId = DesignWorkId,
+                Prompt = Prompt
+            };
 
             var resultUrl = await sender.Send(command);
 
