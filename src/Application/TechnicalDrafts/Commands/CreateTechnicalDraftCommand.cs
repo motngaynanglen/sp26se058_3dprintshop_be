@@ -15,7 +15,7 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 using static Amazon.S3.Util.S3EventNotification;
 
 namespace sp26se058_3dprintshop_be.Application.TechnicalDrafts.Commands;
-[Authorize(Roles = Roles.STAFF)]
+[Authorize(Roles = Roles.StaffOrManager)]
 public record CreateTechnicalDraftCommand : IRequest<object>
 {
     public Guid DesignVersionHistoryId { get; init; }

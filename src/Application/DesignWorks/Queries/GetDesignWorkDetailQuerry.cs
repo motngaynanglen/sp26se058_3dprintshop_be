@@ -8,6 +8,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
 
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public record GetDesignWorkDetailQuerry : IRequest<DesignWorkDTO>
 {
     [JsonIgnore]
@@ -29,11 +30,18 @@ public class GetDesignWorkDetailQuerryHandler : IRequestHandler<GetDesignWorkDet
     {
         var query = _context.DesignWorks.AsNoTracking();
         bool isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
-        Customer customer = (Customer)_context.Customers.Where(c => c.Account.Id.Equals(_user.Id));
         if (!isStaffOrManager)
         {
-            // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-            
+            var userId = _user.Id.ToGuid();
+            var customer = await _context.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.AccountId == userId, cancellationToken);
+
+            if (customer == null)
+            {
+                throw new ForbiddenAccessException();
+            }
+
             query = query.Where(dv => dv.CustomerId.Equals(customer.Id));
         }
         var designWork = await query.FirstOrDefaultAsync(dv => dv.Id.Equals(request.Id), cancellationToken);

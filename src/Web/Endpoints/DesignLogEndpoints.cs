@@ -5,6 +5,8 @@ using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
 using sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
+using sp26se058_3dprintshop_be.Web.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -37,9 +39,17 @@ public class DesignLogEndpoints : EndpointGroupBase
             ));
     }
 
-    public async Task<IResult> CreateChatLog([FromServices] ISender sender, [FromBody] CreateDesignLogCommand request)
+    public async Task<IResult> CreateChatLog(
+        [FromServices] ISender sender,
+        [FromServices] IHubContext<DesignWorkChatHub> hubContext,
+        [FromBody] CreateDesignLogCommand request)
     {
         var result = await sender.Send(request);
+
+        await hubContext.Clients
+            .Group(DesignWorkChatHub.GetGroupName(result.DesignWorkId))
+            .SendAsync(DesignWorkChatHub.ReceiveDesignLogEvent, result);
+
         return TypedResults.Ok(BaseResponseModel<DesignLogDTO>.OkResponseModel(
                 code: ResponseCodeConstants.SUCCESS,
                 data: result,
