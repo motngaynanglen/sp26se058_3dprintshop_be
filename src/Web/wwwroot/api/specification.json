@@ -375,7 +375,7 @@
     "/api/app-support/presigned-image-url": {
       "get": {
         "tags": [
-          "AppSupport"
+          "App Support"
         ],
         "summary": "Lấy link upload ảnh (Max 5MB); Trước mắt không bắt giới hạn.",
         "description": "(Hỗ trợ: .jpg, .png, .webp); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
@@ -401,7 +401,7 @@
     "/api/app-support/presigned-model-url": {
       "get": {
         "tags": [
-          "AppSupport"
+          "App Support"
         ],
         "summary": "Lấy link upload file 3D (Max 100MB)",
         "description": "(Hỗ trợ: .glb, .stl); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
@@ -427,7 +427,7 @@
     "/api/app-support/test-upload-to-b2": {
       "post": {
         "tags": [
-          "AppSupport"
+          "App Support"
         ],
         "operationId": "PostApiAppSupportTestUploadToB2",
         "parameters": [
@@ -597,7 +597,7 @@
     "/api/concept-tag/all": {
       "get": {
         "tags": [
-          "ConceptTag"
+          "Concept Tag"
         ],
         "summary": "[All] Truy vấn danh sách tag.",
         "operationId": "GetApiConceptTagAll",
@@ -611,7 +611,7 @@
     "/api/concept-tag/query": {
       "post": {
         "tags": [
-          "ConceptTag"
+          "Concept Tag"
         ],
         "summary": "[All] Truy vấn danh sách với search và paging.",
         "operationId": "PostApiConceptTagQuery",
@@ -637,7 +637,7 @@
     "/api/concept-tag/add": {
       "post": {
         "tags": [
-          "ConceptTag"
+          "Concept Tag"
         ],
         "summary": "[Manager] Thêm Tag.",
         "operationId": "PostApiConceptTagAdd",
@@ -663,7 +663,7 @@
     "/api/concept-tag/{id}/update": {
       "put": {
         "tags": [
-          "ConceptTag"
+          "Concept Tag"
         ],
         "summary": "[Manager] Cập nhật nội dung tag.",
         "operationId": "PutApiConceptTagUpdate",
@@ -701,7 +701,7 @@
     "/api/concept-tag/{id}/delete": {
       "put": {
         "tags": [
-          "ConceptTag"
+          "Concept Tag"
         ],
         "summary": "[Manager] Xóa concept tag và các tag được dán trên sản phẩm với tag ID.",
         "operationId": "PutApiConceptTagDelete",
@@ -2324,7 +2324,7 @@
     "/api/service-option/all": {
       "get": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[All] Lấy danh sách tùy chọn dịch vụ.",
         "operationId": "GetApiServiceOptionAll",
@@ -2338,7 +2338,7 @@
     "/api/service-option/add": {
       "post": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[Staff/Manager] Tạo tùy chọn dịch vụ mới.",
         "operationId": "PostApiServiceOptionAdd",
@@ -2364,7 +2364,7 @@
     "/api/service-option/{id}/update": {
       "patch": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[Staff/Manager] Cập nhật thông tin tùy chọn.",
         "operationId": "PatchApiServiceOptionUpdate",
@@ -2402,7 +2402,7 @@
     "/api/service-option/{id}/active": {
       "patch": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[Staff/Manager] Kích hoạt tùy chọn.",
         "operationId": "PatchApiServiceOptionActive",
@@ -2428,7 +2428,7 @@
     "/api/service-option/{id}/deactive": {
       "patch": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[Staff/Manager] Ngưng kích hoạt tùy chọn.",
         "operationId": "PatchApiServiceOptionDeactive",
@@ -2454,7 +2454,7 @@
     "/api/service-option/{id}/delete": {
       "delete": {
         "tags": [
-          "ServiceOption"
+          "Service Option"
         ],
         "summary": "[Staff/Manager] Xóa tùy chọn dịch vụ.",
         "operationId": "DeleteApiServiceOptionDelete",
@@ -2719,7 +2719,7 @@
     "/api/shipping-address/add": {
       "post": {
         "tags": [
-          "ShippingAddress"
+          "Shipping Address"
         ],
         "summary": "[Customer] Thêm địa chỉ nhận hàng mới.",
         "operationId": "PostApiShippingAddressAdd",
@@ -2745,7 +2745,7 @@
     "/api/shipping-address/my": {
       "get": {
         "tags": [
-          "ShippingAddress"
+          "Shipping Address"
         ],
         "summary": "[Customer] Lấy danh sách địa chỉ.",
         "operationId": "GetApiShippingAddressMy",
@@ -2759,7 +2759,7 @@
     "/api/shipping-address/{id}/update": {
       "patch": {
         "tags": [
-          "ShippingAddress"
+          "Shipping Address"
         ],
         "summary": "[Customer] Cập nhật địa chỉ của bản thân có ID.",
         "operationId": "PatchApiShippingAddressUpdate",
@@ -2797,7 +2797,7 @@
     "/api/shipping-address/{id}/remove": {
       "delete": {
         "tags": [
-          "ShippingAddress"
+          "Shipping Address"
         ],
         "summary": "[Customer] Xóa địa chỉ có ID.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
