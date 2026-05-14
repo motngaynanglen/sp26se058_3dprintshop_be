@@ -12,7 +12,7 @@ public class AppSupportEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/app-support")
-                        .WithTags("AppSupport")
+                        .WithTags("App Support")
                         .WithOpenApi();
         // API dành riêng cho hình ảnh (Preview, Avatar, Minh họa)
         group.MapGet("/presigned-image-url", GetPresignedImageUrl)
