@@ -1383,6 +1383,72 @@
         }
       }
     },
+    "/api/design-work/{id}/lock": {
+      "patch": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Customer/Staff/Manager] Khóa công việc thiết kế",
+        "description": "Khóa DesignWork để bảo toàn lịch sử sau khi đã chốt file hoặc kết thúc hỗ trợ.",
+        "operationId": "PatchApiDesignWorkLock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/request-rework": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Customer] Yêu cầu chỉnh sửa thêm",
+        "description": "Tạo một DesignWork revision mới từ DesignWork đã có, giữ quan hệ Parent/Root để tra lịch sử.",
+        "operationId": "PostApiDesignWorkRequestRework",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestDesignWorkReworkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feedback/my-pending": {
       "post": {
         "tags": [
@@ -1931,6 +1997,27 @@
         ],
         "summary": "Tạo mô hình 3D từ ảnh",
         "operationId": "PostApiModelGenerate",
+        "parameters": [
+          {
+            "name": "DesignWorkId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Prompt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -3210,6 +3297,11 @@
             "type": "string",
             "format": "guid"
           },
+          "parentLogId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
           "content": {
             "type": "string",
             "default": "Nội dung log",
@@ -3682,6 +3774,22 @@
       "UpdateDesignVersionHistoryIsPrintableCommand": {
         "type": "object",
         "additionalProperties": false
+      },
+      "RequestDesignWorkReworkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "type": "string",
+            "default": "Chỉnh lại chi tiết khuôn mặt và tăng độ dày thành in",
+            "nullable": true
+          },
+          "sourceVersionHistoryId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          }
+        }
       },
       "GetPendingFeedbacksQuery": {
         "allOf": [

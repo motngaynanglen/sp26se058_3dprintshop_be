@@ -4,21 +4,43 @@ using System.Text.Json.Serialization;
 using MediatR;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
 
+[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
 public record CreateDesignLogCommand : IRequest<DesignLogDTO>
 {
     //[DefaultValue(000)]
     public Guid DesignWorkId { get; init; }
+    public Guid? ParentLogId { get; init; }
     [DefaultValue("Nội dung log")]
     public string? Content { get; init; }
     [DefaultValue("[\"https://f005.backblazeb2.com/file/3dprintshop/models/62b1ae312d6a48b69972d17e8058fe4c.glb\"]")]
     public List<string>? ImageUrls { get; init; }
     [DefaultValue("COMMUNICATION hoặc INTERNAL_NOTE")]
     public string LogType { get; init; } = "COMMUNICATION";
+}
+
+public class CreateDesignLogCommandValidator : AbstractValidator<CreateDesignLogCommand>
+{
+    public CreateDesignLogCommandValidator()
+    {
+        RuleFor(x => x.DesignWorkId)
+            .NotEmpty();
+
+        RuleFor(x => x.LogType)
+            .NotEmpty()
+            .Must(x => DesignLogType.All.Any(t => t.Value == x))
+            .WithMessage("LogType is invalid.");
+
+        RuleFor(x => x)
+            .Must(x => !string.IsNullOrWhiteSpace(x.Content) || (x.ImageUrls?.Any() ?? false))
+            .WithMessage("Content or ImageUrls is required.");
+    }
 }
 
 public class CreateDesignLogCommandHandler : IRequestHandler<CreateDesignLogCommand, DesignLogDTO>
@@ -36,12 +58,32 @@ public class CreateDesignLogCommandHandler : IRequestHandler<CreateDesignLogComm
 
     public async Task<DesignLogDTO> Handle(CreateDesignLogCommand request, CancellationToken cancellationToken)
     {
+        var designWorkExists = await _context.DesignWorks
+            .AnyAsync(x => x.Id == request.DesignWorkId, cancellationToken);
+
+        if (!designWorkExists)
+        {
+            throw new DataNotFoundException(nameof(DesignWork), request.DesignWorkId);
+        }
+
+        if (request.ParentLogId.HasValue)
+        {
+            var parentLogExists = await _context.DesignLogs
+                .AnyAsync(x => x.Id == request.ParentLogId && x.DesignWorkId == request.DesignWorkId, cancellationToken);
+
+            if (!parentLogExists)
+            {
+                throw new DataNotFoundException(nameof(DesignLog), request.ParentLogId.Value);
+            }
+        }
+
         var log = new DesignLog
         {
             Id = Guid.NewGuid(),
             DesignWorkId = request.DesignWorkId,
+            ParentLogId = request.ParentLogId,
             AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
-            Content = request.Content,
+            Content = request.Content?.Trim(),
             LogType = request.LogType,
             IsAI = false,
             Metadata = request.ImageUrls != null ? JsonSerializer.Serialize(request.ImageUrls) : null,
@@ -52,6 +94,12 @@ public class CreateDesignLogCommandHandler : IRequestHandler<CreateDesignLogComm
         _context.DesignLogs.Add(log);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<DesignLogDTO>(log);
+        return await _context.DesignLogs
+            .AsNoTracking()
+            .Include(x => x.Account)
+            .Include(x => x.VersionHistories)
+            .Where(x => x.Id == log.Id)
+            .ProjectTo<DesignLogDTO>(_mapper.ConfigurationProvider)
+            .SingleAsync(cancellationToken);
     }
 }

@@ -37,8 +37,8 @@ public class CheckoutQuickPrintCommandValidator : AbstractValidator<CheckoutQuic
 
         RuleForEach(v => v.FileUrls)
             .NotEmpty().WithMessage("Đường dẫn file không được để trống.")
-            .Must(url => url.Contains(".glb") || url.Contains(".stl"))
-            .WithMessage("Hệ thống chỉ hỗ trợ định dạng .glb hoặc .stl");
+            .Must(url => url.Contains(".glb") || url.Contains(".stl") || url.Contains(".obj"))
+            .WithMessage("Hệ thống chỉ hỗ trợ định dạng .glb, .stl hoặc .obj");
 
         RuleFor(v => v.Description)
             .MaximumLength(1000).WithMessage("Mô tả không được quá 1000 ký tự.");
@@ -87,6 +87,7 @@ public class CheckoutQuickPrintCommandHandler : IRequestHandler<CheckoutQuickPri
             DesignWorkId = newWorkId,
             AccountId = userId,
             Content = request.Description ?? "Khách hàng gửi file in gốc.",
+            Metadata = JsonSerializer.Serialize(request.FileUrls),
             LogType = DesignLogType.VersionUpdate, // Đánh dấu là phiên bản file
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
