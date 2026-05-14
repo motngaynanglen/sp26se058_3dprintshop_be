@@ -14,7 +14,7 @@ public class ServiceOptionsEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/service-option")
-                       .WithTags("ServiceOption")
+                       .WithTags("Service Option")
                        .WithOpenApi();
 
 
