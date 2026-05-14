@@ -18,7 +18,9 @@ public class IdentityService : IIdentityService
     public async Task<bool> IsInRoleAsync(string userId, string role)
     {
 
-        return await Task.FromResult(_user.Id == userId && _user.Role == role);
+        return await Task.FromResult(
+            _user.Id == userId &&
+            string.Equals(_user.Role, role, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<bool> AuthorizeAsync(string userId, string policyName)

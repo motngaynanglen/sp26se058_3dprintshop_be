@@ -9,6 +9,8 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
+
+[Authorize(Roles = Roles.Authenticated)]
 public class GetAccountMineDetailQuery : IRequest<AccountDTO>
 {
     public class GetAccountMineDetailQueryHandler : IRequestHandler<GetAccountMineDetailQuery, AccountDTO>

@@ -14,7 +14,7 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
-//[Authorize(Roles = Roles.CUSTOMER)]
+[Authorize(Roles = Roles.CUSTOMER)]
 public record CreateDesignWorkCommand : IRequest<DesignWorkDTO>
 {
     [DefaultValue("Thiết kế mô hình nhân vật Custom")]

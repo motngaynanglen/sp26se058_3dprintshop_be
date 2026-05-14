@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Principal;
@@ -12,10 +12,10 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin)]
 public record DeleteAccountCommand : IRequest<bool>
 {
-    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
+    [JsonIgnore] // ?n kh?i JSON Body v� Swagger
     public Guid Id { get; init; }
 }
 public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand, bool>
@@ -32,12 +32,12 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
     {
         var userId = _user.Id.ToGuid();
   
-        // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
+        // 1. Ki?m tra Username ho?c Email d� t?n t?i chua
         var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
         if (account == null)
         {
-            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+            throw new Exception("T�i kho?n kh�ng t?n t?i trong h? th?ng.");
         }
         if (!account.IsActive)
         {
@@ -48,7 +48,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         }
         else
         {
-            throw new Exception("Tài khoản đang hoạt động! Hãy hủy quyền trước.");
+            throw new Exception("T�i kho?n dang ho?t d?ng! H�y h?y quy?n tru?c.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;

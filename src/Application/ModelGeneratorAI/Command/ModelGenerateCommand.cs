@@ -10,10 +10,12 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 using System.Text.Json;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.ModelGeneratorAI.Command;
 
 // ==================== COMMAND ====================
+[Authorize(Roles = Roles.CUSTOMER)]
 public record GenerateModelCommand : IRequest<string>
 {
     [Required(ErrorMessage = "Vui lòng chọn ảnh để tạo mô hình")]
@@ -70,6 +72,16 @@ public class GenerateModelCommandHandler : IRequestHandler<GenerateModelCommand,
             if (!designWorkExists)
             {
                 throw new DataNotFoundException(nameof(DesignWork), request.DesignWorkId.Value);
+            }
+
+            var userId = _user.Id.ToGuid();
+            var customerOwnsDesignWork = await _context.Customers
+                .AsNoTracking()
+                .AnyAsync(x => x.AccountId == userId && x.DesignWorks.Any(dw => dw.Id == request.DesignWorkId.Value), cancellationToken);
+
+            if (!customerOwnsDesignWork)
+            {
+                throw new ForbiddenAccessException();
             }
 
             var aiLog = new DesignLog

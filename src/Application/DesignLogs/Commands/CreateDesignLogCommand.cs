@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
 
-[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public record CreateDesignLogCommand : IRequest<DesignLogDTO>
 {
     //[DefaultValue(000)]
@@ -58,12 +58,32 @@ public class CreateDesignLogCommandHandler : IRequestHandler<CreateDesignLogComm
 
     public async Task<DesignLogDTO> Handle(CreateDesignLogCommand request, CancellationToken cancellationToken)
     {
-        var designWorkExists = await _context.DesignWorks
-            .AnyAsync(x => x.Id == request.DesignWorkId, cancellationToken);
+        var designWork = await _context.DesignWorks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.DesignWorkId, cancellationToken);
 
-        if (!designWorkExists)
+        if (designWork == null)
         {
             throw new DataNotFoundException(nameof(DesignWork), request.DesignWorkId);
+        }
+
+        var isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
+        if (!isStaffOrManager)
+        {
+            var userId = _user.Id.ToGuid();
+            var customerOwnsDesignWork = await _context.Customers
+                .AsNoTracking()
+                .AnyAsync(x => x.AccountId == userId && x.Id == designWork.CustomerId, cancellationToken);
+
+            if (!customerOwnsDesignWork)
+            {
+                throw new ForbiddenAccessException();
+            }
+
+            if (request.LogType == DesignLogType.InternalNote)
+            {
+                throw new ForbiddenAccessException("Khách hàng không được tạo ghi chú nội bộ.");
+            }
         }
 
         if (request.ParentLogId.HasValue)

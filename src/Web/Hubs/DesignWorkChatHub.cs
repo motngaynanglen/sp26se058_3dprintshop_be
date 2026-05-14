@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Web.Hubs;
 
-[Authorize]
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public class DesignWorkChatHub : Hub
 {
     public const string Route = "/hubs/design-work-chat";
