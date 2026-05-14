@@ -4,6 +4,7 @@ using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Options;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 using sp26se058_3dprintshop_be.Infrastructure.Service;
+using sp26se058_3dprintshop_be.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,8 @@ app.UseSwaggerUi(settings =>
 });
 
 app.MapRazorPages();
+app.MapHub<DesignWorkChatHub>(DesignWorkChatHub.Route)
+    .RequireCors("AllowFrontend");
 
 app.Map("/", () => "3D Print Shop API is running...");
 app.MapFallbackToFile("index.html");

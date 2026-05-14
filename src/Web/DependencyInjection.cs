@@ -10,8 +10,10 @@ using NSwag.Generation.Processors.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using PayOS;
-using sp26se058_3dprintshop_be.Application.Common.Config;
+using sp26se058_3dprintshop_be.Web.Hubs;
+using System.Security.Claims;
+using sp26se058_3dprintshop_be.Domain.Constants;
+
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -70,16 +72,48 @@ public static class DependencyInjection
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidAudience = jwtSettings["Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
+                NameClaimType = ClaimTypes.Name,
+                RoleClaimType = ClaimTypes.Role,
 
                 // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+
+                    if (!string.IsNullOrWhiteSpace(accessToken) &&
+                        path.StartsWithSegments(DesignWorkChatHub.Route))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
-        services.AddAuthorization(); // Kích hoạt phân quyền
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Authenticated", policy =>
+                policy.RequireRole(Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER));
+            options.AddPolicy("SystemAdmin", policy =>
+                policy.RequireRole(Roles.ADMIN));
+            options.AddPolicy("Internal", policy =>
+                policy.RequireRole(Roles.MANAGER, Roles.STAFF));
+            options.AddPolicy("StaffOrManager", policy =>
+                policy.RequireRole(Roles.STAFF, Roles.MANAGER));
+            options.AddPolicy("CustomerStaffManager", policy =>
+                policy.RequireRole(Roles.CUSTOMER, Roles.STAFF, Roles.MANAGER));
+        }); // Kích hoạt phân quyền
+        services.AddSignalR();
 
         services.AddOpenApiDocument((configure, sp) =>
         {
             configure.Title = "3D_printshop_API";
-
+            configure.SchemaSettings.SchemaProcessors.Add(new ConstantSchemaProcessor());
             // Add JWT
             configure.AddSecurity("JWT", Enumerable.Empty<string>(), new OpenApiSecurityScheme
             {
@@ -90,6 +124,8 @@ public static class DependencyInjection
             });
 
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
+            configure.OperationProcessors.Add(new ConstantOperationProcessor());
+
         });
 
         

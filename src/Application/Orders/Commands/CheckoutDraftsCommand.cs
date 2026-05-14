@@ -127,7 +127,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
         foreach (var itemReq in request.Items)
         {
             // Lấy Draft kèm theo thông tin Material và DesignWork để lấy tên
-            var draft = await _context.TechnicalDrafts.AsNoTracking()
+            var draft = await _context.TechnicalDrafts
                 .Include(d => d.DesignVersionHistory)
                     .ThenInclude(v => v.DesignWork)
                 .FirstOrDefaultAsync(d => d.Id == itemReq.TechnicalDraftId, ct);
@@ -135,6 +135,12 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             if (draft == null)
             {
                 failures.AddFailure(nameof(itemReq.TechnicalDraftId), $"Bản nháp kỹ thuật {itemReq.TechnicalDraftId} không tồn tại.");
+                continue;
+            }
+
+            if (draft.DesignVersionHistory.DesignWork.CustomerId != customerId)
+            {
+                failures.AddFailure(nameof(itemReq.TechnicalDraftId), $"Bạn không có quyền đặt in bản nháp kỹ thuật {itemReq.TechnicalDraftId}.");
                 continue;
             }
 
@@ -175,8 +181,27 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             order.OrderItems.Add(orderItem);
             order.TotalPrice += orderItem.TotalPrice;
 
-            // Khóa DesignWork sau khi đã chốt đơn in để tránh sửa đổi bản vẽ
-            //draft.DesignVersionHistory.DesignWork.IsLocked = true;
+            draft.IsConfirmed = true;
+            draft.LastModified = CoreHelper.SystemTimeNow;
+            draft.LastModifiedBy = _user.Username;
+
+            draft.DesignVersionHistory.IsApproved = true;
+            draft.DesignVersionHistory.DesignWork.ResultDraftId = draft.Id;
+            draft.DesignVersionHistory.DesignWork.Status = DesignWorkStatus.Completed;
+            draft.DesignVersionHistory.DesignWork.IsLocked = true;
+            draft.DesignVersionHistory.DesignWork.LastModified = CoreHelper.SystemTimeNow;
+            draft.DesignVersionHistory.DesignWork.LastModifiedBy = _user.Username;
+
+            _context.DesignLogs.Add(new DesignLog
+            {
+                Id = Guid.NewGuid(),
+                DesignWorkId = draft.DesignVersionHistory.DesignWorkId,
+                AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
+                LogType = DesignLogType.StatusChange,
+                Content = "Khách hàng đã xác nhận báo giá kỹ thuật và tạo đơn in. DesignWork được khóa.",
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username ?? "SYSTEM"
+            });
         }
 
         return order;

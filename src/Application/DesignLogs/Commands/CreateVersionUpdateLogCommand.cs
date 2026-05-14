@@ -5,10 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public record CreateVersionUpdateLogCommand : IRequest<DesignLogDTO>
 {
     public Guid DesignWorkId { get; init; }
