@@ -42,7 +42,7 @@ public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswor
 
         if (account == null)
         {
-            throw new Exception("Tài khoảng không tồn tại trong hệ thống.");
+            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
         }
         // 2. Kiểm tra mật khẩu cũ
         if (!_passwordService.VerifyPassword(request.OldPassword, account.PasswordHash))
