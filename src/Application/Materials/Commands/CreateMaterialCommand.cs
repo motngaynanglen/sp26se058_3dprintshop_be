@@ -7,10 +7,12 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public record CreateMaterialCommand : IRequest<MaterialDTO>
 {
     public string Name { get; set; } = null!;

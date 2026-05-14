@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public record UpdateDesignVersionHistoryIsPrintableCommand : IRequest<bool>
 {
     [JsonIgnore]

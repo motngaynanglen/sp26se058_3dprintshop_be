@@ -6,9 +6,11 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public record UpdateMaterialCommand : IRequest<MaterialDTO>
 {
     [JsonIgnore]

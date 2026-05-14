@@ -76,7 +76,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
 
             if (existingWork == null) throw new DataNotFoundException(nameof(DesignWork), request.DesignWorkId);
 
-            int aiLogCount = existingWork.DesignLogs.Count(l => l.IsAI);
+            int aiLogCount = existingWork.DesignLogs.Count(l => l.IsAI || l.LogType == DesignLogType.AiGen);
 
             // CASE 1: Dùng tiếp bản gốc (SourceLogId = null)
             if (!request.SourceLogId.HasValue || request.SourceLogId == Guid.Empty)
@@ -88,6 +88,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
 
                 // Lấy luôn bản gốc
                 designWork = existingWork;
+                designWork.RootDesignWorkId = existingWork.RootDesignWorkId == Guid.Empty ? existingWork.Id : existingWork.RootDesignWorkId;
                 designWork.Status = DesignWorkStatus.Pending;
                 _context.DesignWorks.Update(designWork);
             }
@@ -101,7 +102,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                 {
                     Id = newWorkId,
                     Name = request.NewDesignName ?? $"Nhánh mới từ {existingWork.Name}",
-                    RootDesignWorkId = existingWork.RootDesignWorkId,
+                    RootDesignWorkId = existingWork.RootDesignWorkId == Guid.Empty ? existingWork.Id : existingWork.RootDesignWorkId,
                     ParentDesignWorkId = existingWork.Id,
                     RelationshipType = DesignRelationshipType.Branch,
                     CustomerId = customer.Id,
@@ -141,6 +142,31 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                     LastModified = CoreHelper.SystemTimeNow,
                     LastModifiedBy = _user.Username ?? "SYSTEM"
                 };
+
+                var sourceVersions = await _context.DesignVersionHistorys
+                    .AsNoTracking()
+                    .Where(v => v.DesignLogId == sourceLog.Id)
+                    .ToListAsync(cancellationToken);
+
+                var nextVersionNumber = 1;
+                foreach (var sourceVersion in sourceVersions)
+                {
+                    _context.DesignVersionHistorys.Add(new DesignVersionHistory
+                    {
+                        Id = Guid.NewGuid(),
+                        DesignWorkId = newWorkId,
+                        DesignLogId = clonedLog.Id,
+                        UploaderId = sourceVersion.UploaderId,
+                        Tilte = sourceVersion.Tilte,
+                        FileUrl = sourceVersion.FileUrl,
+                        VersionNumber = nextVersionNumber++,
+                        IsPreviewable = sourceVersion.IsPreviewable,
+                        IsApproved = false,
+                        IsPrintable = sourceVersion.IsPrintable,
+                        Created = CoreHelper.SystemTimeNow.AddMilliseconds(20),
+                        CreatedBy = _user.Username ?? "SYSTEM"
+                    });
+                }
 
                 _context.DesignWorks.Add(designWork);
                 _context.DesignLogs.AddRange(clonedLog, branchInfoLog);
@@ -252,6 +278,19 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
             };
             _context.DesignLogs.Add(initialLog);
         }
+
+        _context.DesignLogs.Add(new DesignLog
+        {
+            Id = Guid.NewGuid(),
+            DesignWorkId = designWork.Id,
+            AccountId = userId,
+            Content = "Đã tạo đơn dịch vụ thiết kế. Chờ thanh toán phí thiết kế để chuyển sang giai đoạn xử lý.",
+            LogType = DesignLogType.System,
+            Created = CoreHelper.SystemTimeNow.AddMicroseconds(200),
+            CreatedBy = _user.Username ?? "SYSTEM",
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username ?? "SYSTEM"
+        });
 
         // 7. Tạo OrderItem và các thực thể liên quan (Sửa lỗi CS9035 bằng cách gán object Order)
         var orderItem = new OrderItem

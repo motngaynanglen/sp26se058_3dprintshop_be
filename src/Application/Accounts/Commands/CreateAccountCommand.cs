@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -14,7 +14,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin)]
 public record CreateAccountCommand : IRequest<Guid>
 {
     [DefaultValue("daylausername")]
@@ -28,24 +28,24 @@ public record CreateAccountCommand : IRequest<Guid>
     [DefaultValue("0777777777")]
     public string? ContactPhone { get; init; }
     [DefaultValue("CUSTOMER")]
-    public string Role { get; init; } = Roles.CUSTOMER; // Mặc định là Customer
+    public string Role { get; init; } = Roles.CUSTOMER; // M?c d?nh l� Customer
 }
 //public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
 //{
 //    public CreateAccountCommandValidator(IApplicationDbContext context)
 //    {
 //        RuleFor(x => x.Username).CustomAsync(async (username, ctx, ct) => {
-//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Username == username, "Tài khoản", "Username", username, ct: ct);
+//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Username == username, "T�i kho?n", "Username", username, ct: ct);
 //            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
 //        });
 
 //        RuleFor(x => x.Email).CustomAsync(async (email, ctx, ct) => {
-//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Email == email, "Tài khoản", "Email", email, ct: ct);
+//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Email == email, "T�i kho?n", "Email", email, ct: ct);
 //            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
 //        });
 
 //        RuleFor(x => x.Role).Must(role => new[] { Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER }.Contains(role.ToUpper()))
-//            .WithMessage("Vai trò không tồn tại.");
+//            .WithMessage("Vai tr� kh�ng t?n t?i.");
 //    }
 //}
 public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
@@ -74,14 +74,14 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
 
         if (request.Role.ToUpper() is not (Roles.MANAGER or Roles.STAFF or Roles.CUSTOMER))
         {
-            failures.AddFailure(nameof(request.Role), "Vai trò không tồn tại trong hệ thống.");
+            failures.AddFailure(nameof(request.Role), "Vai tr� kh�ng t?n t?i trong h? th?ng.");
         }
         if (failures.Any()) throw new ValidationException(failures);
-        // 2. Băm mật khẩu bằng BCrypt
+        // 2. Bam m?t kh?u b?ng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new BusinessException("Không thể mã hóa mật khẩu.");
+            throw new BusinessException("Kh�ng th? m� h�a m?t kh?u.");
         }
         var newAccount = new Account
         {
@@ -93,7 +93,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
             IsActive = true
         };
 
-        // Khởi tạo quan hệ dựa trên Role
+        // Kh?i t?o quan h? d?a tr�n Role
         switch (request.Role.ToUpper())
         {
             case Roles.MANAGER:
@@ -102,7 +102,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
                 break;
             case Roles.STAFF:
                 var staff = new Staff { Account = newAccount };
-                _context.Staffs.Add(staff); // Chỗ này dùng đúng tên DbSet của bạn
+                _context.Staffs.Add(staff); // Ch? n�y d�ng d�ng t�n DbSet c?a b?n
                 break;
             case Roles.CUSTOMER:
                 var customer = new Customer { Account = newAccount };

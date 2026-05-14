@@ -8,6 +8,7 @@ namespace sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
 public class DesignLogDTO
 {
     public Guid Id { get; set; }
+    public Guid DesignWorkId { get; set; }
     public Guid? ParentLogId { get; set; }
 
     public Guid? AccountId { get; set; }
