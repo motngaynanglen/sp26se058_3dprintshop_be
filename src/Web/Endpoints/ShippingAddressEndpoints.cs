@@ -16,7 +16,7 @@ public class ShippingAddressEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/shipping-address")
-                       .WithTags("ShippingAddress")
+                       .WithTags("Shipping Address")
                        .WithOpenApi();
 
         group.MapPost("/add", Add)
