@@ -12,6 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
+[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
 public record DeactiveAccountCommand : IRequest<bool>
 {
     [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
@@ -34,11 +35,17 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
         var userId = _user.Id.ToGuid();
      
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
+        var account = await _context.Accounts
+            .Include(x => x.Staff)
+            .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
         if (account == null)
         {
             throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+        }
+        if (_user.Role == Roles.MANAGER && account.Staff == null)
+        {
+            throw new ForbiddenAccessException("Manager chỉ được vô hiệu hóa tài khoản Staff.");
         }
         if (account.IsActive)
         {
@@ -54,3 +61,4 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
         return true;
     }
 }
+

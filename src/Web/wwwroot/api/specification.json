@@ -21,8 +21,8 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Truy vấn danh sách tài khoản.",
-        "description": "Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Name', 'Email', 'Phone', 'Created', 'Deleted' ",
+        "summary": "[SystemAdmin/Manager] Truy vấn danh sách tài khoản.",
+        "description": "SystemAdmin xem toàn bộ tài khoản. Manager chỉ xem và quản lý tài khoản Staff.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
           "x-name": "command",
@@ -43,13 +43,40 @@
         }
       }
     },
+    "/api/account/basic-query": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "[Staff/Manager] Tìm kiếm thông tin cơ bản người dùng.",
+        "description": "Dùng cho nghiệp vụ: tìm customer/staff/manager theo tên, email, username hoặc số điện thoại. Không trả audit/deleted data.",
+        "operationId": "PostApiAccountBasicQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetUsersBasicQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/account/add": {
       "post": {
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Tạo tài khoản mới.",
-        "description": "Tạo một tài khoản người dùng mới với các thông tin cung cấp.",
+        "summary": "[SystemAdmin/Manager] Tạo tài khoản mới.",
+        "description": "SystemAdmin tạo Manager/Staff/Customer. Manager chỉ được tạo tài khoản Staff.",
         "operationId": "PostApiAccountAdd",
         "requestBody": {
           "x-name": "command",
@@ -75,9 +102,36 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Lấy thông tin chi tiết tài khoản.",
-        "description": "Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.",
+        "summary": "[SystemAdmin/Manager] Lấy thông tin chi tiết tài khoản.",
+        "description": "SystemAdmin xem toàn bộ. Manager chỉ xem chi tiết Staff.",
         "operationId": "GetApiAccountDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/account/{id}/basic": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "[Staff/Manager] Xem thông tin cơ bản người dùng.",
+        "description": "Trả về thông tin liên hệ cơ bản để hỗ trợ xử lý công việc.",
+        "operationId": "GetApiAccountBasic",
         "parameters": [
           {
             "name": "id",
@@ -102,7 +156,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Cập nhật thông tin tài khoản với ID.",
+        "summary": "[SystemAdmin/Manager] Cập nhật thông tin tài khoản với ID. Manager chỉ cập nhật Staff.",
         "operationId": "PatchApiAccountUpdate",
         "parameters": [
           {
@@ -140,7 +194,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Kích hoạt tài khoản có ID.",
+        "summary": "[SystemAdmin/Manager] Kích hoạt tài khoản có ID. Manager chỉ kích hoạt Staff.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountActive",
         "parameters": [
@@ -179,7 +233,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Tạm ngưng hoạt động tài khoản có ID.",
+        "summary": "[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có ID. Manager chỉ vô hiệu hóa Staff.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountDeactive",
         "parameters": [
@@ -218,7 +272,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[Admin] Xóa mềm tài khoản có ID.",
+        "summary": "[SystemAdmin/Manager] Xóa mềm tài khoản có ID. Manager chỉ xóa mềm Staff.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "DeleteApiAccountDelete",
         "parameters": [
@@ -3030,6 +3084,37 @@
             "default": 10
           }
         }
+      },
+      "GetUsersBasicQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string",
+                "default": "CUSTOMER",
+                "nullable": true
+              },
+              "search": {
+                "type": "string",
+                "default": "Nguyen van a",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean"
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "Name",
+                "nullable": true
+              }
+            }
+          }
+        ]
       },
       "CreateAccountCommand": {
         "type": "object",

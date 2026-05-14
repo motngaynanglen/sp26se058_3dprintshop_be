@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Principal;
@@ -12,10 +12,10 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.SystemAdmin)]
+[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
 public record DeleteAccountCommand : IRequest<bool>
 {
-    [JsonIgnore] // ?n kh?i JSON Body v� Swagger
+    [JsonIgnore] // Hidden from JSON body and Swagger
     public Guid Id { get; init; }
 }
 public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand, bool>
@@ -32,12 +32,18 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
     {
         var userId = _user.Id.ToGuid();
   
-        // 1. Ki?m tra Username ho?c Email d� t?n t?i chua
-        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
+        // 1. Check whether the account exists.
+        var account = await _context.Accounts
+            .Include(x => x.Staff)
+            .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
         if (account == null)
         {
-            throw new Exception("T�i kho?n kh�ng t?n t?i trong h? th?ng.");
+            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+        }
+        if (_user.Role == Roles.MANAGER && account.Staff == null)
+        {
+            throw new ForbiddenAccessException("Manager chỉ được xóa mềm tài khoản Staff.");
         }
         if (!account.IsActive)
         {
@@ -48,9 +54,10 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         }
         else
         {
-            throw new Exception("T�i kho?n dang ho?t d?ng! H�y h?y quy?n tru?c.");
+            throw new Exception("Tài khoản đang hoạt động. Hãy vô hiệu hóa tài khoản trước.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }
+
