@@ -9,6 +9,8 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 using AutoMapper;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
@@ -61,6 +63,18 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
         // Lưu ý: Logic này giả định bạn đã có cơ chế lấy Role từ _user
         // if (_user.Role == Roles.CUSTOMER && entity.CreatedBy != _user.Username) throw new ForbiddenAccessException();
 
+        if (entity.IsLocked && (request.Name != null || request.BaseImageUrl != null || request.Status != null || request.MainAssignedStaffId != null || request.ResultDraftId != null))
+        {
+            throw new BusinessException("DesignWork đã bị khóa, không thể cập nhật thông tin.");
+        }
+
+        var oldStatus = entity.Status;
+
+        if (request.Status != null && DesignWorkStatus.All.All(x => x.Value != request.Status))
+        {
+            throw new BusinessException("Trạng thái DesignWork không hợp lệ.");
+        }
+
         // 2. Cập nhật các trường thông tin (Chỉ cập nhật nếu request có giá trị)
         if (request.Name != null) entity.Name = request.Name;
         if (request.BaseImageUrl != null) entity.BaseImageUrl = request.BaseImageUrl;
@@ -69,14 +83,14 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
         if (request.ResultDraftId != null) entity.ResultDraftId = request.ResultDraftId;
 
         // 3. Ghi log tự động khi có sự thay đổi quan trọng (ví dụ đổi trạng thái)
-        if (request.Status != null && request.Status != entity.Status)
+        if (request.Status != null && request.Status != oldStatus)
         {
             var statusLog = new DesignLog
             {
                 Id = Guid.NewGuid(),
                 DesignWorkId = entity.Id,
-                LogType = "INTERNAL_NOTE",
-                Content = $"Trạng thái yêu cầu được thay đổi thành: {request.Status}",
+                LogType = DesignLogType.StatusChange,
+                Content = $"Trạng thái yêu cầu được thay đổi từ {oldStatus} sang {request.Status}",
                 AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username ?? "SYSTEM"

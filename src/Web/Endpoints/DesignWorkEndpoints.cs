@@ -42,6 +42,12 @@ public class DesignWorkEndpoints : EndpointGroupBase
         group.MapPatch("/{id}/mark-printable", UpdateIsPrintable)
             .WithSummary("[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế")
             .WithDescription("Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái có thể in của công việc thiết kế.");
+        group.MapPatch("/{id}/lock", Lock)
+            .WithSummary("[Customer/Staff/Manager] Khóa công việc thiết kế")
+            .WithDescription("Khóa DesignWork để bảo toàn lịch sử sau khi đã chốt file hoặc kết thúc hỗ trợ.");
+        group.MapPost("/{id}/request-rework", RequestRework)
+            .WithSummary("[Customer] Yêu cầu chỉnh sửa thêm")
+            .WithDescription("Tạo một DesignWork revision mới từ DesignWork đã có, giữ quan hệ Parent/Root để tra lịch sử.");
 
     }
 
@@ -110,6 +116,26 @@ public class DesignWorkEndpoints : EndpointGroupBase
                 message: "Cập nhật trạng thái có thể in công việc thiết kế thành công!",
                 code: ResponseCodeConstants.UPDATED
          ));
+    }
+
+    public async Task<IResult> Lock([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new LockDesignWorkCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
+                data: result,
+                message: "Khóa công việc thiết kế thành công!",
+                code: ResponseCodeConstants.UPDATED
+            ));
+    }
+
+    public async Task<IResult> RequestRework([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] RequestDesignWorkReworkCommand command)
+    {
+        var result = await sender.Send(command with { Id = id });
+        return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
+                data: result,
+                message: "Tạo yêu cầu chỉnh sửa thành công!",
+                code: ResponseCodeConstants.CREATED
+            ));
     }
 
     //public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)

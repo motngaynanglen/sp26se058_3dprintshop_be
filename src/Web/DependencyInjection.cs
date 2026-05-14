@@ -10,6 +10,7 @@ using NSwag.Generation.Processors.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using sp26se058_3dprintshop_be.Web.Hubs;
 
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -72,8 +73,26 @@ public static class DependencyInjection
 
                 // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+
+                    if (!string.IsNullOrWhiteSpace(accessToken) &&
+                        path.StartsWithSegments(DesignWorkChatHub.Route))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
         services.AddAuthorization(); // Kích hoạt phân quyền
+        services.AddSignalR();
 
         services.AddOpenApiDocument((configure, sp) =>
         {
