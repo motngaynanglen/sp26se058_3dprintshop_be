@@ -1,0 +1,78 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SignalR DesignWork Chat Test</title>
+</head>
+<body>
+    <input id="api" value="https://localhost:5001" style="width:360px" />
+    <input id="token" placeholder="JWT token" style="width:700px" />
+    <br /><br />
+
+    <input id="designWorkId" placeholder="DesignWorkId" style="width:360px" />
+    <button onclick="connect()">Connect</button>
+    <button onclick="joinRoom()">Join</button>
+    <br /><br />
+
+    <input id="message" placeholder="Message" style="width:500px" />
+    <button onclick="sendMessage()">Send</button>
+
+    <pre id="log"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script>
+    let connection;
+
+    function write(msg) {
+      document.getElementById("log").textContent += msg + "\n";
+    }
+
+    async function connect() {
+      const api = document.getElementById("api").value;
+      const token = document.getElementById("token").value;
+
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(`${api}/hubs/design-work-chat`, {
+          accessTokenFactory: () => token
+        })
+        .withAutomaticReconnect()
+        .build();
+
+      connection.on("ReceiveDesignLog", log => {
+        write("ReceiveDesignLog: " + JSON.stringify(log, null, 2));
+      });
+
+      connection.on("JoinedDesignWork", id => {
+        write("JoinedDesignWork: " + id);
+      });
+
+      connection.on("LeftDesignWork", id => {
+        write("LeftDesignWork: " + id);
+      });
+
+      await connection.start();
+      write("Connected: " + connection.connectionId);
+    }
+
+    async function joinRoom() {
+      const designWorkId = document.getElementById("designWorkId").value;
+      await connection.invoke("JoinDesignWork", designWorkId);
+    }
+
+    async function sendMessage() {
+      const designWorkId = document.getElementById("designWorkId").value;
+      const content = document.getElementById("message").value;
+
+      const result = await connection.invoke("SendMessage", {
+        designWorkId,
+        parentLogId: null,
+        content,
+        imageUrls: [],
+        logType: "COMMUNICATION"
+      });
+
+      write("Send result: " + JSON.stringify(result, null, 2));
+    }
+    </script>
+</body>
+</html>
