@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Win32;
 using sp26se058_3dprintshop_be.Application.Accounts.Commands;
+using sp26se058_3dprintshop_be.Application.Accounts.Queries;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
@@ -19,26 +20,32 @@ public class AccountEndpoints : EndpointGroupBase
                        .WithOpenApi();
 
         group.MapPost("/query", QueryAccounts)
-            .WithSummary("[Admin] Truy vấn danh sách tài khoản.")
-            .WithDescription("Hỗ trợ tìm kiếm, lọc và phân trang danh sách tài khoản trong hệ thống. Nếu data null nghĩa là mặc định lấy hết. Xắp xếp hỗ trợ: 'Name', 'Email', 'Phone', 'Created', 'Deleted' ");
+            .WithSummary("[SystemAdmin/Manager] Truy vấn danh sách tài khoản.")
+            .WithDescription("SystemAdmin xem toàn bộ tài khoản. Manager chỉ xem và quản lý tài khoản Staff.");
+        group.MapPost("/basic-query", QueryBasicUsers)
+            .WithSummary("[Staff/Manager] Tìm kiếm thông tin cơ bản người dùng.")
+            .WithDescription("Dùng cho nghiệp vụ: tìm customer/staff/manager theo tên, email, username hoặc số điện thoại. Không trả audit/deleted data.");
         group.MapPost("/add", CreateAccount)
-            .WithSummary("[Admin] Tạo tài khoản mới.")
-            .WithDescription("Tạo một tài khoản người dùng mới với các thông tin cung cấp.");
+            .WithSummary("[SystemAdmin/Manager] Tạo tài khoản mới.")
+            .WithDescription("SystemAdmin tạo Manager/Staff/Customer. Manager chỉ được tạo tài khoản Staff.");
         group.MapGet("/{id}/detail", GetAccountDetail)
-            .WithSummary("[Admin] Lấy thông tin chi tiết tài khoản.")
-            .WithDescription("Trả về toàn bộ thông tin chi tiết của một tài khoản dựa trên ID.");
+            .WithSummary("[SystemAdmin/Manager] Lấy thông tin chi tiết tài khoản.")
+            .WithDescription("SystemAdmin xem toàn bộ. Manager chỉ xem chi tiết Staff.");
+        group.MapGet("/{id}/basic", GetBasicUserDetail)
+            .WithSummary("[Staff/Manager] Xem thông tin cơ bản người dùng.")
+            .WithDescription("Trả về thông tin liên hệ cơ bản để hỗ trợ xử lý công việc.");
 
         group.MapPatch("/{id}/update", UpdateAccount)
-            .WithSummary("[Admin] Cập nhật thông tin tài khoản với ID.");
+            .WithSummary("[SystemAdmin/Manager] Cập nhật thông tin tài khoản với ID. Manager chỉ cập nhật Staff.");
 
         group.MapPatch("/{id}/active", Active)
-            .WithSummary("[Admin] Kích hoạt tài khoản có ID.")
+            .WithSummary("[SystemAdmin/Manager] Kích hoạt tài khoản có ID. Manager chỉ kích hoạt Staff.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
         group.MapPatch("/{id}/deactive", Deactive)
-            .WithSummary("[Admin] Tạm ngưng hoạt động tài khoản có ID.")
+            .WithSummary("[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có ID. Manager chỉ vô hiệu hóa Staff.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
         group.MapDelete("/{id}/delete", Delete)
-            .WithSummary("[Admin] Xóa mềm tài khoản có ID.")
+            .WithSummary("[SystemAdmin/Manager] Xóa mềm tài khoản có ID. Manager chỉ xóa mềm Staff.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
 
         group.MapGet("/me", GetAccountMine)
@@ -74,6 +81,17 @@ public class AccountEndpoints : EndpointGroupBase
             ));
 
     }
+    public async Task<IResult> QueryBasicUsers([FromServices] ISender sender, [FromBody] GetUsersBasicQuery query)
+    {
+        var result = await sender.Send(query);
+
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<UserBasicDTO>>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                message: "Lấy danh sách người dùng thành công"
+            ));
+    }
     public async Task<IResult> GetAccountDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
 
@@ -84,6 +102,15 @@ public class AccountEndpoints : EndpointGroupBase
                 code: ResponseCodeConstants.SUCCESS
             ));
 
+    }
+    public async Task<IResult> GetBasicUserDetail([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new GetUserBasicDetailQuery(id));
+        return TypedResults.Ok(BaseResponseModel<UserBasicDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy thông tin cơ bản thành công",
+                code: ResponseCodeConstants.SUCCESS
+            ));
     }
     public async Task<IResult> GetAccountMine([FromServices] ISender sender)
     {
