@@ -14,7 +14,7 @@ using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
-//[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER + "," + Roles.CUSTOMER)]
+[Authorize(Roles = Roles.StaffOrManager)]
 public record UpdateDesignWorkCommand : IRequest<DesignWorkDTO>
 {
     [JsonIgnore]

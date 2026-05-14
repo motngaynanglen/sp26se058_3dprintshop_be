@@ -5,10 +5,12 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json.Serialization;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
+[Authorize(Roles = Roles.Authenticated)]
 public record UpdateAccountMineCommand : IRequest<Guid>
 {
     // Dữ liệu cần update

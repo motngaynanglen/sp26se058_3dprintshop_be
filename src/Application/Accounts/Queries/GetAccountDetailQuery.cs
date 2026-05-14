@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin)]
 public class GetAccountDetailQuery : IRequest<AccountDTO>
 {
     public Guid Id { get; init; }
@@ -35,10 +35,10 @@ public class GetAccountDetailQuery : IRequest<AccountDTO>
                 query = query.IgnoreQueryFilters();
             }
                
-            var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper t·ª± t√≠nh to√°n field Role
+            var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper t? tÌnh to·n field Role
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-            if (account == null) throw new Exception("Kh√¥ng t√¨m th·∫•y t√†i kho·∫£n.");
+            if (account == null) throw new Exception("KhÙng tÏm th?y t‡i kho?n.");
 
             return account;
         }

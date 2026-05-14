@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using sp26se058_3dprintshop_be.Web.Hubs;
+using System.Security.Claims;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -70,6 +72,8 @@ public static class DependencyInjection
                 ValidIssuer = jwtSettings["Issuer"],
                 ValidAudience = jwtSettings["Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
+                NameClaimType = ClaimTypes.Name,
+                RoleClaimType = ClaimTypes.Role,
 
                 // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
@@ -91,7 +95,19 @@ public static class DependencyInjection
                 }
             };
         });
-        services.AddAuthorization(); // Kích hoạt phân quyền
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Authenticated", policy =>
+                policy.RequireRole(Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER));
+            options.AddPolicy("SystemAdmin", policy =>
+                policy.RequireRole(Roles.ADMIN));
+            options.AddPolicy("Internal", policy =>
+                policy.RequireRole(Roles.MANAGER, Roles.STAFF));
+            options.AddPolicy("StaffOrManager", policy =>
+                policy.RequireRole(Roles.STAFF, Roles.MANAGER));
+            options.AddPolicy("CustomerStaffManager", policy =>
+                policy.RequireRole(Roles.CUSTOMER, Roles.STAFF, Roles.MANAGER));
+        }); // Kích hoạt phân quyền
         services.AddSignalR();
 
         services.AddOpenApiDocument((configure, sp) =>

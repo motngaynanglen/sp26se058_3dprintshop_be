@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -13,13 +13,13 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin)]
 public record UpdateAccountCommand : IRequest<Guid>
 {
-    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
+    [JsonIgnore] // ?n kh?i JSON Body v� Swagger
     [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
-    // Dữ liệu cần update
+    // D? li?u c?n update
     [DefaultValue("newFullname")]
     public string? Fullname { get; init; }
     [DefaultValue("newemail123@gmail.com")]
@@ -47,17 +47,17 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
         var entity = await _context.Accounts
               .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-        if (entity == null) throw new Exception("Không tìm thấy tài khoản");
+        if (entity == null) throw new Exception("Kh�ng t�m th?y t�i kho?n");
         if (!string.IsNullOrEmpty(request.Email) &&
         !string.Equals(entity.Email, request.Email, StringComparison.OrdinalIgnoreCase))
         {
-            // Kiểm tra xem có AI KHÁC (Id != request.Id) đang dùng Email này không
+            // Ki?m tra xem c� AI KH�C (Id != request.Id) dang d�ng Email n�y kh�ng
             var isEmailUsed = await _context.Accounts.AnyAsync(a =>
                 a.Id != request.Id && a.Email == request.Email, cancellationToken);
 
             if (isEmailUsed)
             {
-                throw new Exception("Email này đã được sử dụng bởi một tài khoản khác.");
+                throw new Exception("Email n�y d� du?c s? d?ng b?i m?t t�i kho?n kh�c.");
             }
 
             entity.Email = request.Email;
@@ -66,13 +66,13 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
         if (!string.IsNullOrEmpty(request.Fullname)) entity.Fullname = request.Fullname;
         if (!string.IsNullOrEmpty(request.ContactPhone)) entity.ContactPhone = request.ContactPhone;
         if (request.IsActive.HasValue) entity.IsActive = request.IsActive.Value;
-        // Băm mật khẩu bằng BCrypt
+        // Bam m?t kh?u b?ng BCrypt
         if (!string.IsNullOrEmpty(request.Password))
         {
             var passwordHash = _passwordService.HashPassword(request.Password);
             if (string.IsNullOrEmpty(passwordHash))
             {
-                throw new Exception("Lỗi tạo pass");
+                throw new Exception("L?i t?o pass");
             }
         }
         entity.LastModified = DateTimeOffset.UtcNow;
@@ -88,6 +88,6 @@ public class UpdateAccountCommandValidator : AbstractValidator<UpdateAccountComm
     {
         RuleFor(v => v.Email).EmailAddress().When(v => !string.IsNullOrEmpty(v.Email));
         RuleFor(v => v.Password).MinimumLength(6).When(v => !string.IsNullOrEmpty(v.Password))
-            .WithMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+            .WithMessage("M?t kh?u m?i ph?i c� �t nh?t 6 k� t?.");
     }
 }

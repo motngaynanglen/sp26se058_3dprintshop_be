@@ -5,12 +5,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
+[Authorize(Roles = Roles.CUSTOMER)]
 public record UpdateDesignWorkIsApproveCommand : IRequest<bool>
 {
     [JsonIgnore]
@@ -40,6 +42,16 @@ public class UpdateDesignWorkIsApproveCommandHandler : IRequestHandler<UpdateDes
         if (entity.DesignWork.IsLocked)
         {
             throw new BusinessException("DesignWork đã bị khóa.");
+        }
+
+        var userId = _user.Id.ToGuid();
+        var customerOwnsDesignWork = await _context.Customers
+            .AsNoTracking()
+            .AnyAsync(x => x.AccountId == userId && x.Id == entity.DesignWork.CustomerId, cancellationToken);
+
+        if (!customerOwnsDesignWork)
+        {
+            throw new ForbiddenAccessException();
         }
 
         // Cập nhật trạng thái phê duyệt

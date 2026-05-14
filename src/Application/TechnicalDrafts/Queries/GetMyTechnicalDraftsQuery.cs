@@ -5,8 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Mappings;
 using sp26se058_3dprintshop_be.Application.Common.Models;
+using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.TechnicalDrafts.Queries;
+
+[Authorize(Roles = Roles.CUSTOMER)]
 public class GetMyTechnicalDraftsQuery : PaginationRequest, IRequest<PaginatedList<TechnicalDraftDTO>>
 {
 

@@ -6,7 +6,7 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
-[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public record LockDesignWorkCommand : IRequest<DesignWorkDTO>
 {
     [JsonIgnore]
@@ -34,6 +34,20 @@ public class LockDesignWorkCommandHandler : IRequestHandler<LockDesignWorkComman
         if (designWork == null)
         {
             throw new DataNotFoundException(nameof(DesignWork), request.Id);
+        }
+
+        var isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
+        if (!isStaffOrManager)
+        {
+            var userId = _user.Id.ToGuid();
+            var customerOwnsDesignWork = await _context.Customers
+                .AsNoTracking()
+                .AnyAsync(x => x.AccountId == userId && x.Id == designWork.CustomerId, cancellationToken);
+
+            if (!customerOwnsDesignWork)
+            {
+                throw new ForbiddenAccessException();
+            }
         }
 
         if (!designWork.IsLocked)
