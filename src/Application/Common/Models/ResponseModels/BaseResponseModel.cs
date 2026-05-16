@@ -55,13 +55,13 @@ public class BaseResponseModel<T>
         string? successMessage = "Lấy danh sách thành công.",
         string? emptyMessage = "Không tìm thấy kết quả nào.")
     {
-        // Kiểm tra xem danh sách có dữ liệu hay không
-        bool hasData = data != null && data.Any();
+        var items = data?.ToList() ?? new List<TItem>();
+        bool hasData = items.Any();
 
         return new BaseResponseModel<IEnumerable<TItem>>(
             statusCode: 200,
             code: hasData ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
-            data: data ?? Enumerable.Empty<TItem>(),
+            data: items,
             additionalData: additionalData,
             message: hasData ? successMessage : emptyMessage
         );
