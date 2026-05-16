@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignVersions.Commands;
@@ -25,10 +25,10 @@ public class DesignVersionEndpoints : EndpointGroupBase
     public async Task<IResult> GetByDesignWork([FromServices] ISender sender, [FromRoute] Guid designWorkId)
     {
         var result = await sender.Send(new GetDesignVersionsByWorkQuery(designWorkId));
-        return TypedResults.Ok(BaseResponseModel<List<DesignVersionHistoryDTO>>.OkResponseModel(
-            code: result.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignVersionHistoryDTO>>.ListResponseModel(
             data: result,
-            message: result.Any() ? "Lấy danh sách file version thành công." : "Không có file version nào."
+            successMessage: "Lấy danh sách file version thành công.",
+            emptyMessage: "Không có file version nào."
         ));
     }
 

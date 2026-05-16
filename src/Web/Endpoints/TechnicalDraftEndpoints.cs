@@ -61,20 +61,20 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
     public async Task<IResult> GetByVersion([FromServices] ISender sender, [FromRoute] Guid versionId)
     {
         var result = await sender.Send(new GetTechnicalDraftsByVersionQuery(versionId));
-        return TypedResults.Ok(BaseResponseModel<List<TechnicalDraftDTO>>.OkResponseModel(
-                code: result.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<TechnicalDraftDTO>>.ListResponseModel(
                 data: result,
-                message: result.Any() ? "Lấy danh sách bản nháp thành công." : "Không tìm thấy bản nháp nào cho phiên bản này."
+                successMessage: "Lấy danh sách bản nháp thành công.",
+                emptyMessage: "Không tìm thấy bản nháp nào cho phiên bản này."
             ));
     }
 
     public async Task<IResult> GetByDesignWork([FromServices] ISender sender, [FromRoute] Guid designWorkId)
     {
         var result = await sender.Send(new GetTechnicalDraftsByDesignWorkQuery(designWorkId));
-        return TypedResults.Ok(BaseResponseModel<List<TechnicalDraftDTO>>.OkResponseModel(
-                code: result.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<TechnicalDraftDTO>>.ListResponseModel(
                 data: result,
-                message: result.Any() ? "Lấy danh sách bản nháp thành công." : "Không tìm thấy bản nháp nào cho DesignWork này."
+                successMessage: "Lấy danh sách bản nháp thành công.",
+                emptyMessage: "Không tìm thấy bản nháp nào cho DesignWork này."
             ));
     }
 

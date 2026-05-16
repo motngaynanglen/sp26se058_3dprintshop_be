@@ -63,11 +63,11 @@ public class OrderEndpoints : EndpointGroupBase
 
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
+                successMessage: "Lấy danh sách đơn hàng thành công.",
+                emptyMessage: "Không tìm thấy đơn hàng nào."
             ));
 
     }
