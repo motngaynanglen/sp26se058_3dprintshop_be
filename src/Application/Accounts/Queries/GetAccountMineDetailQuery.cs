@@ -30,7 +30,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDTO>
             var userId = _user.Id.ToGuid();
             if (userId == Guid.Empty)
             {
-                throw new Exception("Hãy đăng nhập.");
+                throw new UnauthorizedAccessException("Hãy đăng nhập.");
             }
             
             var query = _context.Accounts.AsNoTracking();
@@ -38,7 +38,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDTO>
             var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper tự tính toán field Role
                 .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
-            if (account == null) throw new Exception("Tài khoản không tồn tại");
+            if (account == null) throw new DataNotFoundException(nameof(Account), userId);
 
             return account;
         }

@@ -27,7 +27,7 @@ public class GetMaterialDetailQuery : IRequest<MaterialDTO>
                 .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
             if (material == null)
             {
-                throw new Exception("Không tìm thấy chất liệu.");
+                throw new DataNotFoundException(nameof(Material), request.Id);
             }
             return material;
         }

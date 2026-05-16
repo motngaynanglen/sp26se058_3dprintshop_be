@@ -41,7 +41,7 @@ public class SyncDesignTagCommandHandler
         // VALIDATION — chỉ 1 main tag
         // =========================
         if (request.Tags.Count(x => x.IsMainTag) > 1)
-            throw new Exception("Chỉ được phép có đúng 1 tag chính.");
+            throw new BusinessException("Chỉ được phép có đúng 1 tag chính.");
 
         // =========================
         // LẤY TAG CŨ

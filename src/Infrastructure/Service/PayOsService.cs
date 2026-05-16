@@ -8,6 +8,7 @@ using PayOS.Models.V2.PaymentRequests;
 using PayOS.Models.Webhooks;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Config;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Entities;
@@ -73,7 +74,7 @@ public class PayOsService : IPaymentService
         catch (Exception)
         {
             // Nếu sai chữ ký, coi như dữ liệu không hợp lệ
-            throw new Exception("Chữ ký Webhook không hợp lệ!");
+            throw new BusinessException("Chữ ký webhook không hợp lệ.");
         }
     }
     public async Task<bool> CancelPaymentLink(long orderCode, string? reason = null)

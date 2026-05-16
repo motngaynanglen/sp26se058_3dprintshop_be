@@ -48,7 +48,7 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
               .Include(x => x.Staff)
               .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-        if (entity == null) throw new Exception("Không tìm thấy tài khoản.");
+        if (entity == null) throw new DataNotFoundException(nameof(Account), request.Id);
         if (_user.Role == Roles.MANAGER && entity.Staff == null)
         {
             throw new ForbiddenAccessException("Quản lý chỉ được cập nhật tài khoản nhân viên.");
@@ -62,7 +62,7 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
 
             if (isEmailUsed)
             {
-                throw new Exception("Email này đã được sử dụng bởi một tài khoản khác.");
+                throw new DuplicateException("Email này đã được sử dụng bởi một tài khoản khác.");
             }
 
             entity.Email = request.Email;
@@ -77,7 +77,7 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
             var passwordHash = _passwordService.HashPassword(request.Password);
             if (string.IsNullOrEmpty(passwordHash))
             {
-                throw new Exception("Lỗi tạo mật khẩu.");
+                throw new BusinessException("Không thể mã hóa mật khẩu.");
             }
             entity.PasswordHash = passwordHash;
         }

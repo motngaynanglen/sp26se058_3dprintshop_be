@@ -76,7 +76,7 @@ public class CreateFeedbackCommandHandler : IRequestHandler<CreateFeedbackComman
 
         // 2. Xác định DesignTemplateId (Có thể null nếu là hàng Custom)
         if (item.DesignVariant == null)
-            throw new NotSupportedException("Hiện tại hệ thống chỉ hỗ trợ đánh giá sản phẩm theo mẫu có sẵn.");
+            throw new BusinessException("Hiện tại hệ thống chỉ hỗ trợ đánh giá sản phẩm theo mẫu có sẵn.");
 
         var entity = new Feedback
         {
