@@ -44,7 +44,10 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
         if (order == null) throw new DataNotFoundException(nameof(Order), request.OrderId);
         if (order.OrderStatus != OrderStatuses.Processing)
         {
-            throw new BusinessException($"Chỉ có thể tạo vận đơn khi đơn hàng đang ở trạng thái '{OrderStatuses.Processing}'.",
+            var processingLabel = OrderStatuses.All
+                .FirstOrDefault(x => x.Value == OrderStatuses.Processing)?.Label
+                ?? OrderStatuses.Processing;
+            throw new BusinessException($"Chỉ có thể tạo vận đơn khi đơn hàng đang ở trạng thái {processingLabel}.",
                 ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
         }
         // Quy tắc 1: Chỉ ship 1 lần. 
@@ -91,7 +94,7 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
         }
         if (finalShippingAddressId == null || finalShippingAddressId == Guid.Empty)
         {
-            throw new BusinessException("Không tìm thấy địa chỉ giao hàng hợp lệ. Vui lòng cung cấp ShippingAddressId.");
+            throw new BusinessException("Không tìm thấy địa chỉ giao hàng hợp lệ. Vui lòng cung cấp mã địa chỉ giao hàng.");
         }
         // 2. Khởi tạo Shipment (Lấy logic từ Checkout)
         var shipment = new Shipment

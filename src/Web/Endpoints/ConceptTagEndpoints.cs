@@ -66,7 +66,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
 
         return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
             data: result,
-            message: "Cập nhật Concept tag thành công!",
+            message: "Cập nhật tag ý tưởng thành công!",
             code: ResponseCodeConstants.SUCCESS));
 
     }
@@ -81,7 +81,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
 
         return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
             data: result,
-            message: "Xóa Concept tag thành công!",
+            message: "Xóa tag ý tưởng thành công!",
             code: ResponseCodeConstants.SUCCESS));
 
     }
@@ -95,7 +95,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
 
         return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
             data: result,
-            message: "Tạo Concept tag thành công!",
+            message: "Tạo tag ý tưởng thành công!",
             code: ResponseCodeConstants.SUCCESS));
 
     }

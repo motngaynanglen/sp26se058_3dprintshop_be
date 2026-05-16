@@ -49,7 +49,7 @@ public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
 
         RuleFor(x => x.SourceType)
             .Must(x => x == SourceTypes.InStock || x == SourceTypes.PreOrder)
-            .WithMessage("Loại nguồn hàng không hợp lệ, chỉ có thể là " + SourceTypes.InStock + " hoặc " + SourceTypes.PreOrder + ".");
+            .WithMessage("Loại nguồn hàng không hợp lệ, chỉ có thể là hàng có sẵn hoặc hàng đặt trước.");
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("Đơn hàng phải có ít nhất một sản phẩm.");
@@ -168,7 +168,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
 
                 if (variant == null)
                 {
-                    failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm ID {itemReq.DesignVariantId} không tồn tại.");
+                    failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm với mã {itemReq.DesignVariantId} không tồn tại.");
                     continue;
                 }
 
@@ -204,7 +204,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
                     // LUỒNG PRE-ORDER: Kiểm tra xem biến thể này có cho phép đặt trước không
                     if (!variant.IsAllowPreOrder)
                     {
-                        failures.AddFailure(nameof(request.SourceType), $"Sản phẩm '{variant.Name}' không hỗ trợ đặt hàng Pre-order.");
+                        failures.AddFailure(nameof(request.SourceType), $"Sản phẩm '{variant.Name}' không hỗ trợ đặt hàng trước.");
                     }
 
                     // KHÔNG trừ StockQuantity, KHÔNG tạo InventoryTransaction

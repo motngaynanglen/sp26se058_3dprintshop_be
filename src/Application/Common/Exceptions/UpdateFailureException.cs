@@ -12,5 +12,5 @@ public class UpdateFailureException : BusinessException
         : base(message, ResponseCodeConstants.UPDATE_FAILED) { }
 
     public UpdateFailureException(string entityName, string reason)
-        : base($"Không thể cập nhật {entityName}. Lý do: {reason}", ResponseCodeConstants.UPDATE_FAILED) { }
+        : base($"Không thể cập nhật {DisplayNameHelper.Entity(entityName)}. Lý do: {reason}", ResponseCodeConstants.UPDATE_FAILED) { }
 }

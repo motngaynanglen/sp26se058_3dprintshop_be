@@ -204,7 +204,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
                 DesignWorkId = draft.DesignVersionHistory.DesignWorkId,
                 AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
                 LogType = DesignLogType.StatusChange,
-                Content = "Khách hàng đã xác nhận báo giá kỹ thuật và tạo đơn in. DesignWork được khóa.",
+                Content = "Khách hàng đã xác nhận báo giá kỹ thuật và tạo đơn in. Công việc thiết kế được khóa.",
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username ?? "SYSTEM"
             });

@@ -32,7 +32,7 @@ public class CreateConceptTagCommandHandler : IRequestHandler<CreateConceptTagCo
         var exists = _context.ConceptTags.Any(ct => ct.Name == request.Name);
         if (exists)
         { 
-            throw new Exception("Đã tồn tại Concept tag với tên "+request.Name+".");
+            throw new Exception("Đã tồn tại tag ý tưởng với tên " + request.Name + ".");
         }
             var newConceptTag = new ConceptTag
         {

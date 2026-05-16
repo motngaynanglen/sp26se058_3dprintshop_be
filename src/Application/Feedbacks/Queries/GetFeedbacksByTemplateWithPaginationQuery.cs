@@ -20,7 +20,7 @@ public class GetFeedbacksByTemplateWithPaginationQueryValidator : AbstractValida
 {
     public GetFeedbacksByTemplateWithPaginationQueryValidator()
     {
-        RuleFor(x => x.TemplateId).NotEmpty().WithMessage("TemplateId là bắt buộc.");
+        RuleFor(x => x.TemplateId).NotEmpty().WithMessage("Mã mẫu thiết kế là bắt buộc.");
         RuleFor(x => x.Rating).InclusiveBetween(1, 5).When(x => x.Rating.HasValue);
     }
 }

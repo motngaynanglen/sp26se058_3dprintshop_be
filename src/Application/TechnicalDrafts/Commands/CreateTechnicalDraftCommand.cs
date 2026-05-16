@@ -45,7 +45,7 @@ public class CreateTechnicalDraftCommandValidator : AbstractValidator<CreateTech
     {
         RuleFor(v => v.DesignVersionHistoryId).NotEmpty().WithMessage("Phiên bản thiết kế không được để trống");
         RuleFor(v => v.MaterialId).NotEmpty().WithMessage("Vật liệu không được để trống");
-        RuleFor(v => v.InfillDensity).InclusiveBetween(0, 100).WithMessage("Infill phải từ 0-100%");
+        RuleFor(v => v.InfillDensity).InclusiveBetween(0, 100).WithMessage("Mật độ lấp đầy phải từ 0-100%");
         RuleFor(v => v.LayerHeight).GreaterThan(0).WithMessage("Độ dày lớp in phải lớn hơn 0");
         RuleFor(v => v.EstimatedWeightPerUnit).GreaterThan(0).WithMessage("Khối lượng phải lớn hơn 0");
         RuleFor(v => v.MarkupPercentage).GreaterThanOrEqualTo(0).WithMessage("Phụ thu không được âm");
@@ -94,7 +94,10 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         };
         if (!allowedStatuses.Contains(version.DesignWork.Status))
         {
-            throw new BusinessException($"Dự án đang ở trạng thái {version.DesignWork.Status}, chưa thể tạo bản thông số kỹ thuật.", ResponseCodeConstants.VAL_INVALID_STATE);
+            var statusName = DesignWorkStatus.All
+                .FirstOrDefault(x => x.Value == version.DesignWork.Status)?.Label
+                ?? version.DesignWork.Status;
+            throw new BusinessException($"Dự án đang ở trạng thái {statusName}, chưa thể tạo bản thông số kỹ thuật.", ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
         // 3.Khởi tạo Entity TechnicalDraft

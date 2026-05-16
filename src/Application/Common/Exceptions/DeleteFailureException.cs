@@ -12,5 +12,5 @@ public class DeleteFailureException : BusinessException
         : base(message, ResponseCodeConstants.DELETE_FAILED) { }
 
     public DeleteFailureException(string entityName, string reason)
-        : base($"Xóa {entityName} thất bại. {reason}", ResponseCodeConstants.DELETE_FAILED) { }
+        : base($"Xóa {DisplayNameHelper.Entity(entityName)} thất bại. {reason}", ResponseCodeConstants.DELETE_FAILED) { }
 }
