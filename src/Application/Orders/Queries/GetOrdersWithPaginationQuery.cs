@@ -38,7 +38,10 @@ public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<Paginate
         }
         public async Task<PaginatedList<OrderDTO>> Handle(GetOrdersWithPaginationQuery request, CancellationToken cancellationToken)
         {
-            var query = _context.Orders.Include(o=>o.OrderItems).AsNoTracking();
+            var query = _context.Orders
+                .Include(o => o.OrderItems)
+                .Include(o => o.Invoice)
+                .AsNoTracking();
 
             if (_user.Role == Roles.CUSTOMER)
             {

@@ -46,7 +46,7 @@ public class ActiveAccountCommandHandler : IRequestHandler<ActiveAccountCommand,
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
-            throw new ForbiddenAccessException("Manager chỉ được kích hoạt tài khoản Staff.");
+            throw new ForbiddenAccessException("Quản lý chỉ được kích hoạt tài khoản nhân viên.");
         }
         if (!account.IsActive)
         {

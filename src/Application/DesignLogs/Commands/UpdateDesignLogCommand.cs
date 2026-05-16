@@ -34,7 +34,7 @@ public class UpdateDesignLogCommandHandler : IRequestHandler<UpdateDesignLogComm
         var entity = await _context.DesignLogs
             .FirstOrDefaultAsync(l => l.Id == request.Id, cancellationToken);
 
-        if (entity == null) throw new NotFoundException(nameof(DesignLog), "Không tìm thấy log thiết kế với id " + request.Id);
+        if (entity == null) throw new DataNotFoundException("Không tìm thấy log thiết kế với mã " + request.Id);
 
         //entity.IsRead = request.IsRead;
         entity.LastModified = CoreHelper.SystemTimeNow;

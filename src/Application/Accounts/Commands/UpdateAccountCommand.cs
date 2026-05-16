@@ -51,7 +51,7 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
         if (entity == null) throw new Exception("Không tìm thấy tài khoản.");
         if (_user.Role == Roles.MANAGER && entity.Staff == null)
         {
-            throw new ForbiddenAccessException("Manager chỉ được cập nhật tài khoản Staff.");
+            throw new ForbiddenAccessException("Quản lý chỉ được cập nhật tài khoản nhân viên.");
         }
         if (!string.IsNullOrEmpty(request.Email) &&
         !string.Equals(entity.Email, request.Email, StringComparison.OrdinalIgnoreCase))

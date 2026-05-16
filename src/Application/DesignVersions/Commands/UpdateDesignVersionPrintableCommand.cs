@@ -35,7 +35,7 @@ public class UpdateDesignVersionPrintableCommandHandler : IRequestHandler<Update
 
         if (version.DesignWork.IsLocked)
         {
-            throw new BusinessException("DesignWork đã bị khóa, không thể cập nhật trạng thái file.");
+            throw new BusinessException("Công việc thiết kế đã bị khóa, không thể cập nhật trạng thái file.");
         }
 
         version.IsPrintable = request.IsPrintable;
@@ -49,8 +49,8 @@ public class UpdateDesignVersionPrintableCommandHandler : IRequestHandler<Update
             AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
             LogType = DesignLogType.StatusChange,
             Content = request.IsPrintable
-                ? $"File version {version.VersionNumber} đã được đánh dấu có thể in."
-                : $"File version {version.VersionNumber} đã được bỏ đánh dấu có thể in.",
+                ? $"File phiên bản {version.VersionNumber} đã được đánh dấu có thể in."
+                : $"File phiên bản {version.VersionNumber} đã được bỏ đánh dấu có thể in.",
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "SYSTEM"
         });

@@ -23,7 +23,7 @@ public class DuplicateCheckResult
     public string GetErrorMessage()
     {
         return IsDeleted
-            ? $"{EntityName} này đã tồn tại trong danh sách đã xóa. Vui lòng khôi phục hoặc dùng {FieldName} khác."
-            : $"{EntityName} với {FieldName} '{Value}' đã tồn tại.";
+            ? $"{DisplayNameHelper.Entity(EntityName)} này đã tồn tại trong danh sách đã xóa. Vui lòng khôi phục hoặc dùng {DisplayNameHelper.Field(FieldName)} khác."
+            : $"{DisplayNameHelper.Entity(EntityName)} với {DisplayNameHelper.Field(FieldName)} '{Value}' đã tồn tại.";
     }
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PayOS.Exceptions;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
@@ -41,12 +42,14 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IOrderPendingService _orderPendingService;
 
-    public CheckoutDesignWorkCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public CheckoutDesignWorkCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _orderPendingService = orderPendingService;
     }
 
     public async Task<OrderDTO> Handle(CheckoutDesignWorkCommand request, CancellationToken cancellationToken)
@@ -58,6 +61,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
         // Lấy Customer dựa trên AccountId liên kết
         var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId);
         if (customer == null) throw new ForbiddenAccessException();
+        await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, cancellationToken);
 
 
         DesignWork designWork;
@@ -331,6 +335,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
             InvoiceCode = $"INV-DSG-{DateTime.UtcNow.Ticks}",
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
+            DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "SYSTEM",
             LastModified = CoreHelper.SystemTimeNow,
