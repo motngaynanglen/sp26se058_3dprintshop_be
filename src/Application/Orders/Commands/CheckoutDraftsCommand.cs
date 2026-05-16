@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
@@ -42,12 +43,14 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IOrderPendingService _orderPendingService;
 
-    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _orderPendingService = orderPendingService;
     }
     public async Task<object> Handle(CheckoutDraftsCommand request, CancellationToken ct)
     {
@@ -56,6 +59,8 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
 
         var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId, ct);
         if (customer == null) throw new ForbiddenAccessException("Yêu cầu tài khoản khách hàng.");
+        await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, ct);
+
         var address = await _context.ShippingAddresses
             .AnyAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, ct);
         if (!address) failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ không hợp lệ.");
@@ -86,6 +91,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             InvoiceCode = $"INV-PRT-{DateTime.UtcNow.Ticks}",
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
+            DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,

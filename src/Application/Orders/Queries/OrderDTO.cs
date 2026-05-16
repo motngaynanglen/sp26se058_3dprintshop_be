@@ -15,6 +15,7 @@ public class OrderDTO
     public DateTimeOffset? DepositedAt { get; set; }
     public DateTimeOffset? DeliveredAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
+    public DateTime? PaymentDueDate { get; set; }
     public DateTimeOffset? Created { get; set; }
 
     public List<OrderItemDTO> Items { get; set; } = new();
@@ -29,7 +30,9 @@ public class OrderDTO
                 .ForMember(dest => dest.Items,
                     opt => opt.MapFrom(src => src.OrderItems))
                 .ForMember(dest => dest.TotalItem,
-                    opt => opt.MapFrom(src => src.OrderItems.Sum(oi => oi.QuantityOrdered)));
+                    opt => opt.MapFrom(src => src.OrderItems.Sum(oi => oi.QuantityOrdered)))
+                .ForMember(dest => dest.PaymentDueDate,
+                    opt => opt.MapFrom(src => src.Invoice != null ? src.Invoice.DueDate : null));
         }
         
     }
