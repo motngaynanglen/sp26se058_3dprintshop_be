@@ -73,11 +73,11 @@ public class AccountEndpoints : EndpointGroupBase
 
         var result = await sender.Send(command);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<AccountDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách thành công"
+                successMessage: "Lấy danh sách tài khoản thành công.",
+                emptyMessage: "Không tìm thấy tài khoản nào."
             ));
 
     }
@@ -85,11 +85,11 @@ public class AccountEndpoints : EndpointGroupBase
     {
         var result = await sender.Send(query);
 
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<UserBasicDTO>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<UserBasicDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách người dùng thành công"
+                successMessage: "Lấy danh sách người dùng thành công.",
+                emptyMessage: "Không tìm thấy người dùng nào."
             ));
     }
     public async Task<IResult> GetAccountDetail([FromServices] ISender sender, [FromRoute] Guid id)

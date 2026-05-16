@@ -51,10 +51,10 @@ public class MaterialEndpoints : EndpointGroupBase
        
             var result = await sender.Send(new GetMaterialListQuery());
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.OkResponseModel(
+            return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.ListResponseModel(
                 data: result,
-                message: "Lấy danh sách chất liệu thành công!",
-                code: ResponseCodeConstants.SUCCESS));
+                successMessage: "Lấy danh sách chất liệu thành công!",
+                emptyMessage: "Không tìm thấy chất liệu nào."));
         
 
     }

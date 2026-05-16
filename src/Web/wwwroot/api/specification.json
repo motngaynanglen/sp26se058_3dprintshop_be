@@ -372,6 +372,118 @@
         }
       }
     },
+    "/api/app-support/catalog": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy toàn bộ danh mục status/type/role",
+        "description": "Trả về toàn bộ danh sách trạng thái, loại nghiệp vụ và vai trò để FE dùng cho dropdown/filter.",
+        "operationId": "GetApiAppSupportCatalog",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/statuses": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách nhóm status",
+        "description": "Trả về các nhóm status: design-work, invoice, order-item, order, shipment, transaction.",
+        "operationId": "GetApiAppSupportStatuses",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/statuses/{groupKey}": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách status theo nhóm",
+        "description": "Ví dụ groupKey: design-work, invoice, order-item, order, shipment, transaction.",
+        "operationId": "GetApiAppSupportStatuses2",
+        "parameters": [
+          {
+            "name": "groupKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/types": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách nhóm type",
+        "description": "Trả về các nhóm type: design-log, design-relationship, inventory-transaction, payment-method, source.",
+        "operationId": "GetApiAppSupportTypes",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/types/{groupKey}": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách type theo nhóm",
+        "description": "Ví dụ groupKey: design-log, design-relationship, inventory-transaction, payment-method, source.",
+        "operationId": "GetApiAppSupportTypes2",
+        "parameters": [
+          {
+            "name": "groupKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/roles": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách role",
+        "description": "Trả về role hiện có trong hệ thống để FE dùng cho phân quyền và quản lý tài khoản.",
+        "operationId": "GetApiAppSupportRoles",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/app-support/presigned-image-url": {
       "get": {
         "tags": [
@@ -1232,6 +1344,96 @@
             "x-position": 1
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-version/design-work/{designWorkId}": {
+      "get": {
+        "tags": [
+          "Design Version"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy danh sách file version theo DesignWork.",
+        "operationId": "GetApiDesignVersionDesignWork",
+        "parameters": [
+          {
+            "name": "designWorkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-version/{id}/detail": {
+      "get": {
+        "tags": [
+          "Design Version"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy chi tiết file version.",
+        "operationId": "GetApiDesignVersionDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-version/{id}/printable": {
+      "patch": {
+        "tags": [
+          "Design Version"
+        ],
+        "summary": "[Staff/Manager] Cập nhật trạng thái có thể in của file version.",
+        "operationId": "PatchApiDesignVersionPrintable",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDesignVersionPrintableCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
         "responses": {
           "200": {
             "description": ""
@@ -2907,6 +3109,150 @@
         }
       }
     },
+    "/api/technical-draft/version/{versionId}": {
+      "get": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy danh sách draft theo phiên bản thiết kế",
+        "description": "Lấy tất cả các bản nháp kỹ thuật đã tạo cho một DesignVersionHistory cụ thể.",
+        "operationId": "GetApiTechnicalDraftVersion",
+        "parameters": [
+          {
+            "name": "versionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technical-draft/design-work/{designWorkId}": {
+      "get": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy danh sách draft theo DesignWork",
+        "operationId": "GetApiTechnicalDraftDesignWork",
+        "parameters": [
+          {
+            "name": "designWorkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technical-draft/{id}/detail": {
+      "get": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Customer/Staff/Manager] Lấy chi tiết bản nháp kỹ thuật",
+        "description": "Lấy thông tin chi tiết về thông số in và vật liệu của một Technical Draft.",
+        "operationId": "GetApiTechnicalDraftDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technical-draft/{id}/update": {
+      "patch": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Staff/Manager] Cập nhật bản nháp kỹ thuật chưa xác nhận",
+        "operationId": "PatchApiTechnicalDraftUpdate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTechnicalDraftCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technical-draft/{id}/delete": {
+      "delete": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Staff/Manager] Xóa mềm bản nháp kỹ thuật chưa xác nhận",
+        "operationId": "DeleteApiTechnicalDraftDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/transaction/payos-webhook": {
       "post": {
         "tags": [
@@ -3744,6 +4090,19 @@
           }
         }
       },
+      "UpdateDesignVersionPrintableCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "guid"
+          },
+          "isPrintable": {
+            "type": "boolean"
+          }
+        }
+      },
       "GetPaginationDesignWorkQuery": {
         "allOf": [
           {
@@ -4544,6 +4903,51 @@
           "technicalNote": {
             "type": "string",
             "default": "",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTechnicalDraftCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "infillDensity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "layerHeight": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "markupPercentage": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "technicalNote": {
+            "type": "string",
             "nullable": true
           }
         }
