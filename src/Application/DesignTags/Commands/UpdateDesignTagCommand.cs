@@ -24,7 +24,7 @@ public class UpdateDesignTagCommandHandler : IRequestHandler<UpdateDesignTagComm
     public async Task<UpdateDesignTagCommand> Handle(UpdateDesignTagCommand request, CancellationToken ct)
     {
         var entity = await _context.DesignTags.FindAsync(request.Id);
-        if (entity == null) throw new Exception("Tag không tồn tại.");
+        if (entity == null) throw new DataNotFoundException(nameof(DesignTag), request.Id);
 
         if (request.IsMainTag)
         {

@@ -49,7 +49,7 @@ public class GenerateModelCommandHandler : IRequestHandler<GenerateModelCommand,
     public async Task<string> Handle(GenerateModelCommand request, CancellationToken cancellationToken)
     {
         if (request.Image == null || request.Image.Length == 0)
-            throw new ArgumentException("Ảnh đầu vào không hợp lệ");
+            throw new BusinessException("Ảnh đầu vào không hợp lệ.");
 
         // 1. Chuyển ảnh đầu vào (IFormFile) sang Base64 để gửi Request cho AI
         string imageBase64 = await ConvertFileToBase64Async(request.Image);
@@ -59,7 +59,7 @@ public class GenerateModelCommandHandler : IRequestHandler<GenerateModelCommand,
         byte[] glbData = await _aiService.GenerateModelAsync(imageBase64);
 
         if (glbData == null || glbData.Length == 0)
-            throw new Exception("Dịch vụ AI trả về dữ liệu trống hoặc không hợp lệ.");
+            throw new BusinessException("Dịch vụ AI trả về dữ liệu trống hoặc không hợp lệ.");
 
         // 3. Upload mảng byte trực tiếp lên Backblaze B2 và trả về URL
         string glbUrl = await _b2Service.UploadGlbAsync(glbData);
