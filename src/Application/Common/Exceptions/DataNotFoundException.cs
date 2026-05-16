@@ -12,6 +12,9 @@ public class DataNotFoundException : BusinessException
     public DataNotFoundException(string message = "Mục tiêu không tồn tại.")
         : base(message, ResponseCodeConstants.NOT_EXIST) { }
 
+    public DataNotFoundException(string message, object? details, bool useRawMessage)
+        : base(message, ResponseCodeConstants.NOT_EXIST, details) { }
+
     // Dùng khi muốn chỉ đích danh đối tượng không tồn tại (Ví dụ: DB_004)
     // Dùng khi tìm ID không thấy (DB_004)
     public DataNotFoundException(string entityName, object key)
