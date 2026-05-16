@@ -35,12 +35,12 @@ public class UpdateAccountMineCommandHandler : IRequestHandler<UpdateAccountMine
             var currentUserId = _user.Id.ToGuid();
         if (currentUserId == Guid.Empty)
         {
-            throw new Exception("Hãy đăng nhập.");
+            throw new UnauthorizedAccessException("Hãy đăng nhập.");
         }
         var entity = await _context.Accounts
               .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken);
 
-        if (entity == null) throw new Exception("Không tìm thấy tài khoản");
+        if (entity == null) throw new DataNotFoundException(nameof(Account), currentUserId);
 
         if (!string.IsNullOrEmpty(request.Fullname)) entity.Fullname = request.Fullname;
         if (!string.IsNullOrEmpty(request.ContactPhone)) entity.ContactPhone = request.ContactPhone;

@@ -41,12 +41,12 @@ public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCo
         var conceptTag = await _context.ConceptTags.FindAsync(new object[] { request.Id }, cancellationToken);
         if (conceptTag == null)
         {
-            throw new Exception("Không tìm thấy tag ý tưởng với mã " + request.Id);
+            throw new DataNotFoundException(nameof(ConceptTag), request.Id);
         }
         var exists = _context.ConceptTags.Any(ct => ct.Name == request.Name && ct.Id != request.Id);
         if (exists)
         {
-            throw new Exception("Đã tồn tại tag ý tưởng với tên " + request.Name + ".");
+            throw new DuplicateException("Đã tồn tại tag ý tưởng với tên " + request.Name + ".");
         }
 
         //UpdateAllChildTags(conceptTag, request.IsActive ?? conceptTag.IsActive);
