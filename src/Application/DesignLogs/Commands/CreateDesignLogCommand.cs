@@ -35,11 +35,11 @@ public class CreateDesignLogCommandValidator : AbstractValidator<CreateDesignLog
         RuleFor(x => x.LogType)
             .NotEmpty()
             .Must(x => DesignLogType.All.Any(t => t.Value == x))
-            .WithMessage("LogType is invalid.");
+            .WithMessage("Loại ghi chép không hợp lệ.");
 
         RuleFor(x => x)
             .Must(x => !string.IsNullOrWhiteSpace(x.Content) || (x.ImageUrls?.Any() ?? false))
-            .WithMessage("Content or ImageUrls is required.");
+            .WithMessage("Vui lòng nhập nội dung hoặc đính kèm hình ảnh.");
     }
 }
 

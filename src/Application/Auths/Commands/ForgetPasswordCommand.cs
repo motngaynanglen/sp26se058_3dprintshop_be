@@ -43,8 +43,8 @@ public class ForgetPasswordCommandHandler : IRequestHandler<ForgetPasswordComman
         
         await _context.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendEmailAsync(account.Email, "Reset Password",
-            $"Mã token của bạn là: {account.PasswordResetToken}");
+        await _emailService.SendEmailAsync(account.Email, "Đặt lại mật khẩu",
+            $"Mã đặt lại mật khẩu của bạn là: {account.PasswordResetToken}");
 
         return true;
     }

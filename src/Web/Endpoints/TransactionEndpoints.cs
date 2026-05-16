@@ -45,7 +45,7 @@ public class TransactionEndpoints : EndpointGroupBase
         var result = await sender.Send(command);
         return TypedResults.Ok(BaseResponseModel.OkResponseModel(
                 data: result,
-                message: "Xác nhực thanh toán thành công!",
+                message: "Xác thực thanh toán thành công!",
                 code: ResponseCodeConstants.SUCCESS
             ));
 

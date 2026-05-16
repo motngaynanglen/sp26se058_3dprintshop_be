@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using PayOS;
 using PayOS.Models.V2.PaymentRequests;
 using PayOS.Models.Webhooks;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Config;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
@@ -28,9 +29,7 @@ public class PayOsService : IPaymentService
     {
         // Tạo mã thanh toán duy nhất (số)
         long orderCode = _codeGenerator.GenerateCode();
-        int expireInMinutes = 10;
-
-        DateTimeOffset expiryTime = DateTimeOffset.UtcNow.AddMinutes(expireInMinutes);
+        DateTimeOffset expiryTime = DateTimeOffset.UtcNow.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes);
 
         List<PaymentLinkItem> Items = order.OrderItems.Select(x => new PaymentLinkItem
         {

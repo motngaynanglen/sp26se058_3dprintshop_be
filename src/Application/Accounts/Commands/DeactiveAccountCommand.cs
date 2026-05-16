@@ -45,7 +45,7 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
-            throw new ForbiddenAccessException("Manager chỉ được vô hiệu hóa tài khoản Staff.");
+            throw new ForbiddenAccessException("Quản lý chỉ được vô hiệu hóa tài khoản nhân viên.");
         }
         if (account.IsActive)
         {

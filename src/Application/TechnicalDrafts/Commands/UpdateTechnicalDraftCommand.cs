@@ -58,7 +58,7 @@ public class UpdateTechnicalDraftCommandHandler : IRequestHandler<UpdateTechnica
 
         if (draft.IsConfirmed || draft.DesignVersionHistory.DesignWork.IsLocked)
         {
-            throw new BusinessException("Bản nháp kỹ thuật đã được xác nhận hoặc DesignWork đã khóa, không thể cập nhật.");
+            throw new BusinessException("Bản nháp kỹ thuật đã được xác nhận hoặc công việc thiết kế đã khóa, không thể cập nhật.");
         }
 
         if (request.MaterialId.HasValue)

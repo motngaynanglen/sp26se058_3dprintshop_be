@@ -19,7 +19,7 @@ public class DesignVariantEndpoints : EndpointGroupBase
                        .WithOpenApi();
         group.MapPost("/query", GetAll)
             .WithSummary("[All] Truy vấn danh sách Biến thể")
-            .WithDescription("Hỗ trợ lọc theo TemplateId, MaterialId. Tự động ẩn hàng IsActive=false đối với Customer.");
+            .WithDescription("Hỗ trợ lọc theo mã mẫu thiết kế và mã vật liệu. Tự động ẩn dữ liệu ngưng hoạt động đối với khách hàng.");
 
         group.MapPost("/add", Add)
             .WithSummary("[Staff/Manager] Thêm mới biến thể")

@@ -18,5 +18,5 @@ public class DataNotFoundException : BusinessException
     // Dùng khi muốn chỉ đích danh đối tượng không tồn tại (Ví dụ: DB_004)
     // Dùng khi tìm ID không thấy (DB_004)
     public DataNotFoundException(string entityName, object key)
-        : base($"{entityName} với mã ({key}) không tồn tại, hoặc đã bị xóa trên hệ thống.", ResponseCodeConstants.NOT_EXIST) { }
+        : base($"{DisplayNameHelper.Entity(entityName)} với mã ({key}) không tồn tại, hoặc đã bị xóa trên hệ thống.", ResponseCodeConstants.NOT_EXIST) { }
 }

@@ -15,7 +15,7 @@ public class GetInventoryTransactionsByReferenceQueryValidator : AbstractValidat
 {
     public GetInventoryTransactionsByReferenceQueryValidator()
     {
-        RuleFor(x => x.ReferenceId).NotEmpty().WithMessage("ReferenceId không được để trống.");
+        RuleFor(x => x.ReferenceId).NotEmpty().WithMessage("Mã tham chiếu không được để trống.");
     }
 }
 public class GetInventoryTransactionsByReferenceQueryHandler: IRequestHandler<GetInventoryTransactionsByReferenceQuery, List<InventoryTransactionDTO>>

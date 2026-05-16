@@ -41,7 +41,7 @@ public class UpdateDesignWorkIsApproveCommandHandler : IRequestHandler<UpdateDes
 
         if (entity.DesignWork.IsLocked)
         {
-            throw new BusinessException("DesignWork đã bị khóa.");
+            throw new BusinessException("Công việc thiết kế đã bị khóa.");
         }
 
         var userId = _user.Id.ToGuid();
@@ -67,7 +67,7 @@ public class UpdateDesignWorkIsApproveCommandHandler : IRequestHandler<UpdateDes
             DesignWorkId = entity.DesignWorkId,
             AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
             LogType = DesignLogType.StatusChange,
-            Content = "Khách hàng đã duyệt phiên bản cuối. DesignWork được chuyển sang COMPLETED và khóa lịch sử.",
+            Content = "Khách hàng đã duyệt phiên bản cuối. Công việc thiết kế được chuyển sang trạng thái đã nghiệm thu và khóa lịch sử.",
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "SYSTEM"
         });

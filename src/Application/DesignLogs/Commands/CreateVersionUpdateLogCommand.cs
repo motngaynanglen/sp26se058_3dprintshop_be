@@ -53,7 +53,7 @@ public class CreateVersionUpdateLogCommandHandler : IRequestHandler<CreateVersio
             .FirstOrDefaultAsync(dw => dw.Id == request.DesignWorkId, cancellationToken);
 
         if (designWork == null)
-            throw new NotFoundException(nameof(DesignWork), "Không tìm thấy công việc thiết kế với id " + request.DesignWorkId);
+            throw new DataNotFoundException("Không tìm thấy công việc thiết kế với mã " + request.DesignWorkId);
 
         var currentUserId = _user.Id != null ? Guid.Parse(_user.Id) : Guid.Empty;
 
@@ -81,7 +81,7 @@ public class CreateVersionUpdateLogCommandHandler : IRequestHandler<CreateVersio
             DesignWorkId = request.DesignWorkId,
             DesignLogId = newLog.Id, // Foreign Key quan trọng
             UploaderId = currentUserId,
-            Tilte = request.Title ?? $"Version {nextVersion}",
+            Tilte = request.Title ?? $"Phiên bản {nextVersion}",
             FileUrl = request.FileUrl,
             VersionNumber = nextVersion,
             IsPreviewable = request.IsPreviewable,
@@ -100,7 +100,7 @@ public class CreateVersionUpdateLogCommandHandler : IRequestHandler<CreateVersio
         }
         catch (Exception ex)
         {
-            throw new CreateFailureException("VersionUpdateLog", ex.Message);
+            throw new CreateFailureException("log cập nhật phiên bản", ex.Message);
         }
 
         // Trả về DTO của Log (đã bao gồm thông tin vừa tạo)

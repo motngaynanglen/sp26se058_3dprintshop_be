@@ -22,7 +22,7 @@ public class DesignWorkEndpoints : EndpointGroupBase
 
         group.MapPost("/query", Query)
             .WithSummary("[All] Truy vấn danh sách công việc thiết kế có phân trang")
-            .WithDescription("Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.");
+            .WithDescription("Hệ thống tự động chỉ hiển thị dữ liệu đang hoạt động đối với khách hàng. Nhân viên/quản lý có thể xem toàn bộ.");
         //group.MapGet("{id}/detail", GetDetail)
         //    .WithSummary("[All] Xem chi tiết một công việc thiết kế")
         //    .WithDescription("Trả về thông tin chi tiết cùng các thuộc tính cơ bản của công việc thiết kế.");
@@ -32,22 +32,22 @@ public class DesignWorkEndpoints : EndpointGroupBase
             .WithDescription("Khách hàng upload tối đa 5 file và gửi yêu cầu để nhân viên báo giá.");
         group.MapPost("/add", Create)
             .WithSummary("[Staff/Manager] Tạo mới công việc thiết kế")
-            .WithDescription("Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.");
+            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.");
         group.MapPatch("/{id}/update", Update)
             .WithSummary("[Staff/Manager] Cập nhật thông tin công việc thiết kế")
             .WithDescription("Cập nhật từng phần (Partial Update). Ghi đè ID nếu có.");
         group.MapPatch("/{id}/mark-approve", UpdateIsApprove)
             .WithSummary("[Staff/Manager] Cập nhật trạng thái phê duyệt công việc thiết kế")
-            .WithDescription("Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái phê duyệt của công việc thiết kế.");
+            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái phê duyệt của công việc thiết kế.");
         group.MapPatch("/{id}/mark-printable", UpdateIsPrintable)
             .WithSummary("[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế")
-            .WithDescription("Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái có thể in của công việc thiết kế.");
+            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái có thể in của công việc thiết kế.");
         group.MapPatch("/{id}/lock", Lock)
             .WithSummary("[Customer/Staff/Manager] Khóa công việc thiết kế")
             .WithDescription("Khóa DesignWork để bảo toàn lịch sử sau khi đã chốt file hoặc kết thúc hỗ trợ.");
         group.MapPost("/{id}/request-rework", RequestRework)
             .WithSummary("[Customer] Yêu cầu chỉnh sửa thêm")
-            .WithDescription("Tạo một DesignWork revision mới từ DesignWork đã có, giữ quan hệ Parent/Root để tra lịch sử.");
+            .WithDescription("Tạo một phiên bản chỉnh sửa mới từ công việc thiết kế đã có, giữ quan hệ cha/gốc để tra lịch sử.");
 
     }
 
