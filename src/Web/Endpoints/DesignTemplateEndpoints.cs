@@ -23,7 +23,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
 
         group.MapPost("/query", Query)
             .WithSummary("[All] Truy vấn danh sách mẫu thiết kế có phân trang")
-            .WithDescription("Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.");
+            .WithDescription("Hệ thống tự động chỉ hiển thị dữ liệu đang hoạt động đối với khách hàng. Nhân viên/quản lý có thể xem toàn bộ.");
 
         group.MapGet("{id}/detail", GetDetail)
             .WithSummary("[All] Xem chi tiết một mẫu thiết kế")
@@ -38,7 +38,7 @@ public class DesignTemplateEndpoints : EndpointGroupBase
 
         group.MapPost("/add", Create)
             .WithSummary("[Staff/Manager] Tạo mới mẫu thiết kế")
-            .WithDescription("Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.");
+            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.");
 
         group.MapPatch("/{id}/update", Update)
             .WithSummary("[Staff/Manager] Cập nhật thông tin mẫu thiết kế")

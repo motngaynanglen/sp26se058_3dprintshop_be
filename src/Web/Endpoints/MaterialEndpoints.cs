@@ -98,7 +98,7 @@ public class MaterialEndpoints : EndpointGroupBase
             var result = await sender.Send(finalCommand);
             return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
                 data: result,
-                message: "Cập nhật IsActive của chất liệu thành công!",
+                message: "Cập nhật trạng thái hoạt động của chất liệu thành công!",
                 code: ResponseCodeConstants.SUCCESS));
         
     }

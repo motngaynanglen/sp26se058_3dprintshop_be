@@ -20,7 +20,7 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
                        .WithOpenApi();
         group.MapPost("/", CreateTechnicalDraft)
              .WithSummary("[Staff] Tạo bản nháp kỹ thuật mới")
-             .WithDescription("Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho Staff.");
+             .WithDescription("Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho nhân viên.");
 
         group.MapGet("/my-drafts", GetMyDrafts)
             .WithSummary("[Customer] Lấy danh sách bản thảo kỹ thuật của tôi")
@@ -29,7 +29,7 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
             .WithSummary("[Customer/Staff/Manager] Lấy danh sách draft theo phiên bản thiết kế")
             .WithDescription("Lấy tất cả các bản nháp kỹ thuật đã tạo cho một DesignVersionHistory cụ thể.");
         group.MapGet("/design-work/{designWorkId}", GetByDesignWork)
-            .WithSummary("[Customer/Staff/Manager] Lấy danh sách draft theo DesignWork");
+            .WithSummary("[Customer/Staff/Manager] Lấy danh sách bản nháp theo công việc thiết kế");
         group.MapGet("/{id}/detail", GetById)
             .WithSummary("[Customer/Staff/Manager] Lấy chi tiết bản nháp kỹ thuật")
             .WithDescription("Lấy thông tin chi tiết về thông số in và vật liệu của một Technical Draft.");
@@ -74,7 +74,7 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<IEnumerable<TechnicalDraftDTO>>.ListResponseModel(
                 data: result,
                 successMessage: "Lấy danh sách bản nháp thành công.",
-                emptyMessage: "Không tìm thấy bản nháp nào cho DesignWork này."
+                emptyMessage: "Không tìm thấy bản nháp nào cho công việc thiết kế này."
             ));
     }
 

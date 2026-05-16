@@ -62,7 +62,7 @@ public class LockDesignWorkCommandHandler : IRequestHandler<LockDesignWorkComman
                 DesignWorkId = designWork.Id,
                 AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
                 LogType = DesignLogType.StatusChange,
-                Content = "DesignWork đã được khóa để bảo toàn lịch sử và file đã chốt.",
+                Content = "Công việc thiết kế đã được khóa để bảo toàn lịch sử và file đã chốt.",
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username ?? "SYSTEM"
             });

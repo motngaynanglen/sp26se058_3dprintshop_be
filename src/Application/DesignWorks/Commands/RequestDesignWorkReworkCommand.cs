@@ -93,7 +93,7 @@ public class RequestDesignWorkReworkCommandHandler : IRequestHandler<RequestDesi
             Id = Guid.NewGuid(),
             DesignWorkId = revisionWork.Id,
             AccountId = userId,
-            Content = request.Note ?? "Khách hàng yêu cầu chỉnh sửa thêm từ DesignWork đã hoàn tất.",
+            Content = request.Note ?? "Khách hàng yêu cầu chỉnh sửa thêm từ công việc thiết kế đã hoàn tất.",
             LogType = DesignLogType.Communication,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "CUSTOMER"
@@ -103,7 +103,7 @@ public class RequestDesignWorkReworkCommandHandler : IRequestHandler<RequestDesi
         {
             Id = Guid.NewGuid(),
             DesignWorkId = revisionWork.Id,
-            Content = $"Tạo revision từ DesignWork {parentWork.Id}.",
+            Content = $"Tạo phiên bản chỉnh sửa từ công việc thiết kế {parentWork.Id}.",
             LogType = DesignLogType.System,
             Created = CoreHelper.SystemTimeNow.AddMilliseconds(10),
             CreatedBy = "SYSTEM"

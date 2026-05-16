@@ -53,7 +53,7 @@ public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswor
         var newPasswordHash = _passwordService.HashPassword(request.NewPassword);
         if (newPasswordHash == null)
         {
-            throw new Exception("Lỗi tạo pass (đáng lẽ nó sẽ không xảy ra");
+            throw new Exception("Lỗi tạo mật khẩu.");
         }
         account.PasswordHash = newPasswordHash;
         await _context.SaveChangesAsync(cancellationToken);

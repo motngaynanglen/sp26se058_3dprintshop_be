@@ -46,8 +46,8 @@ public class GetDesignWorkDetailQuerryHandler : IRequestHandler<GetDesignWorkDet
         }
         var designWork = await query.FirstOrDefaultAsync(dv => dv.Id.Equals(request.Id), cancellationToken);
 
-        if (designWork == null) { 
-            throw new DataNotFoundException("DesignWork not found");
+        if (designWork == null) {
+            throw new DataNotFoundException("Không tìm thấy công việc thiết kế.");
         }
         return _mapper.Map<DesignWorkDTO>(designWork);
     }

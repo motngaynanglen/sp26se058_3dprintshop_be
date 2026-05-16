@@ -42,13 +42,13 @@ public class CreateMaterialCommandValidator : AbstractValidator<CreateMaterialCo
             .NotEmpty().WithMessage("Mô tả vật liệu không được để trống.")
             .MaximumLength(1000).WithMessage("Mô tả không được vượt quá 1000 ký tự.");
 
-        // 3. Kiểm tra Đơn giá cơ bản (Base Cost)
+        // 3. Kiểm tra đơn giá gốc
         RuleFor(v => v.BaseCostPerGram)
-            .GreaterThan(0).WithMessage("Giá nhập (Base Cost) phải lớn hơn 0.");
+            .GreaterThan(0).WithMessage("Giá nhập phải lớn hơn 0.");
 
-        // 4. Kiểm tra Phí dịch vụ (Service Cost)
+        // 4. Kiểm tra phí dịch vụ
         RuleFor(v => v.TotalServiceCostPerGram)
-            .GreaterThan(v => v.BaseCostPerGram).WithMessage("Phí dịch vụ phải cao hơn giá nhập (Base Cost).");
+            .GreaterThan(v => v.BaseCostPerGram).WithMessage("Phí dịch vụ phải cao hơn giá nhập.");
 
         // 5. Kiểm tra Ngày hiệu lực
         RuleFor(v => v.EffectiveDate)

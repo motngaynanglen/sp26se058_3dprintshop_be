@@ -65,14 +65,14 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
 
         if (entity.IsLocked && (request.Name != null || request.BaseImageUrl != null || request.Status != null || request.MainAssignedStaffId != null || request.ResultDraftId != null))
         {
-            throw new BusinessException("DesignWork đã bị khóa, không thể cập nhật thông tin.");
+            throw new BusinessException("Công việc thiết kế đã bị khóa, không thể cập nhật thông tin.");
         }
 
         var oldStatus = entity.Status;
 
         if (request.Status != null && DesignWorkStatus.All.All(x => x.Value != request.Status))
         {
-            throw new BusinessException("Trạng thái DesignWork không hợp lệ.");
+            throw new BusinessException("Trạng thái công việc thiết kế không hợp lệ.");
         }
 
         // 2. Cập nhật các trường thông tin (Chỉ cập nhật nếu request có giá trị)

@@ -25,7 +25,7 @@ public class GetInventoryTransactionsWithPaginationQueryValidator : AbstractVali
         RuleFor(x => x.DesignVariantId)
             .NotEqual(Guid.Empty)
             .When(x => x.DesignVariantId.HasValue)
-            .WithMessage("DesignVariantId không hợp lệ.");
+            .WithMessage("Mã biến thể thiết kế không hợp lệ.");
 
         // 2. Validate Type (Phải nằm trong danh sách định nghĩa sẵn ở InventoryTransactionTypes)
         var validTypes = typeof(InventoryTransactionTypes)
@@ -35,16 +35,16 @@ public class GetInventoryTransactionsWithPaginationQueryValidator : AbstractVali
 
         RuleFor(x => x.Type)
             .Must(type => string.IsNullOrEmpty(type) || validTypes.Contains(type))
-            .WithMessage($"Type không hợp lệ. Chỉ chấp nhận: {string.Join(", ", validTypes)}");
+            .WithMessage($"Loại giao dịch không hợp lệ. Chỉ chấp nhận: {string.Join(", ", validTypes)}");
 
         // 3. Validate Pagination (Kế thừa từ PaginationRequest)
         RuleFor(x => x.PageNumber)
             .GreaterThanOrEqualTo(1)
-            .WithMessage("Số trang (PageNumber) phải lớn hơn hoặc bằng 1.");
+            .WithMessage("Số trang phải lớn hơn hoặc bằng 1.");
 
         RuleFor(x => x.PageSize)
             .GreaterThanOrEqualTo(1)
-            .WithMessage("Kích thước trang (PageSize) phải lớn hơn hoặc bằng 1.");
+            .WithMessage("Kích thước trang phải lớn hơn hoặc bằng 1.");
     }
 }
 public class GetInventoryTransactionsWithPaginationQueryHandler : IRequestHandler<GetInventoryTransactionsWithPaginationQuery, PaginatedList<InventoryTransactionDTO>>
