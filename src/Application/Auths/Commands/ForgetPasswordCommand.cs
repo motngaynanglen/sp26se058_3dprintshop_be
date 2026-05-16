@@ -34,7 +34,7 @@ public class ForgetPasswordCommandHandler : IRequestHandler<ForgetPasswordComman
 
         if (account == null)
         {
-            throw new Exception("Email của bạn không tồn tại trong hệ thống.");
+            throw new DataNotFoundException("Email của bạn không tồn tại trong hệ thống.");
         }
         
 

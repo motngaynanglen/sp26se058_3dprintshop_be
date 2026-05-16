@@ -42,18 +42,18 @@ public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswor
 
         if (account == null)
         {
-            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+            throw new DataNotFoundException(nameof(Account), userId);
         }
         // 2. Kiểm tra mật khẩu cũ
         if (!_passwordService.VerifyPassword(request.OldPassword, account.PasswordHash))
         {
-            throw new Exception("Mật khẩu cũ không chính xác.");
+            throw new BusinessException("Mật khẩu cũ không chính xác.");
         }
         // 3. Lưu mật khẩu mới.
         var newPasswordHash = _passwordService.HashPassword(request.NewPassword);
         if (newPasswordHash == null)
         {
-            throw new Exception("Lỗi tạo mật khẩu.");
+            throw new BusinessException("Không thể mã hóa mật khẩu.");
         }
         account.PasswordHash = newPasswordHash;
         await _context.SaveChangesAsync(cancellationToken);

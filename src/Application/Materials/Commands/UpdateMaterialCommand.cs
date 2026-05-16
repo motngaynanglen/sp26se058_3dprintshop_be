@@ -41,12 +41,12 @@ public record UpdateMaterialCommand : IRequest<MaterialDTO>
             // Validation
             if (request.BaseCostPerGram <= 0)
             {
-                throw new Exception("Đơn giá gốc phải lớn hơn 0.");
+                throw new BusinessException("Đơn giá gốc phải lớn hơn 0.");
             }
 
             if (request.TotalServiceCostPerGram < request.BaseCostPerGram)
             {
-                throw new Exception("Tổng phí dịch vụ phải cao hơn đơn giá gốc.");
+                throw new BusinessException("Tổng phí dịch vụ phải cao hơn đơn giá gốc.");
             }
 
             var material = await _context.Materials
@@ -55,7 +55,7 @@ public record UpdateMaterialCommand : IRequest<MaterialDTO>
 
             if (material == null)
             {
-                throw new Exception("Không tìm thấy vật liệu.");
+                throw new DataNotFoundException(nameof(Material), request.Id);
             }
 
             // Cập nhật thông tin cơ bản của Material

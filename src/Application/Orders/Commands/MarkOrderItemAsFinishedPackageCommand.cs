@@ -163,7 +163,9 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                 break;
 
             default:
-                throw new NotSupportedException("Loại sản phẩm không hỗ trợ trạng thái hoàn thành này.");
+                throw new BusinessException(
+                    "Loại sản phẩm không hỗ trợ trạng thái hoàn thành này.",
+                    ResponseCodeConstants.NOT_SUPPORTED);
         }
 
         item.LastModified = CoreHelper.SystemTimeNow;

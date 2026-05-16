@@ -31,7 +31,7 @@ public class UpdateDesignVariantQuantityCommandHandler : IRequestHandler<UpdateD
             .FirstOrDefaultAsync(x => x.Id == command.Id, cancellationToken);
 
         if (entity == null)
-            throw new Exception("Không tìm thấy biến thể thiết kế");
+            throw new DataNotFoundException(nameof(DesignVariant), command.Id);
 
         entity.StockQuantity += command.AdditionalQuantity;
         entity.LastModified = DateTime.UtcNow;

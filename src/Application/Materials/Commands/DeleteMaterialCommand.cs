@@ -35,7 +35,7 @@ public class DeleteMaterialCommandHandler : IRequestHandler<DeleteMaterialComman
         var material = await _context.Materials.FindAsync(request.Id);
         if (material == null)
         {
-            throw new Exception("Không tìm thấy vật liệu.");
+            throw new DataNotFoundException(nameof(Material), request.Id);
         }
         if (material.IsActive)
         {
