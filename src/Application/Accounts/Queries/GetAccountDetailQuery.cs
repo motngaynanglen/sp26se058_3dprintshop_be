@@ -45,7 +45,7 @@ public class GetAccountDetailQuery : IRequest<AccountDTO>
             var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-            if (account == null) throw new Exception("Không tìm thấy tài khoản.");
+            if (account == null) throw new DataNotFoundException(nameof(Account), request.Id);
 
             return account;
         }
