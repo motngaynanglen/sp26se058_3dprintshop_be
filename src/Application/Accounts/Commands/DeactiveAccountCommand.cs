@@ -41,7 +41,7 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
 
         if (account == null)
         {
-            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+            throw new DataNotFoundException(nameof(Account), request.Id);
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
@@ -55,7 +55,7 @@ public class DeactiveAccountCommandHandler : IRequestHandler<DeactiveAccountComm
         }
         else
         {
-            throw new Exception("Tài khoản đã bị vô hiệu hóa.");
+            throw new BusinessException("Tài khoản đã bị vô hiệu hóa.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;

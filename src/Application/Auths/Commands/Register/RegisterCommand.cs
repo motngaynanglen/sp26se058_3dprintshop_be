@@ -54,15 +54,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
 
         if (isExisted)
         {
-            // Ném lỗi 400 hoặc xử lý qua ValidationBehaviour
-            throw new Exception("Tên đăng nhập hoặc email đã tồn tại trong hệ thống.");
+            throw new DuplicateException("Tên đăng nhập hoặc email đã tồn tại trong hệ thống.");
         }
 
         // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new Exception("Lỗi tạo mật khẩu.");
+            throw new BusinessException("Không thể mã hóa mật khẩu.");
         }
         // 3. Khởi tạo Account mới
         var newAccount = new Account

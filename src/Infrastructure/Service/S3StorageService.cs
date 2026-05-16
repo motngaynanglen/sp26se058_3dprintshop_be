@@ -67,7 +67,7 @@ public class S3StorageService : IS3StorageService
         // 2. Kiểm tra định dạng có trong danh sách cho phép không
         if (!_allowedExtensions.TryGetValue(extension, out var contentType))
         {
-            throw new NotSupportedException($"Định dạng file {extension} không được hỗ trợ. Hệ thống chỉ chấp nhận hình ảnh và file 3D (.glb).");
+            throw new BusinessException($"Định dạng file {extension} không được hỗ trợ. Hệ thống chỉ chấp nhận hình ảnh và file 3D (.glb).");
         }
 
         // 3. Tạo đường dẫn file: vd service-options/abc-123.jpg

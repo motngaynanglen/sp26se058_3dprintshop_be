@@ -42,7 +42,7 @@ public class ActiveAccountCommandHandler : IRequestHandler<ActiveAccountCommand,
 
         if (account == null)
         {
-            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+            throw new DataNotFoundException(nameof(Account), request.Id);
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
@@ -56,7 +56,7 @@ public class ActiveAccountCommandHandler : IRequestHandler<ActiveAccountCommand,
         }
         else
         {
-            throw new Exception("Tài khoản đang hoạt động");
+            throw new BusinessException("Tài khoản đang hoạt động.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;

@@ -39,7 +39,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
 
         if (account == null)
         {
-            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
+            throw new DataNotFoundException(nameof(Account), request.Id);
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
@@ -54,7 +54,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         }
         else
         {
-            throw new Exception("Tài khoản đang hoạt động. Hãy vô hiệu hóa tài khoản trước.");
+            throw new BusinessException("Tài khoản đang hoạt động. Hãy vô hiệu hóa tài khoản trước.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;
