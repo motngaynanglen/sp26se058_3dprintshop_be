@@ -54,11 +54,11 @@ public class DesignWorkEndpoints : EndpointGroupBase
     public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetPaginationDesignWorkQuery request)
     {
         var result = await sender.Send(request);
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignWorkDTO>>.OkResponseModel(
-                code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignWorkDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { pagination = result.Metadata },
-                message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
+                successMessage: "Lấy danh sách công việc thiết kế thành công.",
+                emptyMessage: "Không tìm thấy công việc thiết kế nào phù hợp."
             ));
     }
 

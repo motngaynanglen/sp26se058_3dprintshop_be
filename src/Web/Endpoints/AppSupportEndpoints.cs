@@ -78,19 +78,19 @@ public class AppSupportEndpoints : EndpointGroupBase
 
         if (response.IsSuccessStatusCode)
         {
-            return TypedResults.Ok(new
-            {
-                Message = "BE Test: Upload lên Backblaze thành công!",
-                StatusCode = (int)response.StatusCode
-            });
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: new { StatusCode = (int)response.StatusCode },
+                message: "BE Test: Upload lên Backblaze thành công!"
+            ));
         }
 
         var errorDetail = await response.Content.ReadAsStringAsync();
-        return TypedResults.BadRequest(new
-        {
-            Message = "B2 từ chối File",
-            Detail = errorDetail
-        });
+        return TypedResults.BadRequest(BaseResponseModel<object>.BadRequestResponseModel(
+            data: new { Detail = errorDetail },
+            message: "B2 từ chối file",
+            code: ResponseCodeConstants.STORAGE_ERROR
+        ));
 
     }
 }

@@ -58,10 +58,10 @@ public class DesignTagEndpoints : EndpointGroupBase
 
         var result = await sender.Send(new GetDesignTagsByTemplateIdQuery { TemplateId = templateId });
         return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<DesignTagDTO>>.OkResponseModel(
+            BaseResponseModel<IEnumerable<DesignTagDTO>>.ListResponseModel(
                 data: result,
-                message: "Lấy danh sách tag thành công!",
-                code: ResponseCodeConstants.SUCCESS
+                successMessage: "Lấy danh sách tag thành công!",
+                emptyMessage: "Không tìm thấy tag nào."
             ));
 
     }
