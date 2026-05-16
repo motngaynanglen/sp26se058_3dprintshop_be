@@ -45,6 +45,10 @@ public class OrderEndpoints : EndpointGroupBase
                 .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng.")
                 .WithDescription("Chỉ hỗ trợ khi đơn hàng chưa thanh toán hoặc chưa đi vào sản xuất.");
 
+        group.MapPost("/sync-expired-pending-cancellations", SyncExpiredPendingOrders)
+                .WithSummary("[Staff/Manager] Đồng bộ hủy các đơn hàng chờ thanh toán đã quá hạn.")
+                .WithDescription("Chủ động quét các đơn PENDING đã quá hạn thanh toán, hủy đơn, hủy giao dịch, hủy vận đơn và hoàn kho nếu cần.");
+
         // --- FLOW SẢN XUẤT & HOÀN TẤT (NEW) ---
 
         group.MapPatch("/item/{orderItemId}/finish-package", FinishOrderItem)
@@ -125,6 +129,19 @@ public class OrderEndpoints : EndpointGroupBase
             ));
 
     }
+
+    public async Task<IResult> SyncExpiredPendingOrders([FromServices] ISender sender)
+    {
+        var result = await sender.Send(new SyncExpiredPendingOrdersCommand());
+        return TypedResults.Ok(BaseResponseModel<SyncExpiredPendingOrdersResultDTO>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
+                data: result,
+                message: result.CancelledCount > 0
+                    ? $"Đã đồng bộ hủy {result.CancelledCount} đơn hàng chờ thanh toán quá hạn."
+                    : "Không có đơn hàng chờ thanh toán quá hạn cần hủy."
+            ));
+    }
+
     public async Task<IResult> FinishOrderItem([FromServices] ISender sender, [FromRoute] Guid orderItemId)
     {
         var result = await sender.Send(new MarkOrderItemAsFinishedPackageCommand { Id = orderItemId});

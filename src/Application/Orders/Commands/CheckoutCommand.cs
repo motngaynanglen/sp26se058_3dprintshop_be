@@ -66,12 +66,14 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IOrderPendingService _orderPendingService;
 
-    public CheckoutCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public CheckoutCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _orderPendingService = orderPendingService;
     }
     public async Task<object> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
@@ -82,6 +84,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
         {
             throw new ForbiddenAccessException("Chỉ có tài khoản khách hàng mới có quyền thực hiện tạo đơn hàng.");
         }
+        await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, cancellationToken);
 
         var addressExists = await _context.ShippingAddresses
             .AnyAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, cancellationToken);
@@ -116,6 +119,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             InvoiceCode = $"INV-{DateTime.UtcNow.Ticks}",
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
+            DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,

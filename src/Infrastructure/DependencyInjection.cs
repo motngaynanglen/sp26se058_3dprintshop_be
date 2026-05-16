@@ -66,6 +66,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IPaymentService, PayOsService>();
         services.AddScoped<IOrderWorkflowService, OrderWorkflowService>();
+        services.AddScoped<IOrderPendingService, OrderPendingService>();
+        services.AddHostedService<ExpiredPendingOrderHostedService>();
 
         // Cấu hình Email
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));

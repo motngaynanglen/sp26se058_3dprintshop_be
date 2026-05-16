@@ -76,7 +76,7 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
 
         var payTransaction = invoice.Transactions
                             .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending
-                                            && t.Created.AddMinutes(10) > CoreHelper.SystemTimeNow);
+                                            && t.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes) > CoreHelper.SystemTimeNow);
         if (payTransaction != null && payTransaction.PaymentMethod == PaymentMethods.PAYOS)
         {
             try
