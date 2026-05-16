@@ -56,11 +56,10 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         {
             DesignTemplateId = id
         });
-        bool isEmpty = result.Any();
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTagDTO>>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignTagDTO>>.ListResponseModel(
                 data: result,
-                message: isEmpty ? "Lấy tags mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
-                code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
+                successMessage: "Lấy tags mẫu thiết kế thành công!",
+                emptyMessage: "Không tìm thấy tag nào cho mẫu thiết kế này."
             ));
 
     }
