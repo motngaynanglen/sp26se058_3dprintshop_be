@@ -57,7 +57,7 @@ public class OrderEndpoints : EndpointGroupBase
 
         group.MapPatch("/{id}/complete", CompleteOrder)
                 .WithSummary("[Customer/Staff/Manager] Hoàn thành đơn hàng (Đóng đơn).")
-                .WithDescription("Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Staff/Manager chỉ được bấm sau 3 ngày kể từ khi Delivered.");
+                .WithDescription("Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Nhân viên/quản lý chỉ được bấm sau 3 ngày kể từ khi đơn được giao thành công.");
 
        
     }

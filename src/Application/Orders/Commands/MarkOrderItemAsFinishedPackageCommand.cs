@@ -76,7 +76,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                             ReferenceId = item.Id,
                             Quantity = item.QuantityOrdered,
                             Type = InventoryTransactionTypes.ProductionIn,
-                            Note = $"[Nhập] Hoàn tất sản xuất đơn Pre-order: {item.Order.Code}",
+                            Note = $"[Nhập] Hoàn tất sản xuất đơn đặt trước: {item.Order.Code}",
                             Created = CoreHelper.SystemTimeNow,
                             CreatedBy = _user.Username
                         });
@@ -89,7 +89,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                             ReferenceId = item.Order.Id,
                             Quantity = -item.QuantityOrdered,
                             Type = InventoryTransactionTypes.OrderOut,
-                            Note = $"[Xuất] Đóng gói đơn Pre-order: {item.Order.Code}",
+                            Note = $"[Xuất] Đóng gói đơn đặt trước: {item.Order.Code}",
                             Created = CoreHelper.SystemTimeNow,
                             CreatedBy = _user.Username
                         });
@@ -126,7 +126,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                     {
                         throw new BusinessException(
                             $"Món hàng '{item.ItemName}' đang ở trạng thái {designWork.Status}. " +
-                            "Dự án phải được chuyển sang giai đoạn 'Đang xem xét' (Reviewing) và có file kết quả mới được hoàn thành.",
+                            "Dự án phải được chuyển sang giai đoạn đang xem xét và có file kết quả mới được hoàn thành.",
                             ResponseCodeConstants.VAL_INVALID_STATE
                         );
                     }
@@ -134,7 +134,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
                     if (designWork.ResultDraftId == null || designWork.ResultDraftId == Guid.Empty)
                     {
                         throw new BusinessException(
-                            $"Món hàng '{item.ItemName}' chưa có bản thiết kế cuối cùng. Staff cần upload và chọn bản thảo hoàn tất trước khi đóng gói.",
+                            $"Món hàng '{item.ItemName}' chưa có bản thiết kế cuối cùng. Nhân viên cần tải file lên và chọn bản thảo hoàn tất trước khi đóng gói.",
                             ResponseCodeConstants.VAL_INVALID_STATE
                         );
                     }

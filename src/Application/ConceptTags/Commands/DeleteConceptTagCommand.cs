@@ -32,7 +32,7 @@ public class DeleteConceptTagCommandHandler : IRequestHandler<DeleteConceptTagCo
         var conceptTag = await _context.ConceptTags.Include(c => c.DesignTags).FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
         if (conceptTag == null)
         {
-            throw new Exception("Không tìm thấy Concept tag với Id " + request.Id);
+            throw new Exception("Không tìm thấy tag ý tưởng với mã " + request.Id);
         }
 
         DeleteAllChildTags(conceptTag);

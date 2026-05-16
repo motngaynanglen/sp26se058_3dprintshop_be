@@ -15,11 +15,11 @@ public class DesignVersionEndpoints : EndpointGroupBase
             .WithOpenApi();
 
         group.MapGet("/design-work/{designWorkId}", GetByDesignWork)
-            .WithSummary("[Customer/Staff/Manager] Lấy danh sách file version theo DesignWork.");
+            .WithSummary("[Customer/Staff/Manager] Lấy danh sách phiên bản file theo công việc thiết kế.");
         group.MapGet("/{id}/detail", GetDetail)
-            .WithSummary("[Customer/Staff/Manager] Lấy chi tiết file version.");
+            .WithSummary("[Customer/Staff/Manager] Lấy chi tiết phiên bản file.");
         group.MapPatch("/{id}/printable", UpdatePrintable)
-            .WithSummary("[Staff/Manager] Cập nhật trạng thái có thể in của file version.");
+            .WithSummary("[Staff/Manager] Cập nhật trạng thái có thể in của phiên bản file.");
     }
 
     public async Task<IResult> GetByDesignWork([FromServices] ISender sender, [FromRoute] Guid designWorkId)
@@ -27,8 +27,8 @@ public class DesignVersionEndpoints : EndpointGroupBase
         var result = await sender.Send(new GetDesignVersionsByWorkQuery(designWorkId));
         return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignVersionHistoryDTO>>.ListResponseModel(
             data: result,
-            successMessage: "Lấy danh sách file version thành công.",
-            emptyMessage: "Không có file version nào."
+            successMessage: "Lấy danh sách phiên bản file thành công.",
+            emptyMessage: "Không có phiên bản file nào."
         ));
     }
 
@@ -38,7 +38,7 @@ public class DesignVersionEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<DesignVersionHistoryDTO>.OkResponseModel(
             code: ResponseCodeConstants.SUCCESS,
             data: result,
-            message: "Lấy chi tiết file version thành công."
+            message: "Lấy chi tiết phiên bản file thành công."
         ));
     }
 

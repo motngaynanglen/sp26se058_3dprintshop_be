@@ -9,5 +9,5 @@ namespace sp26se058_3dprintshop_be.Application.Common.Exceptions;
 public class CreateFailureException : BusinessException
 {
     public CreateFailureException(string entityName, string reason)
-        : base($"Tạo {entityName} thất bại: {reason}", ResponseCodeConstants.FAILED) { }
+        : base($"Tạo {DisplayNameHelper.Entity(entityName)} thất bại: {reason}", ResponseCodeConstants.FAILED) { }
 }

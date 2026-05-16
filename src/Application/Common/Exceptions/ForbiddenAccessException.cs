@@ -9,7 +9,7 @@ public class ForbiddenAccessException : BusinessException
     
     // Hàm tiện ích để ghi đè thông báo nhanh
     public static ForbiddenAccessException OnlyForCustomer()
-        => new ForbiddenAccessException("Chỉ có khách hàng (Customer) mới có quyền sử dụng chức năng này.");
+        => new ForbiddenAccessException("Chỉ có khách hàng mới có quyền sử dụng chức năng này.");
 
     public static ForbiddenAccessException OnlyForStaff()
         => new ForbiddenAccessException("Chức năng này dành riêng cho nhân viên điều phối.");

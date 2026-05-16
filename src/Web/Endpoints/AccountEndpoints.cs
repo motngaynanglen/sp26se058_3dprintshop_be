@@ -21,31 +21,31 @@ public class AccountEndpoints : EndpointGroupBase
 
         group.MapPost("/query", QueryAccounts)
             .WithSummary("[SystemAdmin/Manager] Truy vấn danh sách tài khoản.")
-            .WithDescription("SystemAdmin xem toàn bộ tài khoản. Manager chỉ xem và quản lý tài khoản Staff.");
+            .WithDescription("Quản trị hệ thống xem toàn bộ tài khoản. Quản lý chỉ xem và quản lý tài khoản nhân viên.");
         group.MapPost("/basic-query", QueryBasicUsers)
             .WithSummary("[Staff/Manager] Tìm kiếm thông tin cơ bản người dùng.")
             .WithDescription("Dùng cho nghiệp vụ: tìm customer/staff/manager theo tên, email, username hoặc số điện thoại. Không trả audit/deleted data.");
         group.MapPost("/add", CreateAccount)
             .WithSummary("[SystemAdmin/Manager] Tạo tài khoản mới.")
-            .WithDescription("SystemAdmin tạo Manager/Staff/Customer. Manager chỉ được tạo tài khoản Staff.");
+            .WithDescription("Quản trị hệ thống tạo tài khoản quản lý/nhân viên/khách hàng. Quản lý chỉ được tạo tài khoản nhân viên.");
         group.MapGet("/{id}/detail", GetAccountDetail)
             .WithSummary("[SystemAdmin/Manager] Lấy thông tin chi tiết tài khoản.")
-            .WithDescription("SystemAdmin xem toàn bộ. Manager chỉ xem chi tiết Staff.");
+            .WithDescription("Quản trị hệ thống xem toàn bộ. Quản lý chỉ xem chi tiết tài khoản nhân viên.");
         group.MapGet("/{id}/basic", GetBasicUserDetail)
             .WithSummary("[Staff/Manager] Xem thông tin cơ bản người dùng.")
             .WithDescription("Trả về thông tin liên hệ cơ bản để hỗ trợ xử lý công việc.");
 
         group.MapPatch("/{id}/update", UpdateAccount)
-            .WithSummary("[SystemAdmin/Manager] Cập nhật thông tin tài khoản với ID. Manager chỉ cập nhật Staff.");
+            .WithSummary("[SystemAdmin/Manager] Cập nhật thông tin tài khoản với mã. Quản lý chỉ cập nhật nhân viên.");
 
         group.MapPatch("/{id}/active", Active)
-            .WithSummary("[SystemAdmin/Manager] Kích hoạt tài khoản có ID. Manager chỉ kích hoạt Staff.")
+            .WithSummary("[SystemAdmin/Manager] Kích hoạt tài khoản có mã. Quản lý chỉ kích hoạt nhân viên.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
         group.MapPatch("/{id}/deactive", Deactive)
-            .WithSummary("[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có ID. Manager chỉ vô hiệu hóa Staff.")
+            .WithSummary("[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có mã. Quản lý chỉ vô hiệu hóa nhân viên.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
         group.MapDelete("/{id}/delete", Delete)
-            .WithSummary("[SystemAdmin/Manager] Xóa mềm tài khoản có ID. Manager chỉ xóa mềm Staff.")
+            .WithSummary("[SystemAdmin/Manager] Xóa mềm tài khoản có mã. Quản lý chỉ xóa mềm nhân viên.")
             .WithDescription("Để trống dữ liệu Request BODY khi gọi");
 
         group.MapGet("/me", GetAccountMine)

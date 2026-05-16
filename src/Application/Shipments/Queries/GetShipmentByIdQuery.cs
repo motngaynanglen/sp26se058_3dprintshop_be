@@ -39,7 +39,7 @@ public class GetShipmentByIdQuery : IRequest<ShipmentDTO>
             // 2. Kiểm tra tồn tại
             if (entity == null)
             {
-                throw new DataNotFoundException($"Không tìm thấy vận đơn với Id: {request.Id}");
+                throw new DataNotFoundException($"Không tìm thấy vận đơn với mã: {request.Id}");
             }
 
             // 3. Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ
