@@ -31,11 +31,11 @@ public class DesignLogEndpoints : EndpointGroupBase
     public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetPaginationDesignWorkQuery request)
     {
         var result = await sender.Send(request);
-        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignWorkDTO>>.OkResponseModel(
-                code: result.Items.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignWorkDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { pagination = result.Metadata },
-                message: result.Items.Any() ? "Lấy danh sách thành công" : "Không tìm thấy kết quả nào phù hợp."
+                successMessage: "Lấy danh sách thành công.",
+                emptyMessage: "Không tìm thấy kết quả nào phù hợp."
             ));
     }
 
@@ -70,10 +70,10 @@ public class DesignLogEndpoints : EndpointGroupBase
     public async Task<IResult> Get([FromServices] ISender sender, [FromRoute] Guid designWorkId)
     {
         var result = await sender.Send(new GetDesignLogsByWorkQuery(designWorkId));
-        return TypedResults.Ok(BaseResponseModel<List<DesignLogDTO>>.OkResponseModel(
-                code: result.Any() ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<DesignLogDTO>>.ListResponseModel(
                 data: result,
-                message: result.Any() ? "Lấy danh sách log thành công" : "Không tìm thấy log nào cho công việc thiết kế này."
+                successMessage: "Lấy danh sách log thành công.",
+                emptyMessage: "Không tìm thấy log nào cho công việc thiết kế này."
             ));
     }
 }

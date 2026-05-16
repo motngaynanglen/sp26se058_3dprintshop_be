@@ -46,7 +46,7 @@ public class GetMyTechnicalDraftsQueryHandler : IRequestHandler<GetMyTechnicalDr
             .AsNoTracking()
             .Include(td => td.DesignVersionHistory)
                 .ThenInclude(v => v.DesignWork)
-            .Where(td => td.DesignVersionHistory.DesignWork.CustomerId == customer.Id);
+            .Where(td => td.Deleted == null && td.DesignVersionHistory.DesignWork.CustomerId == customer.Id);
 
         // 3. Lọc thêm theo DesignWorkId nếu khách hàng yêu cầu xem cụ thể 1 dự án
         if (request.DesignWorkId.HasValue)

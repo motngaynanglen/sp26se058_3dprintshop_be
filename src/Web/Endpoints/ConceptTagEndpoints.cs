@@ -34,10 +34,10 @@ public class ConceptTagEndpoints : EndpointGroupBase
         var result = await sender.Send(new GetConceptTagsListQuery());
 
         return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.ListResponseModel(
                 data: result,
-                message: "Lấy danh sách concept tag thành công",
-                code: ResponseCodeConstants.SUCCESS));
+                successMessage: "Lấy danh sách concept tag thành công.",
+                emptyMessage: "Không tìm thấy concept tag nào."));
 
 
     }
@@ -47,11 +47,11 @@ public class ConceptTagEndpoints : EndpointGroupBase
         var result = await sender.Send(command);
 
         return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.ListResponseModel(
                 data: result.Items,
                 additionalData: new { paging = result.Metadata },
-                message: "Lấy danh sách concept tag thành công",
-                code: ResponseCodeConstants.SUCCESS));
+                successMessage: "Lấy danh sách concept tag thành công.",
+                emptyMessage: "Không tìm thấy concept tag nào."));
 
     }
     public async Task<IResult> Update(
