@@ -99,6 +99,18 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
     private bool ValidateOrderForTransaction(Order order)
     {
+        bool isExpired = order.OrderStatus == OrderStatuses.Pending
+            && (order.Invoice?.DueDate.HasValue == true
+                ? CoreHelper.SystemTimeNow.UtcDateTime > order.Invoice.DueDate.Value
+                : CoreHelper.SystemTimeNow > order.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes));
+
+        if (isExpired)
+        {
+            throw new BusinessException(
+                "Đơn hàng đã quá hạn thanh toán. Vui lòng tạo đơn hàng mới để tiếp tục.",
+                ResponseCodeConstants.VAL_INVALID_STATE);
+        }
+
         bool isNotPending = order.OrderStatus != OrderStatuses.Pending;
         bool isPaid = order.Invoice != null && order.Invoice.PaymentStatus == InvoiceStatuses.Paid;
 
@@ -124,6 +136,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
                 InvoiceCode = $"INV-{DateTime.Now:yyyyMMdd}-{order.Code}",
                 TotalAmount = order.TotalPrice,
                 PaymentStatus = InvoiceStatuses.Unpaid,
+                DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username,
                 LastModified = CoreHelper.SystemTimeNow,
@@ -141,8 +154,10 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
         if (pendingTransaction == null) return null;
 
-        // Kiểm tra thời hạn 10 phút
-        bool isTimeOut = CoreHelper.SystemTimeNow > pendingTransaction.Created.AddMinutes(10);
+        // Kiểm tra thời hạn 15 phút
+        bool isTimeOut = pendingTransaction.Invoice.DueDate.HasValue
+            ? CoreHelper.SystemTimeNow.UtcDateTime > pendingTransaction.Invoice.DueDate.Value
+            : CoreHelper.SystemTimeNow > pendingTransaction.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes);
         if (isTimeOut)
         {
             pendingTransaction.TransactionStatus = TransactionStatuses.Failed;
@@ -204,6 +219,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             transaction.PaymentLink = paymentResponse.PaymentLink;
             transaction.QrCode = paymentResponse.QrCode;
             transaction.Note = $"Tạo link thanh toán PayOS cho đơn hàng {order.Code}";
+            order.Invoice.DueDate = paymentResponse.ExpiredAt.UtcDateTime;
 
             _context.Transactions.Add(transaction);
             return paymentResponse;

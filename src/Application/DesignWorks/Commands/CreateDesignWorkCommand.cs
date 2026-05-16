@@ -51,7 +51,7 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
         var customer = await _context.Customers
             .FirstOrDefaultAsync(c => c.AccountId == Guid.Parse(currentUserId), cancellationToken);
 
-        if (customer == null) throw new NotFoundException(nameof(Customer), currentUserId);
+        if (customer == null) throw new DataNotFoundException(nameof(Customer), currentUserId);
 
         var designWorkId = Guid.NewGuid();
 
@@ -94,7 +94,7 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
                 DesignWorkId = designWork.Id,
                 DesignLogId = initialLog.Id, // Liên kết với log vừa tạo
                 UploaderId = Guid.Parse(currentUserId),
-                Tilte = request.VersionTitle ?? "Initial Version",
+                Tilte = request.VersionTitle ?? "Phiên bản đầu tiên",
                 FileUrl = request.InitialFileUrl,
                 VersionNumber = 1,
                 IsPreviewable = true,

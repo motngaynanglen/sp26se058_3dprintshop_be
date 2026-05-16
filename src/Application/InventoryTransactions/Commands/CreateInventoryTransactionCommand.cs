@@ -27,9 +27,9 @@ public class CreateInventoryTransactionCommandValidator : AbstractValidator<Crea
 {
     public CreateInventoryTransactionCommandValidator()
     {
-        // 1. Kiểm tra ID biến thể không được trống
+        // 1. Kiểm tra mã biến thể không được trống
         RuleFor(v => v.DesignVariantId)
-            .NotEmpty().WithMessage("ID biến thể sản phẩm là bắt buộc.");
+            .NotEmpty().WithMessage("Mã biến thể sản phẩm là bắt buộc.");
 
         // 2. Kiểm tra số lượng (Quantity) phải khác 0
         RuleFor(v => v.Quantity)

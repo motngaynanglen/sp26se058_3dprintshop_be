@@ -129,7 +129,7 @@ public class AppSupportEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             code: ResponseCodeConstants.SUCCESS,
             data: new { UploadUrl = uploadUrl, FileUrl = uploadUrl.Split('?')[0] },
-            message: "Lấy link upload ảnh thành công (Hỗ trợ: jpg, png, webp)"
+            message: "Lấy liên kết tải ảnh lên thành công (hỗ trợ: jpg, png, webp)"
         ));
 
     }
@@ -145,7 +145,7 @@ public class AppSupportEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             code: ResponseCodeConstants.SUCCESS,
             data: new { UploadUrl = uploadUrl, FileUrl = uploadUrl.Split('?')[0] },
-            message: "Lấy link upload file 3D thành công (Hỗ trợ: .glb)"
+            message: "Lấy liên kết tải file 3D lên thành công (hỗ trợ: .glb)"
         ));
     }
     public async Task<IResult> TestUploadToB2([FromQuery] string uploadUrl, [FromForm] IFormFile file)
@@ -173,7 +173,7 @@ public class AppSupportEndpoints : EndpointGroupBase
             return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 code: ResponseCodeConstants.SUCCESS,
                 data: new { StatusCode = (int)response.StatusCode },
-                message: "BE Test: Upload lên Backblaze thành công!"
+                message: "Kiểm tra tải file lên Backblaze thành công!"
             ));
         }
 

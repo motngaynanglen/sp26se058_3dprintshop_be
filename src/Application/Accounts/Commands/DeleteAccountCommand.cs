@@ -43,7 +43,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         }
         if (_user.Role == Roles.MANAGER && account.Staff == null)
         {
-            throw new ForbiddenAccessException("Manager chỉ được xóa mềm tài khoản Staff.");
+            throw new ForbiddenAccessException("Quản lý chỉ được xóa mềm tài khoản nhân viên.");
         }
         if (!account.IsActive)
         {

@@ -81,7 +81,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
 
         if (_user.Role == Roles.MANAGER && request.Role.ToUpper() != Roles.STAFF)
         {
-            failures.AddFailure(nameof(request.Role), "Manager chỉ được tạo tài khoản Staff.");
+            failures.AddFailure(nameof(request.Role), "Quản lý chỉ được tạo tài khoản nhân viên.");
         }
         if (failures.Any()) throw new ValidationException(failures);
         // 2. Hash password with BCrypt.
