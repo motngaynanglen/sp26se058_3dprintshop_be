@@ -372,6 +372,118 @@
         }
       }
     },
+    "/api/app-support/catalog": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy toàn bộ danh mục status/type/role",
+        "description": "Trả về toàn bộ danh sách trạng thái, loại nghiệp vụ và vai trò để FE dùng cho dropdown/filter.",
+        "operationId": "GetApiAppSupportCatalog",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/statuses": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách nhóm status",
+        "description": "Trả về các nhóm status: design-work, invoice, order-item, order, shipment, transaction.",
+        "operationId": "GetApiAppSupportStatuses",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/statuses/{groupKey}": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách status theo nhóm",
+        "description": "Ví dụ groupKey: design-work, invoice, order-item, order, shipment, transaction.",
+        "operationId": "GetApiAppSupportStatuses2",
+        "parameters": [
+          {
+            "name": "groupKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/types": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách nhóm type",
+        "description": "Trả về các nhóm type: design-log, design-relationship, inventory-transaction, payment-method, source.",
+        "operationId": "GetApiAppSupportTypes",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/types/{groupKey}": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách type theo nhóm",
+        "description": "Ví dụ groupKey: design-log, design-relationship, inventory-transaction, payment-method, source.",
+        "operationId": "GetApiAppSupportTypes2",
+        "parameters": [
+          {
+            "name": "groupKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/app-support/roles": {
+      "get": {
+        "tags": [
+          "App Support"
+        ],
+        "summary": "[FE Support] Lấy danh sách role",
+        "description": "Trả về role hiện có trong hệ thống để FE dùng cho phân quyền và quản lý tài khoản.",
+        "operationId": "GetApiAppSupportRoles",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/app-support/presigned-image-url": {
       "get": {
         "tags": [
