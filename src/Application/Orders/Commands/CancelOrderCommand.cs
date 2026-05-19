@@ -64,14 +64,14 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
 
         // 2. Lấy Invoice để kiểm tra trạng thái thanh toán
         var invoice = order.Invoice;
-        // 3. LOGIC HỦY: Cho phép hủy nếu Invoice chưa thanh toán (UNPAID) 
-        // Hoặc trạng thái đơn hàng vẫn đang ở PENDING
+        // 3. LOGIC HỦY: Chỉ cho phép hủy nếu đơn vẫn đang chờ và hóa đơn chưa thanh toán.
+        // Hệ thống hiện không hỗ trợ hủy đơn sau khi thanh toán.
         bool isUnpaid = invoice.PaymentStatus == InvoiceStatuses.Unpaid;
         bool isPending = order.OrderStatus == OrderStatuses.Pending;
 
-        if (!isUnpaid && !isPending)
+        if (!isPending || !isUnpaid)
         {
-            throw new BusinessException("Đơn hàng đã thanh toán hoặc đang xử lý, không thể hủy.", ResponseCodeConstants.VAL_INVALID_STATE);
+            throw new BusinessException("Chỉ có thể hủy đơn hàng khi đơn chưa thanh toán.", ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
         var payTransaction = invoice.Transactions
@@ -97,77 +97,75 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
             .Select(i => i.DesignVariantId!.Value)
             .ToList();
 
+        var variants = new List<DesignVariant>();
         if (variantIdsToReturn.Any())
         {
-            var variants = await _context.DesignVariants
+            variants = await _context.DesignVariants
                 .Where(v => variantIdsToReturn.Contains(v.Id))
                 .ToListAsync(cancellationToken);
-            foreach (var item in order.OrderItems)
+        }
+
+        foreach (var item in order.OrderItems)
+        {
+            item.FulfillmentStatus = OrderItemStatuses.Cancelled;
+            item.LastModified = CoreHelper.SystemTimeNow;
+            item.LastModifiedBy = _user.Username;
+
+            switch (item.SourceType)
             {
-                item.FulfillmentStatus = OrderItemStatuses.Cancelled;
-                item.LastModified = CoreHelper.SystemTimeNow;
-                item.LastModifiedBy = _user.Username;
-
-
-                switch (item.SourceType)
-                {
-                    case SourceTypes.InStock:
-                        // 1. HOÀN KHO: ( tối ưu lại Logic cũ cho gọn)
-                        if (item.DesignVariantId.HasValue)
+                case SourceTypes.InStock:
+                    // 1. HOÀN KHO: ( tối ưu lại Logic cũ cho gọn)
+                    if (item.DesignVariantId.HasValue)
+                    {
+                        var variant = variants.FirstOrDefault(v => v.Id == item.DesignVariantId);
+                        if (variant != null)
                         {
-                            var variant = variants.FirstOrDefault(v => v.Id == item.DesignVariantId);
-                            if (variant != null)
+                            variant.StockQuantity += item.QuantityOrdered;
+                            _context.InventoryTransactions.Add(new InventoryTransaction
                             {
-                                variant.StockQuantity += item.QuantityOrdered;
-                                _context.InventoryTransactions.Add(new InventoryTransaction
-                                {
-                                    Id = Guid.NewGuid(),
-                                    DesignVariantId = variant.Id,
-                                    ReferenceId = order.Id,
-                                    Quantity = item.QuantityOrdered,
-                                    Type = InventoryTransactionTypes.OrderCancelReturn,
-                                    Note = $"Hoàn kho đơn {order.Code}. Lý do: {request.Reason}",
-                                    Created = CoreHelper.SystemTimeNow,
-                                    CreatedBy = _user.Username,
-                                    LastModified = CoreHelper.SystemTimeNow,
-                                    LastModifiedBy = _user.Username
-                                });
-                            }
+                                Id = Guid.NewGuid(),
+                                DesignVariantId = variant.Id,
+                                ReferenceId = order.Id,
+                                Quantity = item.QuantityOrdered,
+                                Type = InventoryTransactionTypes.OrderCancelReturn,
+                                Note = $"Hoàn kho đơn {order.Code}. Lý do: {request.Reason}",
+                                Created = CoreHelper.SystemTimeNow,
+                                CreatedBy = _user.Username,
+                                LastModified = CoreHelper.SystemTimeNow,
+                                LastModifiedBy = _user.Username
+                            });
                         }
-                        break;
+                    }
+                    break;
 
-                    case SourceTypes.DesignService:
-                        // 2. HỦY DỊCH VỤ THIẾT KẾ:
-                        // Nếu có bản ghi DesignWork đi kèm, phải chuyển nó về Sketching
-                        if (item.DesignWorkId.HasValue)
+                case SourceTypes.DesignService:
+                    // 2. HỦY DỊCH VỤ THIẾT KẾ:
+                    // Nếu có bản ghi DesignWork đi kèm, phải chuyển nó về Sketching
+                    if (item.DesignWorkId.HasValue)
+                    {
+                        var designWork = await _context.DesignWorks.FirstOrDefaultAsync(dw => dw.Id == item.DesignWorkId, cancellationToken);
+                        if (designWork != null && designWork.Status != DesignWorkStatus.Completed)
                         {
-                            var designWork = await _context.DesignWorks.FirstOrDefaultAsync(dw => dw.Id == item.DesignWorkId, cancellationToken);
-                            if (designWork != null && designWork.Status != DesignWorkStatus.Completed)
+                            designWork.Status = DesignWorkStatus.Sketching;
+
+                            // Ghi Log để nhân viên thiết kế biết dự án này đã bị hủy
+                            _context.DesignLogs.Add(new DesignLog
                             {
-                                designWork.Status = DesignWorkStatus.Sketching;
-
-                                // Ghi Log để nhân viên thiết kế biết dự án này đã bị hủy
-                                _context.DesignLogs.Add(new DesignLog
-                                {
-                                    Id = Guid.NewGuid(),
-                                    DesignWorkId = designWork.Id,
-                                    LogType = DesignLogType.StatusChange,
-                                    Content = $"Hệ thống: Đơn hàng {order.Code} đã bị hủy. Dự án thiết kế dừng lại.",
-                                    Created = CoreHelper.SystemTimeNow
-                                });
-                            }
+                                Id = Guid.NewGuid(),
+                                DesignWorkId = designWork.Id,
+                                LogType = DesignLogType.StatusChange,
+                                Content = $"Hệ thống: Đơn hàng {order.Code} đã bị hủy. Dự án thiết kế dừng lại.",
+                                Created = CoreHelper.SystemTimeNow
+                            });
                         }
-                        break;
+                    }
+                    break;
 
-                    case SourceTypes.PrintService:
-                    case SourceTypes.PreOrder:
-                        // 3. HỦY DỊCH VỤ IN / ĐẶT TRƯỚC:
-                        // Ở giai đoạn PENDING (chưa in), ta chỉ cần đổi trạng thái item.
-
-                        // item.Note = $"[Hủy in] Đơn hàng gốc đã hủy. Lý do: {request.Reason}";
-                        break;
-                }
-
+                case SourceTypes.PrintService:
+                case SourceTypes.PreOrder:
+                    // 3. HỦY DỊCH VỤ IN / ĐẶT TRƯỚC:
+                    // Ở giai đoạn PENDING (chưa in), ta chỉ cần đổi trạng thái item.
+                    break;
             }
         }
 
