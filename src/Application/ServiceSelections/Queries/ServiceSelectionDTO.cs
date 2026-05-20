@@ -14,6 +14,9 @@ public class ServiceSelectionDTO
     public decimal? TotalPrice { get; set; }
     public string? Note { get; set; }
     public bool? IsLocked { get; set; } 
+    public int? AdjustmentRoundLimit { get; set; }
+    public int? UsedAdjustmentRoundCount { get; set; }
+    public int? RemainingAdjustmentRoundCount { get; set; }
     public DateTimeOffset? Created { get; set; }
     public ICollection<ServiceSelectedOptionDTO>? ServiceSelectedOptions { get; init; }
 
@@ -21,7 +24,10 @@ public class ServiceSelectionDTO
     {
         public Mapping()
         {
-            CreateMap<ServiceSelection, ServiceSelectionDTO>();
+            CreateMap<ServiceSelection, ServiceSelectionDTO>()
+                .ForMember(
+                    d => d.RemainingAdjustmentRoundCount,
+                    opt => opt.MapFrom(s => Math.Max(0, s.AdjustmentRoundLimit - s.UsedAdjustmentRoundCount)));
         }
     }
 
