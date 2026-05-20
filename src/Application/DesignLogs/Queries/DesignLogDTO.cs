@@ -39,15 +39,22 @@ public class DesignLogDTO
                     : (s.IsAI ? "AI Assistant" : "SYSTEM")))
                 .ForMember(d => d.AvatarUrl, opt => opt.MapFrom(s => s.Account != null ? s.Account.ProfileImageURL : null))
 
+                // Sửa logic ImageUrls: Chỉ Deserialize nếu Metadata thực sự chứa mảng ảnh
                 .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src =>
-                    string.IsNullOrEmpty(src.Metadata)
-                        ? new List<string>()
-                        : JsonSerializer.Deserialize<List<string>>(src.Metadata, (JsonSerializerOptions?)null)))
+                    (src.LogType == "COMMUNICATION" || src.LogType == "VERSION_UPDATE") && !string.IsNullOrEmpty(src.Metadata)
+                        ? TryDeserializeList(src.Metadata)
+                        : new List<string>()))
 
                 .ForMember(dest => dest.Versions, opt => opt.MapFrom(src => src.VersionHistories))
-                // Metadata map trực tiếp chuỗi JSON sang DTO
                 .ForMember(d => d.Metadata, opt => opt.MapFrom(s => s.Metadata))
                 .ForMember(dest => dest.LogType, opt => opt.MapFrom(src => src.LogType.ToString()));
+        }
+
+        // Hàm phụ để tránh crash khi Metadata không phải định dạng List
+        private static List<string> TryDeserializeList(string json)
+        {
+            try { return JsonSerializer.Deserialize<List<string>>(json) ?? new(); }
+            catch { return new List<string>(); }
         }
     }
 }

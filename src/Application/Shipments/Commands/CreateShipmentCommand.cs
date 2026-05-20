@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Application.Shipments;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
@@ -50,11 +51,11 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
             throw new BusinessException($"Chỉ có thể tạo vận đơn khi đơn hàng đang ở trạng thái {processingLabel}.",
                 ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
         }
-        // Quy tắc 1: Chỉ ship 1 lần. 
-        // Kiểm tra xem đơn hàng đã có Shipment nào chưa bị Cancelled/Failed (đang xử lý hoặc đã xong) không.
+        // Quy tắc 1: Chỉ có một lượt giao đang xử lý tại một thời điểm.
         var hasActiveShipment = order.Shipments?
                     .Any(s => s.ShipmentStatus != ShipmentStatuses.Cancelled
-                            && s.ShipmentStatus != ShipmentStatuses.Failed);
+                            && s.ShipmentStatus != ShipmentStatuses.Returned
+                            && s.ShipmentStatus != ShipmentStatuses.LostOrDamaged);
 
         if (hasActiveShipment == true)
         {
@@ -72,27 +73,30 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
                 ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
         }
 
-        Guid? finalShippingAddressId = null;
+        ShippingAddress? finalShippingAddress = null;
         if (request.ShippingAddressId.HasValue)
         {
-            var validAddress = await _context.ShippingAddresses
-                .AnyAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == order.CustomerId, ct);
-            if (!validAddress)
+            finalShippingAddress = await _context.ShippingAddresses
+                .FirstOrDefaultAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == order.CustomerId, ct);
+            if (finalShippingAddress == null)
             {
                 throw new BusinessException("Địa chỉ giao hàng không hợp lệ hoặc không thuộc về khách hàng của đơn hàng này.", ResponseCodeConstants.FORBIDDEN);
             }
-
-            finalShippingAddressId = request.ShippingAddressId;
         }
         // Ưu tiên 2: Địa chỉ từ vận đơn cũ (nếu có shipment đã bị cancel/fail trước đó)
         else
         {
-            finalShippingAddressId = order.Shipments?
+            var previousShippingAddressId = order.Shipments?
                 .OrderByDescending(s => s.Created)
                 .FirstOrDefault()?.ShippingAddressId;
-            
+
+            if (previousShippingAddressId.HasValue)
+            {
+                finalShippingAddress = await _context.ShippingAddresses
+                    .FirstOrDefaultAsync(a => a.Id == previousShippingAddressId.Value && a.CustomerId == order.CustomerId, ct);
+            }
         }
-        if (finalShippingAddressId == null || finalShippingAddressId == Guid.Empty)
+        if (finalShippingAddress == null)
         {
             throw new BusinessException("Không tìm thấy địa chỉ giao hàng hợp lệ. Vui lòng cung cấp mã địa chỉ giao hàng.");
         }
@@ -101,8 +105,6 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
         {
             Id = Guid.NewGuid(),
             OrderId = order.Id,
-            // Nếu request có địa chỉ mới thì dùng, không thì lấy từ đơn hàng cũ
-            ShippingAddressId = finalShippingAddressId.Value,
             ShippingFee = 0, 
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
@@ -110,6 +112,7 @@ public class CreateShipmentCommandHandler : IRequestHandler<CreateShipmentComman
             LastModified = CoreHelper.SystemTimeNow,
             LastModifiedBy = _user.Username,
         };
+        ShipmentAddressSnapshot.Apply(shipment, finalShippingAddress);
 
         // 3. Cập nhật Order Status (Nếu cần)
         // Khi tạo vận đơn, đơn hàng nên được xác nhận là đang xử lý

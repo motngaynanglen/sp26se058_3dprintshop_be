@@ -50,6 +50,33 @@ public class ShipmentEndpoints : EndpointGroupBase
             .WithSummary("[Staff] Báo cáo sự cố giao hàng thất bại.")
             .WithDescription("Chuyển trạng thái sang 'Failed'. Yêu cầu nhập lý do để làm căn cứ xử lý (giao lại hoặc hoàn hàng).");
 
+        group.MapPatch("/{id}/mark-returning", MarkReturning)
+            .WithSummary("[Staff] Xác nhận kiện hàng đang chuyển hoàn.")
+            .WithDescription("Chuyển trạng thái sang 'Returning'. Áp dụng khi kiện hàng đang giao hoặc đã giao thất bại.");
+
+        group.MapPatch("/{id}/confirm-returned", ConfirmReturned)
+            .WithSummary("[Staff] Xác nhận đã nhận hàng hoàn.")
+            .WithDescription("Chuyển trạng thái từ 'Returning' sang 'Returned'.");
+
+        group.MapPatch("/{id}/mark-lost-or-damaged", MarkLostOrDamaged)
+            .WithSummary("[Staff/Manager] Ghi nhận kiện hàng thất lạc hoặc hư hỏng.")
+            .WithDescription("Chuyển trạng thái từ 'Returning' sang 'LostOrDamaged'.");
+
+        group.MapPatch("/{id}/cancel", Cancel)
+            .WithSummary("[Staff/Manager] Hủy lượt vận chuyển.")
+            .WithDescription("Chỉ hủy vận đơn, không hủy đơn hàng/hóa đơn. Áp dụng khi chưa bàn giao cho đơn vị vận chuyển.");
+
+        group.MapPost("/{id}/address-change-requests", RequestAddressChange)
+            .WithSummary("[Customer] Gửi yêu cầu đổi địa chỉ giao hàng.")
+            .WithDescription("Khách hàng chỉ gửi yêu cầu; staff/manager xác minh thực tế rồi duyệt hoặc từ chối.");
+
+        group.MapPatch("/address-change-requests/{id}/approve", ApproveAddressChange)
+            .WithSummary("[Staff/Manager] Duyệt yêu cầu đổi địa chỉ giao hàng.")
+            .WithDescription("Chỉ duyệt nếu vận đơn chưa được bàn giao cho đơn vị vận chuyển.");
+
+        group.MapPatch("/address-change-requests/{id}/reject", RejectAddressChange)
+            .WithSummary("[Staff/Manager] Từ chối yêu cầu đổi địa chỉ giao hàng.");
+
         // --- NHÓM CẬP NHẬT HÀNH CHÍNH ---
         group.MapPatch("/Add", Create)
             .WithSummary("[Staff/Manager] Tạo mới một vận đơn.")
@@ -133,6 +160,76 @@ public class ShipmentEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
             data: result,
             message: "Đã ghi nhận sự cố giao hàng.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> MarkReturning([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsReturningCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Đã ghi nhận kiện hàng đang chuyển hoàn.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> ConfirmReturned([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ConfirmShipmentReturnedCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Đã xác nhận nhận hàng hoàn.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> MarkLostOrDamaged([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] MarkShipmentAsLostOrDamagedCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Đã ghi nhận kiện hàng thất lạc hoặc hư hỏng.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> Cancel([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelShipmentCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+            data: result,
+            message: "Đã hủy lượt vận chuyển.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> RequestAddressChange([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] RequestShipmentAddressChangeCommand command)
+    {
+        var finalCommand = command with { ShipmentId = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentAddressChangeRequestDTO>.OkResponseModel(
+            data: result,
+            message: "Đã gửi yêu cầu đổi địa chỉ giao hàng.",
+            code: ResponseCodeConstants.CREATED));
+    }
+
+    public async Task<IResult> ApproveAddressChange([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] ApproveShipmentAddressChangeCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentAddressChangeRequestDTO>.OkResponseModel(
+            data: result,
+            message: "Đã duyệt yêu cầu đổi địa chỉ giao hàng.",
+            code: ResponseCodeConstants.UPDATED));
+    }
+
+    public async Task<IResult> RejectAddressChange([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] RejectShipmentAddressChangeCommand command)
+    {
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<ShipmentAddressChangeRequestDTO>.OkResponseModel(
+            data: result,
+            message: "Đã từ chối yêu cầu đổi địa chỉ giao hàng.",
             code: ResponseCodeConstants.UPDATED));
     }
 }
