@@ -34,6 +34,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<TechnicalDraft> TechnicalDrafts => Set<TechnicalDraft>();
     public DbSet<ShippingAddress> ShippingAddresses => Set<ShippingAddress>();
     public DbSet<Shipment> Shipments => Set<Shipment>();
+    public DbSet<ShipmentAddressChangeRequest> ShipmentAddressChangeRequests => Set<ShipmentAddressChangeRequest>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<FeedbackImage> FeedbackImages => Set<FeedbackImage>();
     public DbSet<ServiceOption> ServiceOptions => Set<ServiceOption>();

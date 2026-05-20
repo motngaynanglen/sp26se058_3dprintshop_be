@@ -15,6 +15,7 @@ internal static class SupportCatalogProvider
             ["order-item"] = Map(OrderItemStatuses.All),
             ["order"] = Map(OrderStatuses.All),
             ["shipment"] = Map(ShipmentStatuses.All),
+            ["shipment-address-change-request"] = Map(ShipmentAddressChangeRequestStatuses.All),
             ["transaction"] = Map(TransactionStatuses.All),
         };
 
