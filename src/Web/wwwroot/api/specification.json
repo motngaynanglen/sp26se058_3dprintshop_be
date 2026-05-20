@@ -925,6 +925,178 @@
         }
       }
     },
+    "/api/dashboard/manager/charts/revenue": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ doanh thu theo ngày/tháng.",
+        "description": "Query params: from, to, groupBy=day|month.",
+        "operationId": "GetApiDashboardManagerChartsRevenue",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/charts/orders-by-status": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ đơn hàng theo trạng thái.",
+        "operationId": "GetApiDashboardManagerChartsOrdersByStatus",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/charts/shipments-by-status": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ vận đơn theo trạng thái.",
+        "operationId": "GetApiDashboardManagerChartsShipmentsByStatus",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/charts/design-works-by-status": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ thiết kế theo trạng thái.",
+        "operationId": "GetApiDashboardManagerChartsDesignWorksByStatus",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/charts/orders-by-source-type": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ đơn hàng theo loại nguồn.",
+        "description": "Query params: from, to.",
+        "operationId": "GetApiDashboardManagerChartsOrdersBySourceType",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/charts/top-variants": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Biểu đồ top sản phẩm/biến thể bán chạy.",
+        "description": "Query params: from, to, limit.",
+        "operationId": "GetApiDashboardManagerChartsTopVariants",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/dashboard/staff": {
       "get": {
         "tags": [
@@ -1036,13 +1208,79 @@
         }
       }
     },
+    "/api/design-log/request-adjustment": {
+      "post": {
+        "tags": [
+          "Design Log"
+        ],
+        "summary": "[Customer/Staff/Manager] Tạo yêu cầu hiệu chỉnh chờ duyệt",
+        "description": "Tạo DesignLog loại ADJUSTMENT_REQUEST ở trạng thái PENDING_REVIEW. Chưa trừ lượt hiệu chỉnh cho đến khi Staff/Manager duyệt.",
+        "operationId": "PostApiDesignLogRequestAdjustment",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdjustmentRequestLogCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-log/{id}/review-adjustment": {
+      "post": {
+        "tags": [
+          "Design Log"
+        ],
+        "summary": "[Staff/Manager] Duyệt hoặc từ chối yêu cầu hiệu chỉnh",
+        "description": "Nếu duyệt in-scope thì trừ một lượt hiệu chỉnh đã thanh toán bằng cập nhật có điều kiện; nếu từ chối/out-of-scope thì không trừ lượt và yêu cầu khách tạo nhánh/đơn mới.",
+        "operationId": "PostApiDesignLogReviewAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewAdjustmentRequestLogCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-log/{designWorkId}/getLogsByWork": {
       "get": {
         "tags": [
           "Design Log"
         ],
         "summary": "[All Roles] Lấy danh sách log theo công việc thiết kế",
-        "description": "Lấy danh sách log liên quan đến một công việc thiết kế. Dành cho tất cả các vai trò.",
+        "description": "Lấy log theo kiểu chat. Lần đầu không truyền beforeLogId để lấy log mới nhất; khi load tin cũ hơn, truyền beforeLogId là id log cũ nhất đang có trên màn hình.",
         "operationId": "GetApiDesignLogGetLogsByWork",
         "parameters": [
           {
@@ -1054,6 +1292,36 @@
               "format": "guid"
             },
             "x-position": 1
+          },
+          {
+            "name": "beforeLogId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "guid",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 3
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 30
+            },
+            "x-position": 4
           }
         ],
         "responses": {
@@ -2684,13 +2952,127 @@
         }
       }
     },
+    "/api/service-option/active": {
+      "get": {
+        "tags": [
+          "Service Option"
+        ],
+        "summary": "[Customer] Lấy danh sách tùy chọn dịch vụ đang mở bán.",
+        "operationId": "GetApiServiceOptionActive",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/service-option/all": {
       "get": {
         "tags": [
           "Service Option"
         ],
-        "summary": "[All] Lấy danh sách tùy chọn dịch vụ.",
+        "summary": "[Staff/Manager] Lấy danh sách tùy chọn dịch vụ có phân trang và bộ lọc.",
         "operationId": "GetApiServiceOptionAll",
+        "parameters": [
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "GroupCode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "SelectionType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "IsActive",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "SortBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 5
+          },
+          {
+            "name": "SortDescending",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            },
+            "x-position": 6
+          },
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 7
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 8
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Service Option"
+        ],
+        "summary": "[Staff/Manager] Lấy danh sách tùy chọn dịch vụ có phân trang và bộ lọc.",
+        "operationId": "PostApiServiceOptionAll",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetServiceOptionsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
         "responses": {
           "200": {
             "description": ""
@@ -2704,6 +3086,7 @@
           "Service Option"
         ],
         "summary": "[Staff/Manager] Tạo tùy chọn dịch vụ mới.",
+        "description": "Tạo một tùy chọn dịch vụ mới.\n\nDanh sách groupCode/groupName FE nên dùng:\n- DESIGN_PACKAGE / Gói thiết kế: selectionType=SINGLE. Gói chính của dịch vụ thiết kế, bắt buộc chọn 1 khi tạo order thiết kế mới. Có thể có adjustmentRoundDelta > 0 để cấp lượt chỉnh sửa ban đầu.\n- COMPLEXITY / Độ phức tạp: selectionType=SINGLE. Chọn 1 mức độ phức tạp: đơn giản, trung bình, cao. adjustmentRoundDelta nên là null.\n- DEADLINE / Thời gian xử lý: selectionType=SINGLE. Chọn 1 tốc độ xử lý: tiêu chuẩn, ưu tiên, hỏa tốc. adjustmentRoundDelta nên là null.\n- DELIVERABLE / File bàn giao: selectionType=MULTIPLE. Các loại file/kết quả khách nhận, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- PRINTABILITY / Tối ưu in 3D: selectionType=MULTIPLE. Các dịch vụ kiểm tra/tối ưu để mẫu in được, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- MODEL_SCOPE / Phạm vi mẫu: selectionType=QUANTITY. Dùng cho phần tính thêm theo số lượng chi tiết/cá nhân hóa. FE cần cho nhập quantity. adjustmentRoundDelta nên là null.\n- REVISION / Lượt chỉnh sửa: selectionType=QUANTITY. Mua thêm lượt chỉnh sửa trong phạm vi đã thanh toán. Bắt buộc adjustmentRoundDelta > 0.\n- NEW_SCOPE / Yêu cầu ngoài phạm vi: selectionType=ADDON. Dùng để tư vấn/mở order mới hoặc nhánh mới; không dùng để cộng lượt chỉnh sửa. adjustmentRoundDelta nên là null.\n\nRule selectionType cho FE:\n- SINGLE: radio/select, chỉ chọn một option trong cùng groupCode.\n- MULTIPLE: checkbox, có thể chọn nhiều option trong cùng groupCode.\n- QUANTITY: input/stepper số lượng, quantity phải nằm trong minQuantity/maxQuantity nếu có.\n- ADDON: tùy chọn bổ sung đơn lẻ.\n\nRule adjustmentRoundDelta:\n- null: option không liên quan lượt chỉnh sửa.\n- >= 0: hợp lệ nếu có giá trị.\n- REVISION: bắt buộc > 0.",
         "operationId": "PostApiServiceOptionAdd",
         "requestBody": {
           "x-name": "command",
@@ -4217,6 +4600,48 @@
           }
         }
       },
+      "CreateAdjustmentRequestLogCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "designWorkId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "parentLogId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "default": "Tổng hợp yêu cầu hiệu chỉnh theo brief ban đầu từ nội dung trao đổi với khách.",
+            "nullable": true
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReviewAdjustmentRequestLogCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "isApproved": {
+            "type": "boolean",
+            "default": true
+          },
+          "decisionNote": {
+            "type": "string",
+            "default": "Yêu cầu nằm trong phạm vi brief ban đầu.",
+            "nullable": true
+          }
+        }
+      },
       "SyncDesignTagCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -5018,6 +5443,26 @@
               "type": "string",
               "format": "guid"
             }
+          },
+          "serviceOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckoutServiceOptionSelectionRequest"
+            }
+          }
+        }
+      },
+      "CheckoutServiceOptionSelectionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "serviceOptionId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5066,6 +5511,44 @@
           }
         }
       },
+      "GetServiceOptionsWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "nullable": true
+              },
+              "groupCode": {
+                "type": "string",
+                "nullable": true
+              },
+              "selectionType": {
+                "type": "string",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "Group",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        ]
+      },
       "CreateServiceOptionCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -5078,10 +5561,47 @@
             "type": "string",
             "default": "Thiết kế quy chuẩn"
           },
+          "description": {
+            "type": "string",
+            "default": "Dịch vụ thiết kế mẫu 3D theo yêu cầu cơ bản.",
+            "nullable": true
+          },
+          "groupCode": {
+            "type": "string",
+            "default": "DESIGN"
+          },
+          "groupName": {
+            "type": "string",
+            "default": "Thiết kế"
+          },
+          "selectionType": {
+            "type": "string",
+            "default": "ADDON"
+          },
           "defaultPrice": {
             "type": "number",
             "format": "decimal",
             "default": 100
+          },
+          "minQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": 1
+          },
+          "maxQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "adjustmentRoundDelta": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
           }
         }
       },
@@ -5097,14 +5617,59 @@
             "type": "string",
             "nullable": true
           },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "groupCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "groupName": {
+            "type": "string",
+            "nullable": true
+          },
+          "selectionType": {
+            "type": "string",
+            "nullable": true
+          },
           "defaultPrice": {
             "type": "number",
             "format": "decimal",
             "nullable": true
           },
+          "minQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "adjustmentRoundDelta": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "isActive": {
             "type": "boolean",
             "nullable": true
+          },
+          "clearDescription": {
+            "type": "boolean"
+          },
+          "clearMaxQuantity": {
+            "type": "boolean"
+          },
+          "clearAdjustmentRoundDelta": {
+            "type": "boolean"
           }
         }
       },

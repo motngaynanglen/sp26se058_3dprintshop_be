@@ -11,9 +11,14 @@ public class ServiceSelectedOptionDTO
     public Guid Id { get; set; }
     public Guid ServiceOptionId { get; set; }
     public Guid ServiceSelectionId { get; set; }
+    public string? OptionCodeSnapshot { get; set; }
     public string? OptionNameSnapshot { get; set; }
+    public string? OptionDescriptionSnapshot { get; set; }
+    public string? OptionGroupCodeSnapshot { get; set; }
+    public string? OptionGroupNameSnapshot { get; set; }
     public int? Quantity { get; set; }
     public decimal? AppliedPrice { get; set; }
+    public int? AdjustmentRoundDeltaSnapshot { get; set; }
     private class Mapping : Profile
     {
         public Mapping()

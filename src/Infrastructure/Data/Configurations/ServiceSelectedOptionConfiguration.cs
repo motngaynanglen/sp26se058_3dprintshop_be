@@ -29,7 +29,28 @@ public class ServiceSelectedOptionConfiguration : IEntityTypeConfiguration<Servi
             .HasPrecision(18, 2)
             .IsRequired(); // Bắt buộc phải lưu giá tại thời điểm khách chọn
 
+        builder.Property(x => x.OptionCodeSnapshot)
+            .HasMaxLength(50)
+            .HasDefaultValue("N/A")
+            .IsRequired();
+
+        builder.Property(x => x.OptionNameSnapshot)
+            .HasMaxLength(100)
+            .HasDefaultValue("N/A")
+            .IsRequired();
+
+        builder.Property(x => x.OptionDescriptionSnapshot)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.OptionGroupCodeSnapshot)
+            .HasMaxLength(50);
+
+        builder.Property(x => x.OptionGroupNameSnapshot)
+            .HasMaxLength(100);
+
         builder.Property(x => x.Quantity)
             .HasDefaultValue(1);
+
+        builder.Property(x => x.AdjustmentRoundDeltaSnapshot);
     }
 }

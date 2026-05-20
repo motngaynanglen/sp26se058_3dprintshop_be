@@ -22,6 +22,11 @@ public class DesignLogDTO
     public DateTimeOffset Created { get; set; }
     public string? CreatedBy { get; set; }
     public string? Metadata { get; set; }
+    public string? AdjustmentRequestStatus { get; set; }
+    public Guid? AdjustmentConsumedServiceSelectionId { get; set; }
+    public Guid? AdjustmentReviewedByAccountId { get; set; }
+    public DateTimeOffset? AdjustmentReviewedAt { get; set; }
+    public string? AdjustmentDecisionNote { get; set; }
 
 
     public List<string> ImageUrls { get; set; } = new();
@@ -41,7 +46,7 @@ public class DesignLogDTO
 
                 // Sửa logic ImageUrls: Chỉ Deserialize nếu Metadata thực sự chứa mảng ảnh
                 .ForMember(dest => dest.ImageUrls, opt => opt.MapFrom(src =>
-                    (src.LogType == "COMMUNICATION" || src.LogType == "VERSION_UPDATE") && !string.IsNullOrEmpty(src.Metadata)
+                    (src.LogType == "COMMUNICATION" || src.LogType == "VERSION_UPDATE" || src.LogType == "ADJUSTMENT_REQUEST") && !string.IsNullOrEmpty(src.Metadata)
                         ? TryDeserializeList(src.Metadata)
                         : new List<string>()))
 
