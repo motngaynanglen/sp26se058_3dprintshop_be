@@ -22,7 +22,7 @@
           "Account"
         ],
         "summary": "[SystemAdmin/Manager] Truy vấn danh sách tài khoản.",
-        "description": "SystemAdmin xem toàn bộ tài khoản. Manager chỉ xem và quản lý tài khoản Staff.",
+        "description": "Quản trị hệ thống xem toàn bộ tài khoản. Quản lý chỉ xem và quản lý tài khoản nhân viên.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
           "x-name": "command",
@@ -76,7 +76,7 @@
           "Account"
         ],
         "summary": "[SystemAdmin/Manager] Tạo tài khoản mới.",
-        "description": "SystemAdmin tạo Manager/Staff/Customer. Manager chỉ được tạo tài khoản Staff.",
+        "description": "Quản trị hệ thống tạo tài khoản quản lý/nhân viên/khách hàng. Quản lý chỉ được tạo tài khoản nhân viên.",
         "operationId": "PostApiAccountAdd",
         "requestBody": {
           "x-name": "command",
@@ -103,7 +103,7 @@
           "Account"
         ],
         "summary": "[SystemAdmin/Manager] Lấy thông tin chi tiết tài khoản.",
-        "description": "SystemAdmin xem toàn bộ. Manager chỉ xem chi tiết Staff.",
+        "description": "Quản trị hệ thống xem toàn bộ. Quản lý chỉ xem chi tiết tài khoản nhân viên.",
         "operationId": "GetApiAccountDetail",
         "parameters": [
           {
@@ -156,7 +156,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Cập nhật thông tin tài khoản với ID. Manager chỉ cập nhật Staff.",
+        "summary": "[SystemAdmin/Manager] Cập nhật thông tin tài khoản với mã. Quản lý chỉ cập nhật nhân viên.",
         "operationId": "PatchApiAccountUpdate",
         "parameters": [
           {
@@ -194,7 +194,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Kích hoạt tài khoản có ID. Manager chỉ kích hoạt Staff.",
+        "summary": "[SystemAdmin/Manager] Kích hoạt tài khoản có mã. Quản lý chỉ kích hoạt nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountActive",
         "parameters": [
@@ -233,7 +233,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có ID. Manager chỉ vô hiệu hóa Staff.",
+        "summary": "[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có mã. Quản lý chỉ vô hiệu hóa nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountDeactive",
         "parameters": [
@@ -272,7 +272,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Xóa mềm tài khoản có ID. Manager chỉ xóa mềm Staff.",
+        "summary": "[SystemAdmin/Manager] Xóa mềm tài khoản có mã. Quản lý chỉ xóa mềm nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "DeleteApiAccountDelete",
         "parameters": [
@@ -1063,7 +1063,7 @@
           "Design Template"
         ],
         "summary": "[All] Truy vấn danh sách mẫu thiết kế có phân trang",
-        "description": "Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.",
+        "description": "Hệ thống tự động chỉ hiển thị dữ liệu đang hoạt động đối với khách hàng. Nhân viên/quản lý có thể xem toàn bộ.",
         "operationId": "PostApiDesignTemplateQuery",
         "requestBody": {
           "x-name": "query",
@@ -1144,7 +1144,7 @@
           "Design Template"
         ],
         "summary": "[Staff/Manager] Tạo mới mẫu thiết kế",
-        "description": "Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.",
+        "description": "Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.",
         "operationId": "PostApiDesignTemplateAdd",
         "requestBody": {
           "x-name": "command",
@@ -1237,7 +1237,7 @@
           "Design Variant"
         ],
         "summary": "[All] Truy vấn danh sách Biến thể",
-        "description": "Hỗ trợ lọc theo TemplateId, MaterialId. Tự động ẩn hàng IsActive=false đối với Customer.",
+        "description": "Hỗ trợ lọc theo mã mẫu thiết kế và mã vật liệu. Tự động ẩn dữ liệu ngưng hoạt động đối với khách hàng.",
         "operationId": "PostApiDesignVariantQuery",
         "requestBody": {
           "x-name": "query",
@@ -1356,7 +1356,7 @@
         "tags": [
           "Design Version"
         ],
-        "summary": "[Customer/Staff/Manager] Lấy danh sách file version theo DesignWork.",
+        "summary": "[Customer/Staff/Manager] Lấy danh sách phiên bản file theo công việc thiết kế.",
         "operationId": "GetApiDesignVersionDesignWork",
         "parameters": [
           {
@@ -1382,7 +1382,7 @@
         "tags": [
           "Design Version"
         ],
-        "summary": "[Customer/Staff/Manager] Lấy chi tiết file version.",
+        "summary": "[Customer/Staff/Manager] Lấy chi tiết phiên bản file.",
         "operationId": "GetApiDesignVersionDetail",
         "parameters": [
           {
@@ -1408,7 +1408,7 @@
         "tags": [
           "Design Version"
         ],
-        "summary": "[Staff/Manager] Cập nhật trạng thái có thể in của file version.",
+        "summary": "[Staff/Manager] Cập nhật trạng thái có thể in của phiên bản file.",
         "operationId": "PatchApiDesignVersionPrintable",
         "parameters": [
           {
@@ -1447,7 +1447,7 @@
           "Design Work"
         ],
         "summary": "[All] Truy vấn danh sách công việc thiết kế có phân trang",
-        "description": "Hệ thống tự động lọc IsActive = true đối với khách hàng. Staff/Manager có thể xem toàn bộ.",
+        "description": "Hệ thống tự động chỉ hiển thị dữ liệu đang hoạt động đối với khách hàng. Nhân viên/quản lý có thể xem toàn bộ.",
         "operationId": "PostApiDesignWorkQuery",
         "requestBody": {
           "x-name": "request",
@@ -1501,7 +1501,7 @@
           "Design Work"
         ],
         "summary": "[Staff/Manager] Tạo mới công việc thiết kế",
-        "description": "Chỉ dành cho Staff hoặc Manager. Yêu cầu nhập đầy đủ Code và Name.",
+        "description": "Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.",
         "operationId": "PostApiDesignWorkAdd",
         "requestBody": {
           "x-name": "request",
@@ -1567,7 +1567,7 @@
           "Design Work"
         ],
         "summary": "[Staff/Manager] Cập nhật trạng thái phê duyệt công việc thiết kế",
-        "description": "Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái phê duyệt của công việc thiết kế.",
+        "description": "Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái phê duyệt của công việc thiết kế.",
         "operationId": "PatchApiDesignWorkMarkApprove",
         "parameters": [
           {
@@ -1606,7 +1606,7 @@
           "Design Work"
         ],
         "summary": "[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế",
-        "description": "Chỉ dành cho Staff hoặc Manager. Cập nhật trạng thái có thể in của công việc thiết kế.",
+        "description": "Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái có thể in của công việc thiết kế.",
         "operationId": "PatchApiDesignWorkMarkPrintable",
         "parameters": [
           {
@@ -1672,7 +1672,7 @@
           "Design Work"
         ],
         "summary": "[Customer] Yêu cầu chỉnh sửa thêm",
-        "description": "Tạo một DesignWork revision mới từ DesignWork đã có, giữ quan hệ Parent/Root để tra lịch sử.",
+        "description": "Tạo một phiên bản chỉnh sửa mới từ công việc thiết kế đã có, giữ quan hệ cha/gốc để tra lịch sử.",
         "operationId": "PostApiDesignWorkRequestRework",
         "parameters": [
           {
@@ -2469,6 +2469,21 @@
         }
       }
     },
+    "/api/order/sync-expired-pending-cancellations": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "[Staff/Manager] Đồng bộ hủy các đơn hàng chờ thanh toán đã quá hạn.",
+        "description": "Chủ động quét các đơn PENDING đã quá hạn thanh toán, hủy đơn, hủy giao dịch, hủy vận đơn và hoàn kho nếu cần.",
+        "operationId": "PostApiOrderSyncExpiredPendingCancellations",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/order/item/{orderItemId}/finish-package": {
       "patch": {
         "tags": [
@@ -2502,7 +2517,7 @@
           "Order"
         ],
         "summary": "[Customer/Staff/Manager] Hoàn thành đơn hàng (Đóng đơn).",
-        "description": "Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Staff/Manager chỉ được bấm sau 3 ngày kể từ khi Delivered.",
+        "description": "Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Nhân viên/quản lý chỉ được bấm sau 3 ngày kể từ khi đơn được giao thành công.",
         "operationId": "PatchApiOrderComplete",
         "parameters": [
           {
@@ -2891,6 +2906,278 @@
         }
       }
     },
+    "/api/shipment/{id}/mark-returning": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff] Xác nhận kiện hàng đang chuyển hoàn.",
+        "description": "Chuyển trạng thái sang 'Returning'. Áp dụng khi kiện hàng đang giao hoặc đã giao thất bại.",
+        "operationId": "PatchApiShipmentMarkReturning",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkShipmentAsReturningCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/confirm-returned": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff] Xác nhận đã nhận hàng hoàn.",
+        "description": "Chuyển trạng thái từ 'Returning' sang 'Returned'.",
+        "operationId": "PatchApiShipmentConfirmReturned",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmShipmentReturnedCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/mark-lost-or-damaged": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Ghi nhận kiện hàng thất lạc hoặc hư hỏng.",
+        "description": "Chuyển trạng thái từ 'Returning' sang 'LostOrDamaged'.",
+        "operationId": "PatchApiShipmentMarkLostOrDamaged",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkShipmentAsLostOrDamagedCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/cancel": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Hủy lượt vận chuyển.",
+        "description": "Chỉ hủy vận đơn, không hủy đơn hàng/hóa đơn. Áp dụng khi chưa bàn giao cho đơn vị vận chuyển.",
+        "operationId": "PatchApiShipmentCancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelShipmentCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/address-change-requests": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Customer] Gửi yêu cầu đổi địa chỉ giao hàng.",
+        "description": "Khách hàng chỉ gửi yêu cầu; staff/manager xác minh thực tế rồi duyệt hoặc từ chối.",
+        "operationId": "PostApiShipmentAddressChangeRequests",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestShipmentAddressChangeCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/address-change-requests/{id}/approve": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Duyệt yêu cầu đổi địa chỉ giao hàng.",
+        "description": "Chỉ duyệt nếu vận đơn chưa được bàn giao cho đơn vị vận chuyển.",
+        "operationId": "PatchApiShipmentAddressChangeRequestsApprove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveShipmentAddressChangeCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/address-change-requests/{id}/reject": {
+      "patch": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Từ chối yêu cầu đổi địa chỉ giao hàng.",
+        "operationId": "PatchApiShipmentAddressChangeRequestsReject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectShipmentAddressChangeCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/shipment/Add": {
       "patch": {
         "tags": [
@@ -3041,7 +3328,7 @@
           "Technical Draft"
         ],
         "summary": "[Staff] Tạo bản nháp kỹ thuật mới",
-        "description": "Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho Staff.",
+        "description": "Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho nhân viên.",
         "operationId": "PostApiTechnicalDraft",
         "requestBody": {
           "x-name": "request",
@@ -3141,7 +3428,7 @@
         "tags": [
           "Technical Draft"
         ],
-        "summary": "[Customer/Staff/Manager] Lấy danh sách draft theo DesignWork",
+        "summary": "[Customer/Staff/Manager] Lấy danh sách bản nháp theo công việc thiết kế",
         "operationId": "GetApiTechnicalDraftDesignWork",
         "parameters": [
           {
@@ -4686,7 +4973,7 @@
             "properties": {
               "status": {
                 "type": "string",
-                "default": "PENDING",
+                "default": "PREPARING",
                 "nullable": true
               },
               "search": {
@@ -4737,6 +5024,76 @@
             "format": "guid"
           },
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "MarkShipmentAsReturningCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ConfirmShipmentReturnedCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "MarkShipmentAsLostOrDamagedCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelShipmentCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RequestShipmentAddressChangeCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "newShippingAddressId": {
+            "type": "string",
+            "format": "guid"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ApproveShipmentAddressChangeCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "responseNote": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RejectShipmentAddressChangeCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "responseNote": {
             "type": "string"
           }
         }
