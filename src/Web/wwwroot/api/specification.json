@@ -3086,6 +3086,7 @@
           "Service Option"
         ],
         "summary": "[Staff/Manager] Tạo tùy chọn dịch vụ mới.",
+        "description": "Tạo một tùy chọn dịch vụ mới.\n\nDanh sách groupCode/groupName FE nên dùng:\n- DESIGN_PACKAGE / Gói thiết kế: selectionType=SINGLE. Gói chính của dịch vụ thiết kế, bắt buộc chọn 1 khi tạo order thiết kế mới. Có thể có adjustmentRoundDelta > 0 để cấp lượt chỉnh sửa ban đầu.\n- COMPLEXITY / Độ phức tạp: selectionType=SINGLE. Chọn 1 mức độ phức tạp: đơn giản, trung bình, cao. adjustmentRoundDelta nên là null.\n- DEADLINE / Thời gian xử lý: selectionType=SINGLE. Chọn 1 tốc độ xử lý: tiêu chuẩn, ưu tiên, hỏa tốc. adjustmentRoundDelta nên là null.\n- DELIVERABLE / File bàn giao: selectionType=MULTIPLE. Các loại file/kết quả khách nhận, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- PRINTABILITY / Tối ưu in 3D: selectionType=MULTIPLE. Các dịch vụ kiểm tra/tối ưu để mẫu in được, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- MODEL_SCOPE / Phạm vi mẫu: selectionType=QUANTITY. Dùng cho phần tính thêm theo số lượng chi tiết/cá nhân hóa. FE cần cho nhập quantity. adjustmentRoundDelta nên là null.\n- REVISION / Lượt chỉnh sửa: selectionType=QUANTITY. Mua thêm lượt chỉnh sửa trong phạm vi đã thanh toán. Bắt buộc adjustmentRoundDelta > 0.\n- NEW_SCOPE / Yêu cầu ngoài phạm vi: selectionType=ADDON. Dùng để tư vấn/mở order mới hoặc nhánh mới; không dùng để cộng lượt chỉnh sửa. adjustmentRoundDelta nên là null.\n\nRule selectionType cho FE:\n- SINGLE: radio/select, chỉ chọn một option trong cùng groupCode.\n- MULTIPLE: checkbox, có thể chọn nhiều option trong cùng groupCode.\n- QUANTITY: input/stepper số lượng, quantity phải nằm trong minQuantity/maxQuantity nếu có.\n- ADDON: tùy chọn bổ sung đơn lẻ.\n\nRule adjustmentRoundDelta:\n- null: option không liên quan lượt chỉnh sửa.\n- >= 0: hợp lệ nếu có giá trị.\n- REVISION: bắt buộc > 0.",
         "operationId": "PostApiServiceOptionAdd",
         "requestBody": {
           "x-name": "command",
@@ -5595,7 +5596,6 @@
           "adjustmentRoundDelta": {
             "type": "integer",
             "format": "int32",
-            "default": 0,
             "nullable": true
           },
           "sortOrder": {

@@ -50,6 +50,9 @@ public class ServiceOptionConfiguration : IEntityTypeConfiguration<ServiceOption
         builder.Property(x => x.SortOrder)
             .HasDefaultValue(0);
 
+        builder.Property(x => x.AdjustmentRoundDelta)
+            .IsRequired(false);
+
         
     }
 }
