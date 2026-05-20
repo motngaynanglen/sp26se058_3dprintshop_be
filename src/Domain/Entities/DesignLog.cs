@@ -24,6 +24,11 @@ public class DesignLog : BaseAuditableEntity
 
     public string LogType { get; set; } = "COMMUNICATION";
     // COMMUNICATION, INTERNAL_NOTE, SYSTEM, VERSION_UPDATE, AI_GEN, STATUS_CHANGE
+    public string? AdjustmentRequestStatus { get; set; }
+    public Guid? AdjustmentConsumedServiceSelectionId { get; set; }
+    public Guid? AdjustmentReviewedByAccountId { get; set; }
+    public DateTimeOffset? AdjustmentReviewedAt { get; set; }
+    public string? AdjustmentDecisionNote { get; set; }
     // === STATUS ===
     public bool IsRead { get; set; } = false;
     // === NAVIGATION ===

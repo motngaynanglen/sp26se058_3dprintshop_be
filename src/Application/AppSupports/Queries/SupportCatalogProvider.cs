@@ -17,6 +17,7 @@ internal static class SupportCatalogProvider
             ["shipment"] = Map(ShipmentStatuses.All),
             ["shipment-address-change-request"] = Map(ShipmentAddressChangeRequestStatuses.All),
             ["transaction"] = Map(TransactionStatuses.All),
+            ["adjustment-request"] = Map(AdjustmentRequestStatuses.All),
         };
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyCollection<SupportCatalogItemDTO>> Types =
@@ -26,6 +27,7 @@ internal static class SupportCatalogProvider
             ["design-relationship"] = Map(DesignRelationshipType.All),
             ["inventory-transaction"] = Map(InventoryTransactionTypes.All),
             ["payment-method"] = Map(PaymentMethods.All),
+            ["service-option-selection"] = Map(ServiceOptionSelectionTypes.All),
             ["source"] = Map(SourceTypes.All),
         };
 
