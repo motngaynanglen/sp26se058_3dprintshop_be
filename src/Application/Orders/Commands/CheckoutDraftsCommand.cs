@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Application.Shipments;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -62,8 +63,8 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
         await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, ct);
 
         var address = await _context.ShippingAddresses
-            .AnyAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, ct);
-        if (!address) failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ không hợp lệ.");
+            .FirstOrDefaultAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, ct);
+        if (address == null) failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ không hợp lệ.");
         // Tạo Đơn hàng
         var order = await CreateOrderFromDraftsAsync(customer.Id, request, failures, ct);
         failures.ThrowIfAny();
@@ -74,13 +75,13 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
-            ShippingAddressId = request.ShippingAddressId,
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
             LastModified = CoreHelper.SystemTimeNow,
             LastModifiedBy = _user.Username
         };
+        ShipmentAddressSnapshot.Apply(shipment, address!);
 
         // Tạo Invoice
         var invoice = new Invoice
