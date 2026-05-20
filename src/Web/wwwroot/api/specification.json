@@ -836,6 +836,152 @@
         }
       }
     },
+    "/api/dashboard/manager": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Tổng quan vận hành toàn hệ thống.",
+        "description": "Trả về số lượng theo trạng thái, doanh thu, tồn kho thấp, các cảnh báo cần xử lý và đơn gần đây.",
+        "operationId": "GetApiDashboardManager",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/status-summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Số lượng theo trạng thái.",
+        "description": "Cụm nhẹ cho các biểu đồ trạng thái đơn hàng, item, vận đơn, thiết kế và hóa đơn.",
+        "operationId": "GetApiDashboardManagerStatusSummary",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/revenue": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Tổng quan doanh thu.",
+        "description": "Cụm doanh thu đã thanh toán, doanh thu tháng hiện tại và công nợ chưa thanh toán.",
+        "operationId": "GetApiDashboardManagerRevenue",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/action-items": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Các cảnh báo cần xử lý.",
+        "description": "Cụm việc cần chú ý như đơn quá hạn, yêu cầu đổi địa chỉ, vận đơn lỗi và tồn kho thấp.",
+        "operationId": "GetApiDashboardManagerActionItems",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/inventory": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Tồn kho cần chú ý.",
+        "description": "Cụm danh sách biến thể tồn kho thấp.",
+        "operationId": "GetApiDashboardManagerInventory",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/manager/recent-orders": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Manager] Đơn hàng gần đây.",
+        "operationId": "GetApiDashboardManagerRecentOrders",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/staff": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Staff/Manager] Hàng đợi công việc vận hành.",
+        "description": "Staff xem các đơn/thiết kế được gán và việc cần xử lý. Manager có thể dùng để xem hàng đợi vận hành chung.",
+        "operationId": "GetApiDashboardStaff",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/staff/summary": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Staff/Manager] Tóm tắt công việc theo trạng thái.",
+        "operationId": "GetApiDashboardStaffSummary",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/staff/work-queue": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Staff/Manager] Hàng đợi thao tác cần xử lý.",
+        "operationId": "GetApiDashboardStaffWorkQueue",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/dashboard/staff/recent-work": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "[Staff/Manager] Đơn và thiết kế gần đây.",
+        "operationId": "GetApiDashboardStaffRecentWork",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-log/createChatLog": {
       "post": {
         "tags": [
