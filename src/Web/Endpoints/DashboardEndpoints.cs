@@ -36,6 +36,27 @@ public class DashboardEndpoints : EndpointGroupBase
         group.MapGet("/manager/recent-orders", GetManagerRecentOrders)
             .WithSummary("[Manager] Đơn hàng gần đây.");
 
+        group.MapGet("/manager/charts/revenue", GetManagerRevenueChart)
+            .WithSummary("[Manager] Biểu đồ doanh thu theo ngày/tháng.")
+            .WithDescription("Query params: from, to, groupBy=day|month.");
+
+        group.MapGet("/manager/charts/orders-by-status", GetManagerOrdersByStatusChart)
+            .WithSummary("[Manager] Biểu đồ đơn hàng theo trạng thái.");
+
+        group.MapGet("/manager/charts/shipments-by-status", GetManagerShipmentsByStatusChart)
+            .WithSummary("[Manager] Biểu đồ vận đơn theo trạng thái.");
+
+        group.MapGet("/manager/charts/design-works-by-status", GetManagerDesignWorksByStatusChart)
+            .WithSummary("[Manager] Biểu đồ thiết kế theo trạng thái.");
+
+        group.MapGet("/manager/charts/orders-by-source-type", GetManagerOrdersBySourceTypeChart)
+            .WithSummary("[Manager] Biểu đồ đơn hàng theo loại nguồn.")
+            .WithDescription("Query params: from, to.");
+
+        group.MapGet("/manager/charts/top-variants", GetManagerTopVariantsChart)
+            .WithSummary("[Manager] Biểu đồ top sản phẩm/biến thể bán chạy.")
+            .WithDescription("Query params: from, to, limit.");
+
         group.MapGet("/staff", GetStaffDashboard)
             .WithSummary("[Staff/Manager] Hàng đợi công việc vận hành.")
             .WithDescription("Staff xem các đơn/thiết kế được gán và việc cần xử lý. Manager có thể dùng để xem hàng đợi vận hành chung.");
@@ -137,6 +158,75 @@ public class DashboardEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<StaffDashboardRecentWorkDTO>.OkResponseModel(
             data: result,
             message: "Lấy công việc gần đây thành công.",
+            code: ResponseCodeConstants.SUCCESS));
+    }
+
+    public async Task<IResult> GetManagerRevenueChart(
+        [FromServices] ISender sender,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] string? groupBy)
+    {
+        var result = await sender.Send(new GetManagerRevenueChartQuery
+        {
+            From = from,
+            To = to,
+            GroupBy = groupBy ?? "day"
+        });
+        return ChartResponse(result, "Lấy biểu đồ doanh thu thành công.");
+    }
+
+    public async Task<IResult> GetManagerOrdersByStatusChart([FromServices] ISender sender)
+    {
+        var result = await sender.Send(new GetManagerOrdersByStatusChartQuery());
+        return ChartResponse(result, "Lấy biểu đồ đơn hàng theo trạng thái thành công.");
+    }
+
+    public async Task<IResult> GetManagerShipmentsByStatusChart([FromServices] ISender sender)
+    {
+        var result = await sender.Send(new GetManagerShipmentsByStatusChartQuery());
+        return ChartResponse(result, "Lấy biểu đồ vận đơn theo trạng thái thành công.");
+    }
+
+    public async Task<IResult> GetManagerDesignWorksByStatusChart([FromServices] ISender sender)
+    {
+        var result = await sender.Send(new GetManagerDesignWorksByStatusChartQuery());
+        return ChartResponse(result, "Lấy biểu đồ thiết kế theo trạng thái thành công.");
+    }
+
+    public async Task<IResult> GetManagerOrdersBySourceTypeChart(
+        [FromServices] ISender sender,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
+    {
+        var result = await sender.Send(new GetManagerOrdersBySourceTypeChartQuery
+        {
+            From = from,
+            To = to
+        });
+        return ChartResponse(result, "Lấy biểu đồ đơn hàng theo loại nguồn thành công.");
+    }
+
+    public async Task<IResult> GetManagerTopVariantsChart(
+        [FromServices] ISender sender,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] int? limit)
+    {
+        var result = await sender.Send(new GetManagerTopVariantsChartQuery
+        {
+            From = from,
+            To = to,
+            Limit = limit ?? 10
+        });
+        return ChartResponse(result, "Lấy biểu đồ top sản phẩm bán chạy thành công.");
+    }
+
+    private static IResult ChartResponse(DashboardChartSeriesDTO result, string message)
+    {
+        return TypedResults.Ok(BaseResponseModel<DashboardChartSeriesDTO>.OkResponseModel(
+            data: result,
+            message: message,
             code: ResponseCodeConstants.SUCCESS));
     }
 }
