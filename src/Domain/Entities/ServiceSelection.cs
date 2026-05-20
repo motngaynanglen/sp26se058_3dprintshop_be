@@ -12,6 +12,8 @@ public class ServiceSelection : BaseAuditableEntity
     public decimal TotalPrice { get; set; }
     public string? Note { get; set; }
     public bool IsLocked { get; set; }
+    public int AdjustmentRoundLimit { get; set; }
+    public int UsedAdjustmentRoundCount { get; set; }
     public virtual DesignWork DesignWork { get; set; } = null!;
     public virtual ICollection<ServiceSelectedOption> ServiceSelectedOptions { get; set; } = new List<ServiceSelectedOption>();
 }

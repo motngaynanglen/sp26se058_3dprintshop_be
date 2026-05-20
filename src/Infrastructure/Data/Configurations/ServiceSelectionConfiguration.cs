@@ -18,6 +18,14 @@ public class ServiceSelectionConfiguration : IEntityTypeConfiguration<ServiceSel
             .HasForeignKey(x => x.DesignWorkId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(x => x.AdjustmentRoundLimit)
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.UsedAdjustmentRoundCount)
+            .HasDefaultValue(0)
+            .IsConcurrencyToken();
+
+        builder.HasIndex(x => new { x.DesignWorkId, x.IsLocked, x.Created });
         
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520183722_UpdateServiceOption")]
+    partial class UpdateServiceOption
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,24 +202,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<Guid?>("AccountId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("AdjustmentConsumedServiceSelectionId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("AdjustmentDecisionNote")
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<string>("AdjustmentRequestStatus")
-                        .IsConcurrencyToken()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)");
-
-                    b.Property<DateTimeOffset?>("AdjustmentReviewedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid?>("AdjustmentReviewedByAccountId")
-                        .HasColumnType("char(36)");
-
                     b.Property<string>("Content")
                         .HasColumnType("longtext");
 
@@ -267,8 +252,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("ParentLogId");
 
                     b.HasIndex("DesignWorkId", "Created");
-
-                    b.HasIndex("DesignWorkId", "LogType", "AdjustmentRequestStatus");
 
                     b.ToTable("DesignLogs");
                 });
@@ -1127,9 +1110,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<int?>("AdjustmentRoundDelta")
-                        .HasColumnType("int");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1219,9 +1199,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<int?>("AdjustmentRoundDeltaSnapshot")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("AppliedPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1298,11 +1275,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<int>("AdjustmentRoundLimit")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
 
@@ -1333,17 +1305,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(65,30)");
 
-                    b.Property<int>("UsedAdjustmentRoundCount")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
                     b.HasKey("Id");
 
                     b.HasIndex("Deleted");
 
-                    b.HasIndex("DesignWorkId", "IsLocked", "Created");
+                    b.HasIndex("DesignWorkId");
 
                     b.ToTable("ServiceSelections");
                 });
