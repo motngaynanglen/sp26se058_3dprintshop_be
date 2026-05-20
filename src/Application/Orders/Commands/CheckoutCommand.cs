@@ -11,6 +11,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Application.Shipments;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -86,9 +87,9 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
         }
         await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, cancellationToken);
 
-        var addressExists = await _context.ShippingAddresses
-            .AnyAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, cancellationToken);
-        if (!addressExists)
+        var address = await _context.ShippingAddresses
+            .FirstOrDefaultAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, cancellationToken);
+        if (address == null)
         {
             failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ giao hàng không tồn tại hoặc không thuộc quyền sở hữu của bạn.");
         }
@@ -102,7 +103,6 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
-            ShippingAddressId = request.ShippingAddressId,
             ShippingFee = 0,
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
@@ -110,6 +110,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             LastModified = CoreHelper.SystemTimeNow,
             LastModifiedBy = _user.Username,
         };
+        ShipmentAddressSnapshot.Apply(shipment, address!);
 
         var invoice = new Invoice
         {
