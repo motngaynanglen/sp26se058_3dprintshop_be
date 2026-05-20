@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FluentValidation.Results;
 using PayOS.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
@@ -16,6 +17,12 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 [Authorize(Roles =Roles.CUSTOMER)]
+
+public record CheckoutServiceOptionSelectionRequest
+{
+    public Guid ServiceOptionId { get; init; }
+    public int Quantity { get; init; } = 1;
+}
 
 public record CheckoutDesignWorkCommand : IRequest<OrderDTO>
 {
@@ -33,8 +40,30 @@ public record CheckoutDesignWorkCommand : IRequest<OrderDTO>
     [DefaultValue("Ghi chú yêu cầu thêm cho đơn thiết kế")]
     public string? Note { get; init; }
 
-    // Danh sách các Option dịch vụ khách hàng chọn (Sơn, Phủ bóng, In cao cấp...)
+    // Danh sách id option cũ, giữ lại để FE hiện tại không bị vỡ.
     public List<Guid> ServiceOptionIds { get; init; } = new();
+
+    // Payload mới: hỗ trợ option có số lượng.
+    public List<CheckoutServiceOptionSelectionRequest> ServiceOptions { get; init; } = new();
+}
+
+public class CheckoutDesignWorkCommandValidator : AbstractValidator<CheckoutDesignWorkCommand>
+{
+    public CheckoutDesignWorkCommandValidator()
+    {
+        RuleFor(x => x)
+            .Must(x => x.ServiceOptions?.Any() == true || x.ServiceOptionIds?.Any() == true)
+            .WithMessage("Vui lòng chọn ít nhất một tùy chọn dịch vụ thiết kế.");
+
+        RuleForEach(x => x.ServiceOptions!).ChildRules(option =>
+        {
+            option.RuleFor(x => x.ServiceOptionId)
+                .NotEmpty().WithMessage("Tùy chọn dịch vụ không hợp lệ.");
+
+            option.RuleFor(x => x.Quantity)
+                .GreaterThan(0).WithMessage("Số lượng tùy chọn phải lớn hơn 0.");
+        }).When(x => x.ServiceOptions != null);
+    }
 }
 
 public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWorkCommand, OrderDTO>
@@ -93,7 +122,6 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                 // Lấy luôn bản gốc
                 designWork = existingWork;
                 designWork.RootDesignWorkId = existingWork.RootDesignWorkId == Guid.Empty ? existingWork.Id : existingWork.RootDesignWorkId;
-                designWork.Status = DesignWorkStatus.Pending;
                 _context.DesignWorks.Update(designWork);
             }
             // CASE 2: Tạo nhánh (SourceLogId có giá trị)
@@ -211,11 +239,33 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
 
         }
         // 3. Tính toán giá từ các Service Options đã chọn
+        var requestedOptionSelections = NormalizeRequestedServiceOptions(request);
+        ValidateDuplicateRequestedOptions(requestedOptionSelections);
+
+        var requestedOptionIds = requestedOptionSelections
+            .Select(x => x.ServiceOptionId)
+            .ToList();
+
         var selectedOptions = await _context.ServiceOptions
-            .Where(so => request.ServiceOptionIds.Contains(so.Id) && so.IsActive)
+            .Where(so => requestedOptionIds.Contains(so.Id))
             .ToListAsync(cancellationToken);
 
-        decimal totalServicePrice = selectedOptions.Sum(so => so.DefaultPrice);
+        var isAdjustmentTopUpOrder = IsAdjustmentTopUpOrder(request, selectedOptions);
+        ValidateSelectedServiceOptions(requestedOptionSelections, selectedOptions, requiresDesignPackage: !isAdjustmentTopUpOrder);
+        ValidateAdjustmentTopUpOptions(isAdjustmentTopUpOrder, selectedOptions);
+
+        var selectedOptionsById = selectedOptions.ToDictionary(x => x.Id);
+        var selectedOptionItems = requestedOptionSelections
+            .Select(x => new
+            {
+                Option = selectedOptionsById[x.ServiceOptionId],
+                x.Quantity
+            })
+            .ToList();
+
+        decimal totalServicePrice = selectedOptionItems.Sum(x => x.Option.DefaultPrice * x.Quantity);
+        var adjustmentRoundLimit = selectedOptionItems
+            .Sum(x => (x.Option.AdjustmentRoundDelta ?? 0) * x.Quantity);
 
         // 4. Khởi tạo Order (Gán CustomerId)
         var order = new Order
@@ -237,22 +287,30 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
             TotalPrice = totalServicePrice,
             IsLocked = true,
             Note = request.Note,
+            AdjustmentRoundLimit = adjustmentRoundLimit,
+            UsedAdjustmentRoundCount = 0,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username ?? "SYSTEM",
             LastModified = CoreHelper.SystemTimeNow,
             LastModifiedBy = _user.Username ?? "SYSTEM"
         };
 
-        foreach (var opt in selectedOptions)
+        foreach (var item in selectedOptionItems)
         {
+            var opt = item.Option;
             _context.ServiceSelectedOptions.Add(new ServiceSelectedOption
             {
                 Id = Guid.NewGuid(),
                 ServiceSelectionId = serviceSelection.Id,
                 ServiceOptionId = opt.Id,
+                OptionCodeSnapshot = opt.Code,
                 OptionNameSnapshot = opt.Name,
+                OptionDescriptionSnapshot = opt.Description,
+                OptionGroupCodeSnapshot = opt.GroupCode,
+                OptionGroupNameSnapshot = opt.GroupName,
                 AppliedPrice = opt.DefaultPrice,
-                Quantity = 1,
+                Quantity = item.Quantity,
+                AdjustmentRoundDeltaSnapshot = opt.AdjustmentRoundDelta,
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username ?? "SYSTEM",
                 LastModified = CoreHelper.SystemTimeNow,
@@ -360,5 +418,150 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
         }
 
         return _mapper.Map<OrderDTO>(order);
+    }
+
+    private static bool IsAdjustmentTopUpOrder(CheckoutDesignWorkCommand request, List<ServiceOption> selectedOptions)
+    {
+        return request.DesignWorkId.HasValue
+            && request.DesignWorkId.Value != Guid.Empty
+            && selectedOptions.Any()
+            && selectedOptions.All(x => x.GroupCode == "REVISION");
+    }
+
+    private static void ValidateAdjustmentTopUpOptions(bool isAdjustmentTopUpOrder, List<ServiceOption> selectedOptions)
+    {
+        if (!isAdjustmentTopUpOrder)
+        {
+            return;
+        }
+
+        var outOfScopeOptions = selectedOptions
+            .Where(x => !x.AdjustmentRoundDelta.HasValue || x.AdjustmentRoundDelta.Value <= 0)
+            .Select(x => x.Name)
+            .ToList();
+
+        if (outOfScopeOptions.Any())
+        {
+            throw new BusinessException(
+                $"Không thể thêm thay đổi vượt phạm vi vào công việc thiết kế hiện tại: {string.Join(", ", outOfScopeOptions)}. Vui lòng tạo nhánh/yêu cầu thiết kế mới hoặc đơn dịch vụ mới.",
+                ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
+        }
+    }
+
+    private static List<CheckoutServiceOptionSelectionRequest> NormalizeRequestedServiceOptions(CheckoutDesignWorkCommand request)
+    {
+        if (request.ServiceOptions?.Any() == true)
+        {
+            return request.ServiceOptions.ToList();
+        }
+
+        return (request.ServiceOptionIds ?? new List<Guid>())
+            .Select(id => new CheckoutServiceOptionSelectionRequest
+            {
+                ServiceOptionId = id,
+                Quantity = 1
+            })
+            .ToList();
+    }
+
+    private static void ValidateDuplicateRequestedOptions(List<CheckoutServiceOptionSelectionRequest> requestedOptions)
+    {
+        var failures = new List<ValidationFailure>();
+
+        var duplicatedIds = requestedOptions
+            .GroupBy(x => x.ServiceOptionId)
+            .Where(x => x.Count() > 1)
+            .Select(x => x.Key)
+            .ToList();
+
+        if (duplicatedIds.Any())
+        {
+            failures.Add(new ValidationFailure(
+                nameof(CheckoutDesignWorkCommand.ServiceOptions),
+                $"Không được chọn trùng tùy chọn dịch vụ: {string.Join(", ", duplicatedIds)}."));
+        }
+
+        failures.ThrowIfAny();
+    }
+
+    private static void ValidateSelectedServiceOptions(
+        List<CheckoutServiceOptionSelectionRequest> requestedOptions,
+        List<ServiceOption> selectedOptions,
+        bool requiresDesignPackage)
+    {
+        var failures = new List<ValidationFailure>();
+        var selectedOptionsById = selectedOptions.ToDictionary(x => x.Id);
+
+        var invalidOptionIds = requestedOptions
+            .Select(x => x.ServiceOptionId)
+            .Where(id => !selectedOptionsById.TryGetValue(id, out var option) || !option.IsActive)
+            .ToList();
+
+        if (invalidOptionIds.Any())
+        {
+            failures.Add(new ValidationFailure(
+                nameof(CheckoutDesignWorkCommand.ServiceOptions),
+                $"Tùy chọn dịch vụ không tồn tại hoặc đã ngưng kích hoạt: {string.Join(", ", invalidOptionIds)}."));
+        }
+
+        if (requiresDesignPackage && !selectedOptions.Any(x => x.IsActive && x.GroupCode == "DESIGN_PACKAGE"))
+        {
+            failures.Add(new ValidationFailure(
+                nameof(CheckoutDesignWorkCommand.ServiceOptions),
+                "Vui lòng chọn một gói thiết kế để xác định phạm vi dịch vụ và chính sách hiệu chỉnh."));
+        }
+
+        foreach (var requestedOption in requestedOptions)
+        {
+            if (!selectedOptionsById.TryGetValue(requestedOption.ServiceOptionId, out var option) || !option.IsActive)
+            {
+                continue;
+            }
+
+            if (!ServiceOptionSelectionTypes.IsValid(option.SelectionType))
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(CheckoutDesignWorkCommand.ServiceOptions),
+                    $"Tùy chọn '{option.Name}' đang có loại lựa chọn không hợp lệ: {option.SelectionType}."));
+                continue;
+            }
+
+            if (option.SelectionType != ServiceOptionSelectionTypes.Quantity && requestedOption.Quantity != 1)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(CheckoutServiceOptionSelectionRequest.Quantity),
+                    $"Tùy chọn '{option.Name}' không hỗ trợ nhập số lượng. Vui lòng chọn số lượng bằng 1."));
+            }
+
+            if (requestedOption.Quantity < option.MinQuantity)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(CheckoutServiceOptionSelectionRequest.Quantity),
+                    $"Số lượng của tùy chọn '{option.Name}' phải lớn hơn hoặc bằng {option.MinQuantity}."));
+            }
+
+            if (option.MaxQuantity.HasValue && requestedOption.Quantity > option.MaxQuantity.Value)
+            {
+                failures.Add(new ValidationFailure(
+                    nameof(CheckoutServiceOptionSelectionRequest.Quantity),
+                    $"Số lượng của tùy chọn '{option.Name}' không được vượt quá {option.MaxQuantity.Value}."));
+            }
+        }
+
+        var conflictedSingleSelectionGroupCodes = selectedOptions
+            .Where(x => x.IsActive)
+            .GroupBy(x => x.GroupCode)
+            .Where(x => x.Any(option => option.SelectionType == ServiceOptionSelectionTypes.Single) && x.Count() > 1)
+            .Select(x => x.Key)
+            .ToList();
+
+        if (conflictedSingleSelectionGroupCodes.Any())
+        {
+            failures.Add(new ValidationFailure(
+                nameof(CheckoutDesignWorkCommand.ServiceOptions),
+                $"Nhóm chọn một chỉ được chọn một tùy chọn. Nhóm bị trùng: {string.Join(", ", conflictedSingleSelectionGroupCodes)}."));
+        }
+
+        failures.ThrowIfAny();
     }
 }

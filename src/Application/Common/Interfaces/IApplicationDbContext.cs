@@ -36,7 +36,7 @@ public interface IApplicationDbContext
     DbSet<ServiceSelection> ServiceSelections { get; }
     DbSet<ServiceSelectedOption> ServiceSelectedOptions { get; }
 
-    //DatabaseFacade Database { get; }
+    DatabaseFacade Database { get; }
 
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
