@@ -33,8 +33,8 @@ public record CreateServiceOptionCommand : IRequest<object>
     public int MinQuantity { get; init; } = 1;
     [DefaultValue(null)]
     public int? MaxQuantity { get; init; }
-    [DefaultValue(0)]
-    public int? AdjustmentRoundDelta { get; init; }
+    [DefaultValue(null)]
+    public int? AdjustmentRoundDelta { get; init; };
     [DefaultValue(0)]
     public int SortOrder { get; init; }
 }
@@ -84,7 +84,14 @@ public class CreateServiceOptionCommandValidator : AbstractValidator<CreateServi
             .When(v => v.AdjustmentRoundDelta.HasValue)
             .WithMessage("Số lượt hiệu chỉnh cộng thêm không được nhỏ hơn 0");
 
+        RuleFor(v => v)
+            .Must(v => !IsRevisionGroup(v.GroupCode) || (v.AdjustmentRoundDelta.HasValue && v.AdjustmentRoundDelta.Value > 0))
+            .WithMessage("Tùy chọn thuộc nhóm REVISION phải có số lượt hiệu chỉnh cộng thêm lớn hơn 0.");
+
     }
+
+    private static bool IsRevisionGroup(string? groupCode)
+        => string.Equals(groupCode?.Trim(), "REVISION", StringComparison.OrdinalIgnoreCase);
 }
 public class CreateServiceOptionCommandHandler : IRequestHandler<CreateServiceOptionCommand, object>
 {

@@ -91,6 +91,7 @@ public class UpdateServiceOptionCommandValidator : AbstractValidator<UpdateServi
         RuleFor(v => v)
             .Must(v => !(v.ClearAdjustmentRoundDelta && v.AdjustmentRoundDelta.HasValue))
             .WithMessage("Không thể vừa xóa số lượt hiệu chỉnh vừa cập nhật số lượt hiệu chỉnh mới.");
+
     }
 }
 public class UpdateServiceOptionCommandHandler : IRequestHandler<UpdateServiceOptionCommand, object>
@@ -149,6 +150,11 @@ public class UpdateServiceOptionCommandHandler : IRequestHandler<UpdateServiceOp
             throw new BusinessException("Số lượng tối đa phải lớn hơn hoặc bằng số lượng tối thiểu.");
         }
 
+        if (IsRevisionGroup(entity.GroupCode) && (!entity.AdjustmentRoundDelta.HasValue || entity.AdjustmentRoundDelta.Value <= 0))
+        {
+            throw new BusinessException("Tùy chọn thuộc nhóm REVISION phải có số lượt hiệu chỉnh cộng thêm lớn hơn 0.");
+        }
+
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
 
@@ -162,4 +168,7 @@ public class UpdateServiceOptionCommandHandler : IRequestHandler<UpdateServiceOp
         }
         return request;
     }
+
+    private static bool IsRevisionGroup(string? groupCode)
+        => string.Equals(groupCode?.Trim(), "REVISION", StringComparison.OrdinalIgnoreCase);
 }
