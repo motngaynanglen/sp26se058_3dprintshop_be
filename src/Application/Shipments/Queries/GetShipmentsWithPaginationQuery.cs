@@ -8,6 +8,7 @@ using sp26se058_3dprintshop_be.Application.Common.Mappings;
 using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
@@ -15,7 +16,7 @@ namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
 
 public class GetShipmentsWithPaginationQuery : PaginationRequest, IRequest<PaginatedList<ShipmentDTO>>
 {
-    [DefaultValue("PENDING")]
+    [DefaultValue(ShipmentStatuses.Preparing)]
     public string? Status { get; init; }
 
     [DefaultValue("SPX123")]
@@ -43,7 +44,9 @@ public class GetShipmentsWithPaginationQuery : PaginationRequest, IRequest<Pagin
                 var s = request.Search.ToLower();
                 query = query.Where(x =>
                     (x.TrackingNumber != null && x.TrackingNumber.ToLower().Contains(s)) ||
-                    x.ShippingAddress.ReceiverName.ToLower().Contains(s));
+                    x.RecipientName.ToLower().Contains(s) ||
+                    x.RecipientPhone.ToLower().Contains(s) ||
+                    x.AddressLine.ToLower().Contains(s));
             }
             if (!string.IsNullOrEmpty(request.Status))
             {

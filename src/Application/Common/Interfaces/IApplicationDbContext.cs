@@ -29,6 +29,7 @@ public interface IApplicationDbContext
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
     DbSet<ShippingAddress> ShippingAddresses { get; }
     DbSet<Shipment> Shipments { get; }
+    DbSet<ShipmentAddressChangeRequest> ShipmentAddressChangeRequests { get; }
     DbSet<Feedback> Feedbacks { get; }
     DbSet<FeedbackImage> FeedbackImages { get; }
     DbSet<ServiceOption> ServiceOptions { get; }
