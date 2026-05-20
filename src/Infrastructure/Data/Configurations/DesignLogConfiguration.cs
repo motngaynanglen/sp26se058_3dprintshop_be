@@ -10,6 +10,10 @@ public class DesignLogConfiguration : IEntityTypeConfiguration<DesignLog>
     {
         builder.Property(x => x.LogType).HasMaxLength(30).IsRequired();
         builder.Property(x => x.Content).IsRequired(false);
+        builder.Property(x => x.AdjustmentRequestStatus)
+            .HasMaxLength(30)
+            .IsConcurrencyToken();
+        builder.Property(x => x.AdjustmentDecisionNote).HasMaxLength(1000);
 
         // Cấu hình Threading (Self-referencing)
         builder.HasOne(x => x.ParentLog)
@@ -27,5 +31,6 @@ public class DesignLogConfiguration : IEntityTypeConfiguration<DesignLog>
         // === INDEXING ===
         // Luôn tìm log theo dự án và sắp xếp theo thời gian
         builder.HasIndex(x => new { x.DesignWorkId, x.Created });
+        builder.HasIndex(x => new { x.DesignWorkId, x.LogType, x.AdjustmentRequestStatus });
     }
 }

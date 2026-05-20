@@ -13,6 +13,7 @@ public static class DesignLogType
     public const string AiGen = "AI_GEN";                // Lịch sử tương tác với AI [cite: 11, 37]
     public const string StatusChange = "STATUS_CHANGE";   // Nhật ký thay đổi trạng thái dự án [cite: 37]
     public const string System = "SYSTEM";                // Thông báo tự động (thanh toán, báo giá) [cite: 14, 19, 37]
+    public const string AdjustmentRequest = "ADJUSTMENT_REQUEST";
 
     public static readonly List<StatusDefinition> All = new()
     {
@@ -21,6 +22,7 @@ public static class DesignLogType
         new(VersionUpdate, "Cập nhật phiên bản", "Thông báo có file 3D mới kèm nút Preview/Download."),
         new(AiGen, "Lịch sử AI", "Lưu lại các câu lệnh và ảnh mẫu do AI tạo."),
         new(StatusChange, "Thay đổi trạng thái", "Nhật ký hệ thống ghi lại bước tiến dự án."),
-        new(System, "Thông báo hệ thống", "Các tin nhắn tự động như xác nhận thanh toán.")
+        new(System, "Thông báo hệ thống", "Các tin nhắn tự động như xác nhận thanh toán."),
+        new(AdjustmentRequest, "Yêu cầu hiệu chỉnh", "Khách yêu cầu hiệu chỉnh trong cùng công việc thiết kế.")
     };
 }

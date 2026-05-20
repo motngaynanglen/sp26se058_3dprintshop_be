@@ -49,19 +49,6 @@ public class ApplicationDbContextInitialiser
         }
     }
 
-    //public async Task SeedAsync()
-    //{
-    //    try
-    //    {
-    //        await TrySeedAsync();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.LogError(ex, "An error occurred while seeding the database.");
-    //        throw;
-    //    }
-    //}
-
     //public async Task TrySeedAsync()
     //{
     //    // Default roles
