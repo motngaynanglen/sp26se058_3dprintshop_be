@@ -45,13 +45,15 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
     private readonly IMapper _mapper;
     private readonly IUser _user;
     private readonly IOrderPendingService _orderPendingService;
+    private readonly ICodeGeneratorService _codeGenerator;
 
-    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
+    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
         _orderPendingService = orderPendingService;
+        _codeGenerator = codeGenerator;
     }
     public async Task<object> Handle(CheckoutDraftsCommand request, CancellationToken ct)
     {
@@ -89,7 +91,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
-            InvoiceCode = $"INV-PRT-{DateTime.UtcNow.Ticks}",
+            InvoiceCode = _codeGenerator.GenerateInvoiceCode(SourceTypes.PrintService),
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
             DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
@@ -119,7 +121,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
         var order = new Order
         {
             Id = Guid.NewGuid(),
-            Code = $"ORD-CUSTOM-{DateTime.Now:yyyyMMddHHmmss}",
+            Code = _codeGenerator.GenerateOrderCode(SourceTypes.PrintService),
             CustomerId = customerId,
             OrderStatus = OrderStatuses.Pending,
             //OrderType = "CUSTOM_DESIGN", // Phân loại đơn thiết kế riêng
