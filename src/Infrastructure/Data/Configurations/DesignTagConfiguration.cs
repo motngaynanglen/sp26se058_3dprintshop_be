@@ -8,6 +8,8 @@ public class DesignTagConfiguration : IEntityTypeConfiguration<DesignTag>
 {
     public void Configure(EntityTypeBuilder<DesignTag> builder)
     {
+        builder.HasIndex(dt => dt.DesignTemplateId);
+        builder.HasIndex(dt => new { dt.DesignTemplateId, dt.ConceptTagId });
 
         builder.HasOne(dt => dt.ConceptTag)
                .WithMany(t => t.DesignTags)

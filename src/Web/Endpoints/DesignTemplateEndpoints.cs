@@ -13,6 +13,63 @@ namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
 public class DesignTemplateEndpoints : EndpointGroupBase
 {
+    private const string CreateDesignTemplateDescription = """
+        Tạo một mẫu thiết kế trong catalog.
+
+        Trạng thái catalog hỗ trợ:
+        - DRAFT: bản nháp nội bộ. Staff/Manager xem và chỉnh sửa được; Customer/Guest không thấy trong shop và không mua được.
+        - PUBLISHED: đã công khai. Customer/Guest có thể thấy trong shop nếu IsActive=true và các biến thể liên quan cũng PUBLISHED/IsActive=true.
+        - ARCHIVED: đã lưu trữ/xóa mềm theo nghiệp vụ. Không dùng khi tạo mới; hệ thống dùng khi xóa mềm hoặc ngưng kinh doanh.
+
+        Khuyến nghị khi tạo mới:
+        - Nên tạo với catalogStatus=DRAFT để kiểm tra file, ảnh, tag, biến thể và giá trước khi mở bán.
+        - Nếu không truyền catalogStatus, hệ thống mặc định theo rule command hiện tại: DRAFT, trừ khi dùng IsAcitve=true thì sẽ được hiểu là PUBLISHED.
+        - IsActive được đồng bộ theo catalogStatus: PUBLISHED => true, DRAFT/ARCHIVED => false.
+
+        Cách publish:
+        - Gọi PATCH /api/design-template/{id}/update với body: { "catalogStatus": "PUBLISHED" }.
+        - Nếu template có biến thể, cần publish từng biến thể bằng PATCH /api/design-variant/{id}/update với catalogStatus=PUBLISHED để khách có thể mua.
+        """;
+
+    private const string CreateCatalogProductDescription = """
+        Tạo sản phẩm catalog hoàn chỉnh trong một transaction: DesignTemplate + DesignVariant + DesignTag.
+
+        Trạng thái catalog hỗ trợ:
+        - DRAFT: bản nháp nội bộ. Phù hợp khi vừa nhập sản phẩm, cần kiểm tra ảnh, model, giá, vật liệu và tag.
+        - PUBLISHED: đã công khai. Chỉ nên dùng khi template và ít nhất một variant đã sẵn sàng mở bán.
+        - ARCHIVED: đã lưu trữ/xóa mềm; không nên dùng khi tạo mới.
+
+        Rule khi tạo product:
+        - Nếu product catalogStatus=PUBLISHED thì phải có ít nhất một variant PUBLISHED.
+        - Variant có catalogStatus riêng. Nếu không truyền cho variant, hệ thống dùng status của product.
+        - Ảnh sản phẩm nằm ở từng variant qua ImageUrls, vì mỗi variant có thể khác màu/chất liệu/hình ảnh.
+        - Tags dùng để phân loại template. Chỉ được có tối đa một tag chính IsMainTag=true; nếu không có tag chính, hệ thống tự lấy tag đầu tiên làm tag chính.
+
+        Cách publish sau khi tạo nháp:
+        - Publish template: PATCH /api/design-template/{id}/update với { "catalogStatus": "PUBLISHED" }.
+        - Publish variant: PATCH /api/design-variant/{id}/update với { "catalogStatus": "PUBLISHED" }.
+        - Khách chỉ thấy/mua được khi cả template và variant đều PUBLISHED và IsActive=true.
+        """;
+
+    private const string UpdateDesignTemplateDescription = """
+        Cập nhật thông tin mẫu thiết kế theo từng phần.
+
+        Dùng endpoint này để publish/unpublish template:
+        - Publish/mở bán template: gửi { "catalogStatus": "PUBLISHED" }.
+        - Đưa về bản nháp/nội bộ: gửi { "catalogStatus": "DRAFT" }.
+        - Lưu trữ theo nghiệp vụ: ưu tiên dùng DELETE /api/design-template/{id}/delete để hệ thống xử lý soft delete và audit.
+
+        Lưu ý khi publish:
+        - Publish template chỉ mở trạng thái của template.
+        - Khách vẫn chưa mua được nếu tất cả variant còn DRAFT/ARCHIVED hoặc IsActive=false.
+        - Cần publish ít nhất một variant bằng PATCH /api/design-variant/{id}/update với { "catalogStatus": "PUBLISHED" }.
+
+        Tương thích cũ:
+        - Có thể dùng IsAcitve=true để chuyển template sang PUBLISHED.
+        - Có thể dùng IsAcitve=false để chuyển template sang DRAFT.
+        - Ưu tiên dùng catalogStatus vì rõ nghĩa hơn IsAcitve.
+        """;
+
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/design-template")
@@ -38,11 +95,15 @@ public class DesignTemplateEndpoints : EndpointGroupBase
 
         group.MapPost("/add", Create)
             .WithSummary("[Staff/Manager] Tạo mới mẫu thiết kế")
-            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.");
+            .WithDescription(CreateDesignTemplateDescription);
+
+        group.MapPost("/product/add", CreateCatalogProduct)
+            .WithSummary("[Staff/Manager] Tạo sản phẩm catalog hoàn chỉnh")
+            .WithDescription(CreateCatalogProductDescription);
 
         group.MapPatch("/{id}/update", Update)
             .WithSummary("[Staff/Manager] Cập nhật thông tin mẫu thiết kế")
-            .WithDescription("Cập nhật từng phần (Partial Update). Ghi đè ID từ URL vào Command.");
+            .WithDescription(UpdateDesignTemplateDescription);
 
         group.MapDelete("/{id}/delete", Delete)
             .WithSummary("[Staff/Manager] Xóa mềm mẫu thiết kế")
@@ -92,6 +153,19 @@ public class DesignTemplateEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
                 data: result,
                 message: "Tạo mẫu thiết kế thành công!",
+                code: ResponseCodeConstants.CREATED
+            ));
+
+
+    }
+
+    public async Task<IResult> CreateCatalogProduct([FromServices] ISender sender, [FromBody] CreateCatalogProductCommand command)
+    {
+
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<DesignTemplateDTO>.OkResponseModel(
+                data: result,
+                message: "Tạo sản phẩm catalog thành công!",
                 code: ResponseCodeConstants.CREATED
             ));
 

@@ -8,6 +8,7 @@ using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Mappings;
 using sp26se058_3dprintshop_be.Application.Common.Models;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 
@@ -15,7 +16,11 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
 {
     [DefaultValue("")]
     public string? Search { get; init; }
+    [DefaultValue(true)]
     public bool IsActive { get; init; } = true;
+    [DefaultValue(CatalogStatuses.Published)]
+    public string? CatalogStatus { get; init; }
+    [DefaultValue(false)]
     public bool SortDescending { get; init; } = false;
     [DefaultValue("Name")]
     public string? SortBy { get; init; }
@@ -42,13 +47,24 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
             if (!isStaffOrManager)
             {
                 // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-                query = query.Where(dv => dv.IsActive);
+                query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive);
             }
             else
             {
-                // Đối với Staff/Manager, cho phép lọc theo IsActive từ request
-                // Nếu request.IsActive là true thì lọc true, nếu false thì lọc false
-                query = query.Where(dv => dv.IsActive == request.IsActive);
+                if (!string.IsNullOrWhiteSpace(request.CatalogStatus))
+                {
+                    var status = request.CatalogStatus.ToUpperInvariant();
+                    if (!CatalogStatuses.IsValid(status))
+                    {
+                        throw new BusinessException("Trạng thái catalog không hợp lệ.");
+                    }
+
+                    query = query.Where(dv => dv.CatalogStatus == status);
+                }
+                else
+                {
+                    query = query.Where(dv => dv.IsActive == request.IsActive);
+                }
             }
 
 
@@ -70,10 +86,33 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
                     _ => query.OrderBy(dt => dt.Id)
                 };
             }
-            return await query
-                .ProjectTo<DesignTemplateDTO>(_mapper.ConfigurationProvider)
-                .PaginatedListAsync(request.PageNumber, request.PageSize);
+            var count = await query.CountAsync(cancellationToken);
+            var templates = await query
+                .Include(x => x.Variants)
+                .Include(x => x.DesignTags).ThenInclude(x => x.ConceptTag)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync(cancellationToken);
 
+            var items = _mapper.Map<List<DesignTemplateDTO>>(templates);
+            var result = new PaginatedList<DesignTemplateDTO>(items, count, request.PageNumber, request.PageSize);
+
+            if (!isStaffOrManager)
+            {
+                foreach (var item in result.Items)
+                {
+                    FilterCustomerChildren(item);
+                }
+            }
+
+            return result;
+        }
+
+        private static void FilterCustomerChildren(DesignTemplateDTO designTemplate)
+        {
+            designTemplate.Variants = designTemplate.Variants
+                .Where(x => x.CatalogStatus == CatalogStatuses.Published && x.IsActive)
+                .ToList();
         }
     }
 }

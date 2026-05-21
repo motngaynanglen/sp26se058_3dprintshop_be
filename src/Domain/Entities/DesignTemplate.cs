@@ -13,6 +13,7 @@ public class DesignTemplate : BaseAuditableEntity
     public string? Description { get; set; }
     public required string FileUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
+    public string CatalogStatus { get; set; } = Constants.Statuses.CatalogStatuses.Draft;
     public bool IsActive { get; set; } = true;
     //Navigations
     public virtual ICollection<DesignVariant> Variants { get; set; } = new List<DesignVariant>();
