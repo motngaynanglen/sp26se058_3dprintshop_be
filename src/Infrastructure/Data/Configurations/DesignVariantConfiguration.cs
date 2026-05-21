@@ -20,6 +20,7 @@ public class DesignVariantConfiguration : IEntityTypeConfiguration<DesignVariant
         builder.Property(v => v.Name).IsRequired().HasMaxLength(255);
         builder.Property(v => v.Code).IsRequired().HasMaxLength(50);
         builder.Property(v => v.Description).HasColumnType("nvarchar(max)");
+        builder.Property(v => v.ImageUrls).HasColumnType("longtext");
 
         // Cấu hình Precision cho Decimal (Rất quan trọng cho in 3D và tiền tệ)
         builder.Property(v => v.Price).HasPrecision(18, 2).IsRequired();
@@ -27,12 +28,14 @@ public class DesignVariantConfiguration : IEntityTypeConfiguration<DesignVariant
         builder.Property(v => v.SizeScale).HasPrecision(18, 2);
         builder.Property(v => v.EstimatedWeightPerUnit).HasPrecision(18, 4); // Gram nên cần độ chính xác cao
         builder.Property(v => v.EstimatedPrintTimePerUnit).HasPrecision(18, 2);
+        builder.Property(v => v.CatalogStatus).IsRequired().HasMaxLength(30).HasDefaultValue(Domain.Constants.Statuses.CatalogStatuses.Published);
 
         // Default values
         builder.Property(v => v.StockQuantity).HasDefaultValue(0).IsRequired();
         builder.Property(v => v.MinimumStockLevel);
         builder.Property(v => v.IsAllowPreOrder).HasDefaultValue(true).IsRequired();
         builder.Property(v => v.IsActive).HasDefaultValue(true).IsRequired();
+        builder.HasIndex(v => v.CatalogStatus);
 
         // Relationships (Quan hệ ngoại)
         builder.HasOne(v => v.DesignTemplate)

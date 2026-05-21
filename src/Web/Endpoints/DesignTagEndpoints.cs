@@ -16,7 +16,7 @@ public class DesignTagEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/design-tag")
-                       .WithTags("DesignTag")
+                       .WithTags("Design Tag")
                        .WithOpenApi();
         group.MapGet("/{templateId}/tags", GetDesignTagsByIds)
                 .WithSummary("[Manager] Lấy tất cả tag của một Template với TemplateID.");

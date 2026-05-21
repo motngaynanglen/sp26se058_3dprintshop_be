@@ -5,9 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTags.Commands;
+[Authorize(Roles = Roles.MANAGER)]
 public record UpdateDesignTagCommand : IRequest<UpdateDesignTagCommand>
 {
     [DefaultValue("00000000-0000-0000-0000-000000000001")]

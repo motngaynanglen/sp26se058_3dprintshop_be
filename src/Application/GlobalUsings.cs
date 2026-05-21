@@ -13,4 +13,5 @@ global using sp26se058_3dprintshop_be.Application.Common.Attributes;
 global using sp26se058_3dprintshop_be.Application.Common.Mappings;
 global using sp26se058_3dprintshop_be.Application.Common.Models;
 global using sp26se058_3dprintshop_be.Domain.Entities;
+global using sp26se058_3dprintshop_be.Domain.Constants;
 global using ValidationException = sp26se058_3dprintshop_be.Application.Common.Exceptions.ValidationException;

@@ -12,5 +12,7 @@ public class DesignTemplateConfiguration : IEntityTypeConfiguration<DesignTempla
         builder.Property(t => t.Code).IsRequired().HasMaxLength(50);
         builder.Property(t => t.Name).IsRequired().HasMaxLength(255);
         builder.Property(t => t.FileUrl).IsRequired();
+        builder.Property(t => t.CatalogStatus).IsRequired().HasMaxLength(30).HasDefaultValue(Domain.Constants.Statuses.CatalogStatuses.Published);
+        builder.HasIndex(t => t.CatalogStatus);
     }
 }
