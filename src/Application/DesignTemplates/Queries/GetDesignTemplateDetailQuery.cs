@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -8,6 +9,7 @@ using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Queries;
@@ -15,6 +17,7 @@ namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Queries;
 public record GetDesignTemplateDetailQuery : IRequest<DesignTemplateDTO>
 {
     [JsonIgnore]
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
 }
 public class GetDesignTemplateDetailQueryHandler : IRequestHandler<GetDesignTemplateDetailQuery, DesignTemplateDTO>
@@ -37,18 +40,31 @@ public class GetDesignTemplateDetailQueryHandler : IRequestHandler<GetDesignTemp
         if (!isStaffOrManager)
         {
             // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-            query = query.Where(dv => dv.IsActive);
+            query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive);
         }
 
 
         var designTemplate = await query
-            .ProjectTo<DesignTemplateDTO>(_mapper.ConfigurationProvider)
+            .Include(x => x.Variants)
+            .Include(x => x.DesignTags).ThenInclude(x => x.ConceptTag)
             .FirstOrDefaultAsync(dt => dt.Id == request.Id, cancellationToken);
         if (designTemplate == null)
         {
             throw new DataNotFoundException("Không tìm thấy mẫu thiết kế.");
         }
-        return designTemplate;
+        var dto = _mapper.Map<DesignTemplateDTO>(designTemplate);
+        if (!isStaffOrManager)
+        {
+            FilterCustomerChildren(dto);
+        }
+        return dto;
+    }
+
+    private static void FilterCustomerChildren(DesignTemplateDTO designTemplate)
+    {
+        designTemplate.Variants = designTemplate.Variants
+            .Where(x => x.CatalogStatus == CatalogStatuses.Published && x.IsActive)
+            .ToList();
     }
 }
 
