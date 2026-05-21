@@ -39,6 +39,7 @@ public class MarkOrderItemAsFinishedCommandHandler : IRequestHandler<MarkOrderIt
         var item = await _context.OrderItems
             .Include(oi => oi.Order)
                 .ThenInclude(o => o.OrderItems)
+            .Include(oi => oi.DesignVariant)
             .FirstOrDefaultAsync(oi => oi.Id == request.Id, cancellationToken);
 
         if (item == null)

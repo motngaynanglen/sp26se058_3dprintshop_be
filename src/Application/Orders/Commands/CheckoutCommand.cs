@@ -68,13 +68,15 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
     private readonly IMapper _mapper;
     private readonly IUser _user;
     private readonly IOrderPendingService _orderPendingService;
+    private readonly ICodeGeneratorService _codeGenerator;
 
-    public CheckoutCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
+    public CheckoutCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
         _orderPendingService = orderPendingService;
+        _codeGenerator = codeGenerator;
     }
     public async Task<object> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
@@ -117,7 +119,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
-            InvoiceCode = $"INV-{DateTime.UtcNow.Ticks}",
+            InvoiceCode = _codeGenerator.GenerateInvoiceCode(request.SourceType),
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
             DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
@@ -146,7 +148,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
         var order = new Order
         {
             Id = Guid.NewGuid(),
-            Code = $"ORD-{DateTime.Now:yyyyMMddHHmmss}", // Dùng UtcNow cho chuẩn xác
+            Code = _codeGenerator.GenerateOrderCode(request.SourceType),
             CustomerId = customerId,
             OrderStatus = OrderStatuses.Pending,
             TotalPrice = 0,
