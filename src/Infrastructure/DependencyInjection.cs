@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentService, PayOsService>();
         services.AddScoped<IOrderWorkflowService, OrderWorkflowService>();
         services.AddScoped<IOrderPendingService, OrderPendingService>();
+        services.AddSingleton<ICodeGeneratorService, CodeGeneratorService>();
         services.AddHostedService<ExpiredPendingOrderHostedService>();
 
         // Cấu hình Email

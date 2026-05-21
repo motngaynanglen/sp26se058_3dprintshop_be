@@ -34,7 +34,7 @@ public record CreateServiceOptionCommand : IRequest<object>
     [DefaultValue(null)]
     public int? MaxQuantity { get; init; }
     [DefaultValue(null)]
-    public int? AdjustmentRoundDelta { get; init; };
+    public int? AdjustmentRoundDelta { get; init; }
     [DefaultValue(0)]
     public int SortOrder { get; init; }
 }
