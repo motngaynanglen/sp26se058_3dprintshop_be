@@ -72,13 +72,15 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
     private readonly IMapper _mapper;
     private readonly IUser _user;
     private readonly IOrderPendingService _orderPendingService;
+    private readonly ICodeGeneratorService _codeGenerator;
 
-    public CheckoutDesignWorkCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService)
+    public CheckoutDesignWorkCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
         _orderPendingService = orderPendingService;
+        _codeGenerator = codeGenerator;
     }
 
     public async Task<OrderDTO> Handle(CheckoutDesignWorkCommand request, CancellationToken cancellationToken)
@@ -271,7 +273,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
         var order = new Order
         {
             Id = Guid.NewGuid(),
-            Code = $"ORD-DSG-{DateTime.Now:yyyyMMddHHmmss}",
+            Code = _codeGenerator.GenerateOrderCode(SourceTypes.DesignService),
             CustomerId = customer.Id,
             OrderStatus = OrderStatuses.Pending,
             TotalPrice = totalServicePrice,
@@ -390,7 +392,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
             Id = Guid.NewGuid(),
             OrderId = order.Id,
             Order = order,
-            InvoiceCode = $"INV-DSG-{DateTime.UtcNow.Ticks}",
+            InvoiceCode = _codeGenerator.GenerateInvoiceCode(SourceTypes.DesignService),
             TotalAmount = order.TotalPrice,
             PaymentStatus = InvoiceStatuses.Unpaid,
             DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
