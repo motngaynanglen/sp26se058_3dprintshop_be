@@ -32,6 +32,7 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
         var entity = await _context.Orders
                 .Include(o => o.Customer)
                 .Include(o => o.Invoice)
+                .Include(o => o.OrderItems)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
         if (entity == null)

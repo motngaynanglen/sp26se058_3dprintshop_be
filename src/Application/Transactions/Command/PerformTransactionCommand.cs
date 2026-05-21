@@ -16,6 +16,7 @@ using sp26se058_3dprintshop_be.Application.Common.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Commands;
 
+[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
 public record PerformTransactionCommand : IRequest<object>
 {
     [Required]
@@ -31,14 +32,16 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
     private readonly IPaymentService _paymentService;
     private readonly PayOsSettings _payOsSettings;
     private readonly IUser _user;
+    private readonly ICodeGeneratorService _codeGenerator;
 
-    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings, IUser user)
+    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings, IUser user, ICodeGeneratorService codeGenerator)
     {
         _context = context;
         _orderWorkflowService = orderWorkflowService;
         _paymentService = paymentService;
         _payOsSettings = payOsSettings.Value;
         _user = user;
+        _codeGenerator = codeGenerator;
     }
 
     public async Task<object> Handle(PerformTransactionCommand request, CancellationToken cancellationToken)
@@ -51,6 +54,8 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
         // 1. Lấy thông tin Order kèm theo Invoice và các Transaction liên quan
         var order = await GetOrderWithDetailsAsync(request.OrderId, cancellationToken);
+
+        ValidatePaymentPermission(order, request.PaymentMethod);
 
         // 2. Kiểm tra điều kiện đơn hàng
         ValidateOrderForTransaction(order);
@@ -89,12 +94,38 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
     {
         var order = await _context.Orders
             .Include(o => o.OrderItems)
+            .Include(o => o.Customer)
             .Include(o => o.Invoice)
                 .ThenInclude(i => i!.Transactions)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
 
         if (order == null) throw new DataNotFoundException(nameof(Order), orderId);
         return order;
+    }
+
+    private void ValidatePaymentPermission(Order order, string paymentMethod)
+    {
+        var role = _user.Role ?? Roles.GUEST;
+        var userId = _user.Id.ToGuid();
+        var isStaffOrManager = role == Roles.STAFF || role == Roles.MANAGER;
+
+        if (role == Roles.CUSTOMER)
+        {
+            if (order.Customer?.AccountId != userId)
+            {
+                throw new ForbiddenAccessException("Bạn không có quyền thanh toán đơn hàng của người khác.");
+            }
+
+            if (paymentMethod == PaymentMethods.Cash)
+            {
+                throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
+            }
+        }
+
+        if (paymentMethod == PaymentMethods.Cash && !isStaffOrManager)
+        {
+            throw new ForbiddenAccessException("Chỉ nhân viên hoặc quản lý mới được xác nhận thanh toán tiền mặt.");
+        }
     }
 
     private bool ValidateOrderForTransaction(Order order)
@@ -133,7 +164,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                InvoiceCode = $"INV-{DateTime.Now:yyyyMMdd}-{order.Code}",
+                InvoiceCode = _codeGenerator.GenerateInvoiceCode(),
                 TotalAmount = order.TotalPrice,
                 PaymentStatus = InvoiceStatuses.Unpaid,
                 DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
