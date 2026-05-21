@@ -29,33 +29,36 @@ public class MaterialEndpoints : EndpointGroupBase
             .WithSummary("Chuyển đổi trạng thái Active của vật liệu");
         group.MapPost("/{id}/update-price", UpdatePrice)
             .WithSummary("[Manager] Cập nhật giá của vật liệu");
+        group.MapGet("/{id}/estimate-cost", EstimateCost)
+            .WithSummary("[Manager] Công cụ tự động tính toán nhanh giá tiền sản phẩm")
+            .WithDescription("Nhập ID vật liệu trên route và truyền khối lượng ?weightInGrams=... qua query string.");
     }
 
     public async Task<IResult> Add(
         [FromServices] ISender sender,
         [FromBody] CreateMaterialCommand command)
     {
-        
-            var result = await sender.Send(command);
 
-            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-                data: result,
-                message: "Tạo chất liệu thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-       
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+            data: result,
+            message: "Tạo chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
 
     public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
-       
-            var result = await sender.Send(new GetMaterialListQuery());
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.ListResponseModel(
-                data: result,
-                successMessage: "Lấy danh sách chất liệu thành công!",
-                emptyMessage: "Không tìm thấy chất liệu nào."));
-        
+        var result = await sender.Send(new GetMaterialListQuery());
+
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<MaterialDTO>>.ListResponseModel(
+            data: result,
+            successMessage: "Lấy danh sách chất liệu thành công!",
+            emptyMessage: "Không tìm thấy chất liệu nào."));
+
 
     }
 
@@ -63,15 +66,15 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromServices] ISender sender,
         [FromRoute] Guid id)
     {
-        
-            var result = await sender.Send(new GetMaterialDetailQuery { Id = id });
 
-            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-                data: result,
-                message: "Lấy thông tin chất liệu thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        
-        
+        var result = await sender.Send(new GetMaterialDetailQuery { Id = id });
+
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+            data: result,
+            message: "Lấy thông tin chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
+
     }
 
     public async Task<IResult> Update(
@@ -79,28 +82,28 @@ public class MaterialEndpoints : EndpointGroupBase
         [FromRoute] Guid id,
         [FromBody] UpdateMaterialCommand command)
     {
-        
-        
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
 
-            return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
-                data: result,
-                message: "Cập nhật chất liệu thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+
+        return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
+            data: result,
+            message: "Cập nhật chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
 
     public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] DeleteMaterialCommand command)
     {
-       
-            var finalCommand = command with { Id = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
-                data: result,
-                message: "Cập nhật trạng thái hoạt động của chất liệu thành công!",
-                code: ResponseCodeConstants.SUCCESS));
-        
+
+        var finalCommand = command with { Id = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+            data: result,
+            message: "Cập nhật trạng thái hoạt động của chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+
     }
 
     public async Task<IResult> UpdatePrice(
@@ -113,6 +116,19 @@ public class MaterialEndpoints : EndpointGroupBase
         return TypedResults.Ok(BaseResponseModel<MaterialDTO>.OkResponseModel(
             data: result,
             message: "Cập nhật giá chất liệu thành công!",
+            code: ResponseCodeConstants.SUCCESS));
+    }
+    public async Task<IResult> EstimateCost(
+        [FromServices] ISender sender,
+        [FromRoute] Guid id,
+        [FromQuery] double weightInGrams)
+    {
+        var command = new CalculateMaterialPriceCommand { MaterialId = id, WeightInGrams = weightInGrams };
+        var result = await sender.Send(command);
+
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+            data: result,
+            message: "Tính toán chi phí vật liệu ước tính thành công!",
             code: ResponseCodeConstants.SUCCESS));
     }
 }
