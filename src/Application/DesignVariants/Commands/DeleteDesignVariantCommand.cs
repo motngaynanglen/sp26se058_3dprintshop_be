@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
@@ -44,6 +45,7 @@ public class DeleteDesignVariantCommandHandler : IRequestHandler<DeleteDesignVar
                 reason: "Biến thể này đã có trong lịch sử đơn hàng, không thể xóa để đảm bảo báo cáo thống kê."
             );
         }
+        variant.CatalogStatus = CatalogStatuses.Archived;
         variant.IsActive = false;
         variant.Deleted = CoreHelper.SystemTimeNow;
         variant.DeletedBy = _user.Username;
