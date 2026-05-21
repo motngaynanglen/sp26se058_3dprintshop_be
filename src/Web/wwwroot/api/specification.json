@@ -1334,7 +1334,7 @@
     "/api/design-tag/{templateId}/tags": {
       "get": {
         "tags": [
-          "DesignTag"
+          "Design Tag"
         ],
         "summary": "[Manager] Lấy tất cả tag của một Template với TemplateID.",
         "operationId": "GetApiDesignTagTags",
@@ -1360,7 +1360,7 @@
     "/api/design-tag/sync": {
       "post": {
         "tags": [
-          "DesignTag"
+          "Design Tag"
         ],
         "summary": "[Manager] Cập nhật tất cả tags của một Template với TemplateID và danh sách TagId.",
         "operationId": "PostApiDesignTagSync",
@@ -1386,7 +1386,7 @@
     "/api/design-tag": {
       "post": {
         "tags": [
-          "DesignTag"
+          "Design Tag"
         ],
         "summary": "[Manager] Thêm một tag mới cho Template.",
         "operationId": "PostApiDesignTag",
@@ -1412,7 +1412,7 @@
     "/api/design-tag/{id}": {
       "put": {
         "tags": [
-          "DesignTag"
+          "Design Tag"
         ],
         "summary": "[Manager] Cập nhật trạng thái MainTag cho một Tag cụ thể.",
         "operationId": "PutApiDesignTag",
@@ -1448,7 +1448,7 @@
       },
       "delete": {
         "tags": [
-          "DesignTag"
+          "Design Tag"
         ],
         "summary": "[Manager] Xóa một tag khỏi Template.",
         "operationId": "DeleteApiDesignTag",
@@ -2680,6 +2680,43 @@
           "required": true,
           "x-position": 2
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/{id}/estimate-cost": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Manager] Công cụ tự động tính toán nhanh giá tiền sản phẩm",
+        "description": "Nhập ID vật liệu trên route và truyền khối lượng ?weightInGrams=... qua query string.",
+        "operationId": "GetApiMaterialEstimateCost",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "weightInGrams",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            },
+            "x-position": 2
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
