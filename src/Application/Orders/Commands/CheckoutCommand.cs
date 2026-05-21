@@ -167,11 +167,18 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             {
                 // 1. Lấy thông tin biến thể sản phẩm kèm theo Lock (nếu cần)
                 var variant = await _context.DesignVariants
+                    .Include(x => x.DesignTemplate)
                     .FirstOrDefaultAsync(x => x.Id == itemReq.DesignVariantId.Value, ct);
 
                 if (variant == null)
                 {
                     failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm với mã {itemReq.DesignVariantId} không tồn tại.");
+                    continue;
+                }
+                if (variant.CatalogStatus != CatalogStatuses.Published || !variant.IsActive
+                    || variant.DesignTemplate.CatalogStatus != CatalogStatuses.Published || !variant.DesignTemplate.IsActive)
+                {
+                    failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm '{variant.Name}' hiện chưa được mở bán.");
                     continue;
                 }
 

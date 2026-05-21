@@ -5,6 +5,7 @@ using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
@@ -21,8 +22,29 @@ public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>
     public string FileUrl { get; init; } = null!;
     [DefaultValue("https://example.com/thumbnail.png")]
     public string ThumbnailUrl { get; init; } = null!;
-    [DefaultValue(true)]
-    public bool IsAcitve { get; init; } = true;
+    [DefaultValue(CatalogStatuses.Draft)]
+    public string? CatalogStatus { get; init; }
+    [DefaultValue(null)]
+    public bool? IsAcitve { get; init; }
+}
+
+public class CreateDesignTemplateCommandValidator : AbstractValidator<CreateDesignTemplateCommand>
+{
+    public CreateDesignTemplateCommandValidator()
+    {
+        RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Mã mẫu thiết kế không được để trống.");
+
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Tên mẫu thiết kế không được để trống.");
+
+        RuleFor(x => x.FileUrl)
+            .NotEmpty().WithMessage("File thiết kế không được để trống.");
+
+        RuleFor(x => x.CatalogStatus)
+            .Must(x => string.IsNullOrWhiteSpace(x) || CatalogStatuses.IsValid(x))
+            .WithMessage("Trạng thái catalog không hợp lệ.");
+    }
 }
 
 public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTemplateCommand, DesignTemplateDTO>
@@ -40,19 +62,25 @@ public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTe
 
     public async Task<DesignTemplateDTO> Handle(CreateDesignTemplateCommand request, CancellationToken cancellationToken)
     {
-        var isExist = await _context.DesignTemplates.AnyAsync(t => t.Code == request.Code, cancellationToken);
+        var code = request.Code.Trim();
+        var isExist = await _context.DesignTemplates.AnyAsync(t => t.Code == code, cancellationToken);
         if (isExist)
         {
             throw new DuplicateException(nameof(DesignTemplates), nameof(request.Code), request.Code);
         }
+
+        var catalogStatus = request.CatalogStatus?.ToUpperInvariant()
+            ?? (request.IsAcitve == true ? CatalogStatuses.Published : CatalogStatuses.Draft);
+
         var newDesignTemplate = new DesignTemplate
         {
-            Code = request.Code,
-            Name = request.Name,
+            Code = code,
+            Name = request.Name.Trim(),
             Description = request.Description,
-            FileUrl = request.FileUrl,
+            FileUrl = request.FileUrl.Trim(),
             ThumbnailUrl = request.ThumbnailUrl,
-            IsActive = true,
+            CatalogStatus = catalogStatus,
+            IsActive = catalogStatus == CatalogStatuses.Published,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
         };
