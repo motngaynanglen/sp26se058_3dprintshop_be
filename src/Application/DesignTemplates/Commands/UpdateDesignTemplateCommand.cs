@@ -7,6 +7,7 @@ using sp26se058_3dprintshop_be.Application.Common.Exceptions; // Nếu bạn có
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
@@ -33,8 +34,33 @@ public record UpdateDesignTemplateCommand : IRequest<DesignTemplateDTO>
     [DefaultValue("https://example.com/thumbnail.png")]
     public string? ThumbnailUrl { get; init; }
 
+    [DefaultValue(CatalogStatuses.Published)]
+    public string? CatalogStatus { get; init; }
+
     [DefaultValue(true)]
     public bool? IsAcitve { get; init; }
+}
+
+public class UpdateDesignTemplateCommandValidator : AbstractValidator<UpdateDesignTemplateCommand>
+{
+    public UpdateDesignTemplateCommandValidator()
+    {
+        RuleFor(x => x.Code)
+            .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
+            .WithMessage("Mã mẫu thiết kế không được để trống.");
+
+        RuleFor(x => x.Name)
+            .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
+            .WithMessage("Tên mẫu thiết kế không được để trống.");
+
+        RuleFor(x => x.FileUrl)
+            .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
+            .WithMessage("File thiết kế không được để trống.");
+
+        RuleFor(x => x.CatalogStatus)
+            .Must(x => string.IsNullOrWhiteSpace(x) || CatalogStatuses.IsValid(x))
+            .WithMessage("Trạng thái catalog không hợp lệ.");
+    }
 }
 
 public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTemplateCommand, DesignTemplateDTO>
@@ -60,10 +86,11 @@ public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTe
             throw new DataNotFoundException(nameof(DesignTemplate), request.Id);
         }
         // Nếu thay đổi Code, phải đảm bảo Code mới chưa bị ai khác sử dụng
-        if (!string.IsNullOrEmpty(request.Code) && designTemplate.Code != request.Code)
+        if (!string.IsNullOrEmpty(request.Code) && designTemplate.Code != request.Code.Trim())
         {
+            var code = request.Code.Trim();
             var isCodeExist = await _context.DesignTemplates
-                .AnyAsync(dt => dt.Code == request.Code && dt.Id != request.Id, cancellationToken);
+                .AnyAsync(dt => dt.Code == code && dt.Id != request.Id, cancellationToken);
 
             if (isCodeExist)
             {
@@ -71,22 +98,32 @@ public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTe
             }
         }
 
-        designTemplate.Code = !string.IsNullOrEmpty(request.Code) ? request.Code : designTemplate.Code;
+        designTemplate.Code = !string.IsNullOrEmpty(request.Code) ? request.Code.Trim() : designTemplate.Code;
         // Cập nhật thông tin
         if (!string.IsNullOrEmpty(request.Name))
-            designTemplate.Name = request.Name;
+            designTemplate.Name = request.Name.Trim();
 
         if (!string.IsNullOrEmpty(request.Description))
             designTemplate.Description = request.Description;
 
         if (!string.IsNullOrEmpty(request.FileUrl))
-            designTemplate.FileUrl = request.FileUrl;
+            designTemplate.FileUrl = request.FileUrl.Trim();
 
         if (!string.IsNullOrEmpty(request.ThumbnailUrl))
             designTemplate.ThumbnailUrl = request.ThumbnailUrl;
 
-        if (request.IsAcitve.HasValue)
+        if (!string.IsNullOrWhiteSpace(request.CatalogStatus))
+        {
+            var catalogStatus = request.CatalogStatus.ToUpperInvariant();
+
+            designTemplate.CatalogStatus = catalogStatus;
+            designTemplate.IsActive = catalogStatus == CatalogStatuses.Published;
+        }
+        else if (request.IsAcitve.HasValue)
+        {
             designTemplate.IsActive = request.IsAcitve.Value;
+            designTemplate.CatalogStatus = request.IsAcitve.Value ? CatalogStatuses.Published : CatalogStatuses.Draft;
+        }
 
         designTemplate.LastModified = CoreHelper.SystemTimeNow;
         designTemplate.LastModifiedBy = _user.Username;

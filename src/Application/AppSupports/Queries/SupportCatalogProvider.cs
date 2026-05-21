@@ -18,6 +18,7 @@ internal static class SupportCatalogProvider
             ["shipment-address-change-request"] = Map(ShipmentAddressChangeRequestStatuses.All),
             ["transaction"] = Map(TransactionStatuses.All),
             ["adjustment-request"] = Map(AdjustmentRequestStatuses.All),
+            ["catalog"] = Map(CatalogStatuses.All),
         };
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyCollection<SupportCatalogItemDTO>> Types =

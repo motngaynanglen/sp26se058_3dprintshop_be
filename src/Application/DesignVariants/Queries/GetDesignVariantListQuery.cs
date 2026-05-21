@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 
@@ -18,6 +19,8 @@ public class GetDesignVariantListQuery : IRequest<List<DesignVariantDTO>>
     public Guid? MaterialId { get; init; }
     [DefaultValue(true)]
     public bool IsActive { get; init; } = true;
+    [DefaultValue(CatalogStatuses.Published)]
+    public string? CatalogStatus { get; init; }
 }
 
 public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariantListQuery, List<DesignVariantDTO>>
@@ -45,13 +48,26 @@ public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariant
         if (!isStaffOrManager)
         {
             // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-            query = query.Where(dv => dv.IsActive);
+            query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive
+                && dv.DesignTemplate.CatalogStatus == CatalogStatuses.Published
+                && dv.DesignTemplate.IsActive);
         }
         else
         {
-            // Đối với Staff/Manager, cho phép lọc theo IsActive từ request
-            // Nếu request.IsActive là true thì lọc true, nếu false thì lọc false
-            query = query.Where(dv => dv.IsActive == request.IsActive);
+            if (!string.IsNullOrWhiteSpace(request.CatalogStatus))
+            {
+                var status = request.CatalogStatus.ToUpperInvariant();
+                if (!CatalogStatuses.IsValid(status))
+                {
+                    throw new BusinessException("Trạng thái catalog không hợp lệ.");
+                }
+
+                query = query.Where(dv => dv.CatalogStatus == status);
+            }
+            else
+            {
+                query = query.Where(dv => dv.IsActive == request.IsActive);
+            }
         }
 
         // 2. Lọc theo Template
@@ -70,10 +86,8 @@ public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariant
         query = query.OrderBy(dv => dv.Code)
                      .ThenBy(dv => dv.Name);
 
-        // ProjectTo và lấy danh sách
-        var result = await query
-            .ProjectTo<DesignVariantDTO>(_mapper.ConfigurationProvider)
-            .ToListAsync(cancellationToken);
+        var variants = await query.ToListAsync(cancellationToken);
+        var result = _mapper.Map<List<DesignVariantDTO>>(variants);
 
         return result;
     }

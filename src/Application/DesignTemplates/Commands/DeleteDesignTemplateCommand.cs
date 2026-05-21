@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
@@ -49,6 +50,8 @@ public class DeleteDesignTemplateHander : IRequestHandler<DeleteDesignTemplateCo
             );
         }
 
+        template.CatalogStatus = CatalogStatuses.Archived;
+        template.IsActive = false;
         template.Deleted = CoreHelper.SystemTimeNow;
         template.DeletedBy = _user.Username;
 

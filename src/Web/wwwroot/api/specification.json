@@ -1558,7 +1558,7 @@
           "Design Template"
         ],
         "summary": "[Staff/Manager] Tạo mới mẫu thiết kế",
-        "description": "Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.",
+        "description": "Tạo một mẫu thiết kế trong catalog.\n\nTrạng thái catalog hỗ trợ:\n- DRAFT: bản nháp nội bộ. Staff/Manager xem và chỉnh sửa được; Customer/Guest không thấy trong shop và không mua được.\n- PUBLISHED: đã công khai. Customer/Guest có thể thấy trong shop nếu IsActive=true và các biến thể liên quan cũng PUBLISHED/IsActive=true.\n- ARCHIVED: đã lưu trữ/xóa mềm theo nghiệp vụ. Không dùng khi tạo mới; hệ thống dùng khi xóa mềm hoặc ngưng kinh doanh.\n\nKhuyến nghị khi tạo mới:\n- Nên tạo với catalogStatus=DRAFT để kiểm tra file, ảnh, tag, biến thể và giá trước khi mở bán.\n- Nếu không truyền catalogStatus, hệ thống mặc định theo rule command hiện tại: DRAFT, trừ khi dùng IsAcitve=true thì sẽ được hiểu là PUBLISHED.\n- IsActive được đồng bộ theo catalogStatus: PUBLISHED => true, DRAFT/ARCHIVED => false.\n\nCách publish:\n- Gọi PATCH /api/design-template/{id}/update với body: { \"catalogStatus\": \"PUBLISHED\" }.\n- Nếu template có biến thể, cần publish từng biến thể bằng PATCH /api/design-variant/{id}/update với catalogStatus=PUBLISHED để khách có thể mua.",
         "operationId": "PostApiDesignTemplateAdd",
         "requestBody": {
           "x-name": "command",
@@ -1579,13 +1579,40 @@
         }
       }
     },
+    "/api/design-template/product/add": {
+      "post": {
+        "tags": [
+          "Design Template"
+        ],
+        "summary": "[Staff/Manager] Tạo sản phẩm catalog hoàn chỉnh",
+        "description": "Tạo sản phẩm catalog hoàn chỉnh trong một transaction: DesignTemplate + DesignVariant + DesignTag.\n\nTrạng thái catalog hỗ trợ:\n- DRAFT: bản nháp nội bộ. Phù hợp khi vừa nhập sản phẩm, cần kiểm tra ảnh, model, giá, vật liệu và tag.\n- PUBLISHED: đã công khai. Chỉ nên dùng khi template và ít nhất một variant đã sẵn sàng mở bán.\n- ARCHIVED: đã lưu trữ/xóa mềm; không nên dùng khi tạo mới.\n\nRule khi tạo product:\n- Nếu product catalogStatus=PUBLISHED thì phải có ít nhất một variant PUBLISHED.\n- Variant có catalogStatus riêng. Nếu không truyền cho variant, hệ thống dùng status của product.\n- Ảnh sản phẩm nằm ở từng variant qua ImageUrls, vì mỗi variant có thể khác màu/chất liệu/hình ảnh.\n- Tags dùng để phân loại template. Chỉ được có tối đa một tag chính IsMainTag=true; nếu không có tag chính, hệ thống tự lấy tag đầu tiên làm tag chính.\n\nCách publish sau khi tạo nháp:\n- Publish template: PATCH /api/design-template/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n- Publish variant: PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n- Khách chỉ thấy/mua được khi cả template và variant đều PUBLISHED và IsActive=true.",
+        "operationId": "PostApiDesignTemplateProductAdd",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCatalogProductCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-template/{id}/update": {
       "patch": {
         "tags": [
           "Design Template"
         ],
         "summary": "[Staff/Manager] Cập nhật thông tin mẫu thiết kế",
-        "description": "Cập nhật từng phần (Partial Update). Ghi đè ID từ URL vào Command.",
+        "description": "Cập nhật thông tin mẫu thiết kế theo từng phần.\n\nDùng endpoint này để publish/unpublish template:\n- Publish/mở bán template: gửi { \"catalogStatus\": \"PUBLISHED\" }.\n- Đưa về bản nháp/nội bộ: gửi { \"catalogStatus\": \"DRAFT\" }.\n- Lưu trữ theo nghiệp vụ: ưu tiên dùng DELETE /api/design-template/{id}/delete để hệ thống xử lý soft delete và audit.\n\nLưu ý khi publish:\n- Publish template chỉ mở trạng thái của template.\n- Khách vẫn chưa mua được nếu tất cả variant còn DRAFT/ARCHIVED hoặc IsActive=false.\n- Cần publish ít nhất một variant bằng PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n\nTương thích cũ:\n- Có thể dùng IsAcitve=true để chuyển template sang PUBLISHED.\n- Có thể dùng IsAcitve=false để chuyển template sang DRAFT.\n- Ưu tiên dùng catalogStatus vì rõ nghĩa hơn IsAcitve.",
         "operationId": "PatchApiDesignTemplateUpdate",
         "parameters": [
           {
@@ -4485,6 +4512,11 @@
                 "type": "boolean",
                 "default": false,
                 "nullable": true
+              },
+              "isActive": {
+                "type": "boolean",
+                "default": true,
+                "nullable": true
               }
             }
           }
@@ -4503,10 +4535,12 @@
             "default": "Sản phẩm được in từ Resin"
           },
           "isActive": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "isMainTag": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4648,7 +4682,8 @@
         "properties": {
           "designTemplateId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "tags": {
             "type": "array",
@@ -4664,7 +4699,8 @@
         "properties": {
           "conceptTagId": {
             "type": "string",
-            "format": "guid"
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
           },
           "isMainTag": {
             "type": "boolean",
@@ -4717,10 +4753,17 @@
                 "nullable": true
               },
               "isActive": {
-                "type": "boolean"
+                "type": "boolean",
+                "default": true
+              },
+              "catalogStatus": {
+                "type": "string",
+                "default": "PUBLISHED",
+                "nullable": true
               },
               "sortDescending": {
-                "type": "boolean"
+                "type": "boolean",
+                "default": false
               },
               "sortBy": {
                 "type": "string",
@@ -4755,9 +4798,158 @@
             "type": "string",
             "default": "https://example.com/thumbnail.png"
           },
+          "catalogStatus": {
+            "type": "string",
+            "default": "DRAFT",
+            "nullable": true
+          },
           "isAcitve": {
             "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "CreateCatalogProductCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "default": "CODE_DEFAULT"
+          },
+          "name": {
+            "type": "string",
+            "default": "Product Name"
+          },
+          "description": {
+            "type": "string",
+            "default": "Description here",
+            "nullable": true
+          },
+          "fileUrl": {
+            "type": "string",
+            "default": "https://example.com/file.stl"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "default": "https://example.com/thumbnail.png",
+            "nullable": true
+          },
+          "catalogStatus": {
+            "type": "string",
+            "default": "DRAFT",
+            "nullable": true
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogVariantRequest"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogTagRequest"
+            }
+          }
+        }
+      },
+      "CatalogVariantRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "materialId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "code": {
+            "type": "string",
+            "default": "VAR-001"
+          },
+          "name": {
+            "type": "string",
+            "default": "Biến thể PLA trắng"
+          },
+          "description": {
+            "type": "string",
+            "default": "Biến thể in bằng vật liệu PLA màu trắng",
+            "nullable": true
+          },
+          "sizeScale": {
+            "type": "number",
+            "format": "decimal",
+            "default": 1.0,
+            "nullable": true
+          },
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32",
+            "default": 10
+          },
+          "minimumStockLevel": {
+            "type": "integer",
+            "format": "int32",
+            "default": 5,
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "format": "decimal",
+            "default": 50000.0
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "previewModelUrl": {
+            "type": "string",
+            "default": "https://example.com/preview-model.stl",
+            "nullable": true
+          },
+          "isAllowPreOrder": {
+            "type": "boolean",
             "default": true
+          },
+          "estimatedWeightPerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "default": 25.5,
+            "nullable": true
+          },
+          "estimatedPrintTimePerUnit": {
+            "type": "number",
+            "format": "decimal",
+            "default": 120.0,
+            "nullable": true
+          },
+          "markupPercentage": {
+            "type": "number",
+            "format": "decimal",
+            "default": 0
+          },
+          "catalogStatus": {
+            "type": "string",
+            "default": "DRAFT",
+            "nullable": true
+          }
+        }
+      },
+      "CatalogTagRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "conceptTagId": {
+            "type": "string",
+            "format": "guid",
+            "default": "00000000-0000-0000-0000-000000000001"
+          },
+          "isMainTag": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4790,6 +4982,11 @@
             "default": "https://example.com/thumbnail.png",
             "nullable": true
           },
+          "catalogStatus": {
+            "type": "string",
+            "default": "PUBLISHED",
+            "nullable": true
+          },
           "isAcitve": {
             "type": "boolean",
             "default": true,
@@ -4816,6 +5013,11 @@
           "isActive": {
             "type": "boolean",
             "default": true
+          },
+          "catalogStatus": {
+            "type": "string",
+            "default": "PUBLISHED",
+            "nullable": true
           }
         }
       },
@@ -4841,6 +5043,11 @@
             "type": "string",
             "default": "Biến thể mặc định"
           },
+          "description": {
+            "type": "string",
+            "default": "Biến thể mặc định với chất liệu PLA",
+            "nullable": true
+          },
           "sizeScale": {
             "type": "number",
             "format": "decimal",
@@ -4851,10 +5058,28 @@
             "format": "int32",
             "default": 100
           },
+          "minimumStockLevel": {
+            "type": "integer",
+            "format": "int32",
+            "default": 5,
+            "nullable": true
+          },
           "price": {
             "type": "number",
             "format": "decimal",
             "default": 50000.0
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "previewModelUrl": {
+            "type": "string",
+            "default": "https://example.com/preview-model.stl",
+            "nullable": true
           },
           "isAllowPreOrder": {
             "type": "boolean",
@@ -4870,9 +5095,19 @@
             "format": "decimal",
             "default": 120.0
           },
+          "markupPercentage": {
+            "type": "number",
+            "format": "decimal",
+            "default": 0
+          },
+          "catalogStatus": {
+            "type": "string",
+            "default": "DRAFT",
+            "nullable": true
+          },
           "isActive": {
             "type": "boolean",
-            "default": true
+            "nullable": true
           }
         }
       },
@@ -4913,11 +5148,28 @@
             "default": 100,
             "nullable": true
           },
+          "minimumStockLevel": {
+            "type": "integer",
+            "format": "int32",
+            "default": 5,
+            "nullable": true
+          },
           "price": {
             "type": "number",
             "format": "decimal",
             "default": 50000.0,
             "nullable": true
+          },
+          "imageUrls": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "clearImageUrls": {
+            "type": "boolean",
+            "default": false
           },
           "previewModelUrl": {
             "type": "string",
@@ -4941,9 +5193,19 @@
             "default": 120.0,
             "nullable": true
           },
+          "markupPercentage": {
+            "type": "number",
+            "format": "decimal",
+            "default": 0,
+            "nullable": true
+          },
+          "catalogStatus": {
+            "type": "string",
+            "default": "PUBLISHED",
+            "nullable": true
+          },
           "isActive": {
             "type": "boolean",
-            "default": true,
             "nullable": true
           }
         }
