@@ -38,8 +38,6 @@ public class DesignWorkDTO
 }
 public class DesignWorkDetailDTO : DesignWorkDTO
 {
-    public Guid? ServiceSelectionId { get; set; }
-
     // Có thể bao gồm thêm thông tin Selection để FE hiển thị giá tiền
     public ICollection<ServiceSelectionDTO>? Selections { get; init; }
     public ICollection<DesignWorkDTO>? SubRevisions { get; set; }
