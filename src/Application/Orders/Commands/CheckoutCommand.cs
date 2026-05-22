@@ -96,7 +96,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ giao hàng không tồn tại hoặc không thuộc quyền sở hữu của bạn.");
         }
 
-        var order = await CreateOrderAsync(customer.Id, request, failures, cancellationToken);
+        var stockReservations = new List<StockReservation>();
+        var order = await CreateOrderAsync(customer.Id, request, failures, stockReservations, cancellationToken);
 
         failures.ThrowIfAny();
 
@@ -129,12 +130,38 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             LastModifiedBy = _user.Username,
         };
 
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        foreach (var reservation in stockReservations
+            .GroupBy(x => x.DesignVariantId)
+            .Select(x => new StockReservation(
+                x.Key,
+                x.Sum(item => item.Quantity),
+                x.First().VariantName)))
+        {
+            var affectedRows = await _context.DesignVariants
+                .Where(v => v.Id == reservation.DesignVariantId
+                    && v.StockQuantity >= reservation.Quantity)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(v => v.StockQuantity, v => v.StockQuantity - reservation.Quantity)
+                    .SetProperty(v => v.LastModified, CoreHelper.SystemTimeNow)
+                    .SetProperty(v => v.LastModifiedBy, _user.Username), cancellationToken);
+
+            if (affectedRows == 0)
+            {
+                throw new BusinessException(
+                    $"Sản phẩm '{reservation.VariantName}' không còn đủ tồn kho. Vui lòng kiểm tra lại giỏ hàng.",
+                    ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
+            }
+        }
+
         _context.Orders.Add(order);
         _context.Shipments.Add(shipment);
         _context.Invoices.Add(invoice);
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
+            await dbTransaction.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -143,8 +170,14 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
 
         return _mapper.Map<OrderDTO>(order);
     }
-    private async Task<Order> CreateOrderAsync(Guid customerId, CheckoutCommand request, List<ValidationFailure> failures, CancellationToken ct)
+    private async Task<Order> CreateOrderAsync(
+        Guid customerId,
+        CheckoutCommand request,
+        List<ValidationFailure> failures,
+        List<StockReservation> stockReservations,
+        CancellationToken ct)
     {
+        var reservedQuantities = new Dictionary<Guid, int>();
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -185,13 +218,16 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
                 if (request.SourceType == SourceTypes.InStock)
                 {
                     // LUỒNG HÀNG CÓ SẴN: Phải kiểm tra và trừ kho
-                    if (variant.StockQuantity < itemReq.Quantity)
+                    var alreadyReserved = reservedQuantities.GetValueOrDefault(variant.Id);
+                    var availableQuantity = variant.StockQuantity - alreadyReserved;
+                    if (availableQuantity < itemReq.Quantity)
                     {
-                        failures.AddFailure(nameof(itemReq.Quantity), $"Sản phẩm '{variant.Name}' hiện chỉ còn {variant.StockQuantity} món, không đủ để bán sẵn.");
+                        failures.AddFailure(nameof(itemReq.Quantity), $"Sản phẩm '{variant.Name}' hiện chỉ còn {availableQuantity} món, không đủ để bán sẵn.");
+                        continue;
                     }
 
-                    // Trừ kho
-                    variant.StockQuantity -= itemReq.Quantity;
+                    reservedQuantities[variant.Id] = alreadyReserved + itemReq.Quantity;
+                    stockReservations.Add(new StockReservation(variant.Id, itemReq.Quantity, variant.Name));
 
                     // Ghi log giao dịch kho
                     var inventoryLog = new InventoryTransaction
@@ -215,35 +251,35 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
                     if (!variant.IsAllowPreOrder)
                     {
                         failures.AddFailure(nameof(request.SourceType), $"Sản phẩm '{variant.Name}' không hỗ trợ đặt hàng trước.");
+                        continue;
                     }
 
                     // KHÔNG trừ StockQuantity, KHÔNG tạo InventoryTransaction
                     // Chỉ đơn giản là ghi nhận yêu cầu vào đơn hàng
                 }
                 // 3. Tạo OrderItem chung cho cả 2 luồng
-                if (!failures.Any(f => f.PropertyName == nameof(itemReq.Quantity) || f.PropertyName == nameof(request.SourceType)))
+                var orderItem = new OrderItem
                 {
-                    var orderItem = new OrderItem
-                    {
-                        SourceType = request.SourceType,
-                        DesignVariantId = variant.Id,
-                        QuantityOrdered = itemReq.Quantity,
-                        ItemName = variant.Name ?? "Sản phẩm",
-                        UnitPrice = variant.Price,
-                        TotalPrice = variant.Price * itemReq.Quantity,
-                        FulfillmentStatus = OrderItemStatuses.Pending,
-                        Order = order,
-                        Created = CoreHelper.SystemTimeNow,
-                        CreatedBy = _user.Username
-                    };
-                    order.OrderItems.Add(orderItem);
-                    order.TotalPrice += orderItem.TotalPrice;
-                }
+                    SourceType = request.SourceType,
+                    DesignVariantId = variant.Id,
+                    QuantityOrdered = itemReq.Quantity,
+                    ItemName = variant.Name ?? "Sản phẩm",
+                    UnitPrice = variant.Price,
+                    TotalPrice = variant.Price * itemReq.Quantity,
+                    FulfillmentStatus = OrderItemStatuses.Pending,
+                    Order = order,
+                    Created = CoreHelper.SystemTimeNow,
+                    CreatedBy = _user.Username
+                };
+                order.OrderItems.Add(orderItem);
+                order.TotalPrice += orderItem.TotalPrice;
             }
 
         }
         return order;
     }
+
+    private sealed record StockReservation(Guid DesignVariantId, int Quantity, string VariantName);
 
 }
 
