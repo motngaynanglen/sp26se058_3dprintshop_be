@@ -46,14 +46,16 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
     private readonly IUser _user;
     private readonly IOrderPendingService _orderPendingService;
     private readonly ICodeGeneratorService _codeGenerator;
+    private readonly IPricingEngine _pricingEngine;
 
-    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator)
+    public CheckoutDraftsCommandCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator, IPricingEngine pricingEngine)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
         _orderPendingService = orderPendingService;
         _codeGenerator = codeGenerator;
+        _pricingEngine = pricingEngine;
     }
     public async Task<object> Handle(CheckoutDraftsCommand request, CancellationToken ct)
     {
@@ -165,9 +167,11 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
                 continue;
             }
 
-            // CÔNG THỨC TÍNH GIÁ: (Khối lượng * Giá mỗi gram) * (1 + Phụ thu độ khó)
-            decimal unitPrice = (draft.EstimatedWeightPerUnit * currentMaterialPrice.Value)
-                                * (1 + (draft.MarkupPercentage / 100));
+            // Recalculate from current DB price at checkout time — never read from stored TechnicalDraft.UnitPrice
+            decimal unitPrice = _pricingEngine.CalculatePrintCost(
+                draft.EstimatedWeightPerUnit,
+                currentMaterialPrice.Value,
+                draft.MarkupPercentage);
 
             var orderItem = new OrderItem
             {

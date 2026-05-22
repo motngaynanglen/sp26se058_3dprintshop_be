@@ -1,5 +1,6 @@
 using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.UnitTests.Common.TestHelpers;
+using sp26se058_3dprintshop_be.Infrastructure.Service;
 
 namespace sp26se058_3dprintshop_be.Application.UnitTests.Materials.Commands;
 
@@ -7,13 +8,15 @@ namespace sp26se058_3dprintshop_be.Application.UnitTests.Materials.Commands;
 public class CalculateMaterialPriceCommandHandlerTests
 {
     private ApplicationDbContext _context = null!;
+    private IPricingEngine _pricingEngine = null!;
     private CalculateMaterialPriceCommandHandler _handler = null!;
 
     [SetUp]
     public void SetUp()
     {
         _context = TestDbContextFactory.Create();
-        _handler = new CalculateMaterialPriceCommandHandler(_context);
+        _pricingEngine = new PricingEngine(_context);
+        _handler = new CalculateMaterialPriceCommandHandler(_context, _pricingEngine);
     }
 
     [TearDown]
