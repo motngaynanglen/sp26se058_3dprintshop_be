@@ -41,6 +41,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ServiceSelection> ServiceSelections => Set<ServiceSelection>();
     public DbSet<ServiceSelectedOption> ServiceSelectedOptions => Set<ServiceSelectedOption>();
 
+    public void ClearChangeTracker() => ChangeTracker.Clear();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         //base.OnModelCreating(builder); remove ASP core identity

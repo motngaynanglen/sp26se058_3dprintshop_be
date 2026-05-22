@@ -4328,7 +4328,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProcessOnlinePaymentCommand"
+                "$ref": "#/components/schemas/ProcessOnlinePaymentV2Command"
               }
             }
           },
@@ -4356,6 +4356,33 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/PerformTransactionCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/transaction/confirm-manual": {
+      "post": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[Staff/Manager] Xác nhận thanh toán thủ công (CASH hoặc BANK_TRANSFER).",
+        "description": "Dùng khi khách đã trả tiền mặt tại quầy hoặc chuyển khoản ngoài hệ thống. Kèm mã tham chiếu nếu có.",
+        "operationId": "PostApiTransactionConfirmManual",
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmManualPaymentCommand"
               }
             }
           },
@@ -6532,7 +6559,7 @@
           }
         }
       },
-      "ProcessOnlinePaymentCommand": {
+      "ProcessOnlinePaymentV2Command": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -6643,6 +6670,34 @@
             "type": "string",
             "default": "PAYOS",
             "minLength": 1
+          }
+        }
+      },
+      "ConfirmManualPaymentCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "orderId",
+          "paymentMethod"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "guid",
+            "minLength": 1
+          },
+          "paymentMethod": {
+            "type": "string",
+            "default": "CASH",
+            "minLength": 1
+          },
+          "externalReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

@@ -1,29 +1,34 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using sp26se058_3dprintshop_be.Application.Common.Config;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 
 namespace sp26se058_3dprintshop_be.Infrastructure.Service;
 
 public class ExpiredPendingOrderHostedService : BackgroundService
 {
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(15);
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ExpiredPendingOrderHostedService> _logger;
+    private readonly ExpiredPendingOrderJobOptions _options;
 
     public ExpiredPendingOrderHostedService(
         IServiceScopeFactory scopeFactory,
-        ILogger<ExpiredPendingOrderHostedService> logger)
+        ILogger<ExpiredPendingOrderHostedService> logger,
+        IOptions<ExpiredPendingOrderJobOptions> options)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _options = options.Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await CancelExpiredOrdersAsync(stoppingToken);
 
-        using var timer = new PeriodicTimer(CheckInterval);
+        var intervalMinutes = Math.Max(_options.IntervalMinutes, 1);
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(intervalMinutes));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             await CancelExpiredOrdersAsync(stoppingToken);

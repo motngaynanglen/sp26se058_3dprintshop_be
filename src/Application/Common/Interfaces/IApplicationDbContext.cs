@@ -39,5 +39,6 @@ public interface IApplicationDbContext
     DatabaseFacade Database { get; }
 
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
+    void ClearChangeTracker();
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

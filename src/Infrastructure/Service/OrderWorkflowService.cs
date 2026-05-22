@@ -22,13 +22,16 @@ public class OrderWorkflowService : IOrderWorkflowService
 
     public async Task ActivateOrderWorkflowAsync(Order order, CancellationToken ct)
     {
-        // 1. Cập nhật trạng thái tổng quát
         order.OrderStatus = OrderStatuses.Processing;
         order.DepositedAt = CoreHelper.SystemTimeNow;
         order.LastModified = CoreHelper.SystemTimeNow;
+        order.LastModifiedBy = "SYSTEM_AUTO";
 
         foreach (var item in order.OrderItems)
         {
+            item.LastModified = CoreHelper.SystemTimeNow;
+            item.LastModifiedBy = "SYSTEM_AUTO";
+
             switch (item.SourceType)
             {
                 case SourceTypes.InStock:
