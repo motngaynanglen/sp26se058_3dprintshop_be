@@ -2506,13 +2506,66 @@
         }
       }
     },
+    "/api/material/active": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[All] Lấy danh sách vật liệu đang hoạt động",
+        "description": "Dùng cho dropdown chọn vật liệu. Chỉ trả vật liệu IsActive=true và có giá hiện hành.",
+        "operationId": "GetApiMaterialActive",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/query": {
+      "post": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Staff/Manager] Truy vấn vật liệu có paging/filter",
+        "description": "Hỗ trợ search, lọc IsActive, lọc có giá hiện hành, sort theo name/created/price/effectiveDate.",
+        "operationId": "PostApiMaterialQuery",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetMaterialsWithPaginationQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/add": {
       "post": {
         "tags": [
           "Material"
         ],
         "summary": "[Manager] Tạo mới vật liệu",
-        "description": "Tạo vật liệu mới với các thông tin: giá, mô tả, ...",
+        "description": "Quản lý vật liệu dùng cho catalog variant, technical draft và tính giá in.\n\nRule chính:\n- Material active phải có đúng ít nhất một giá hiện hành IsCurrent=true.\n- Cập nhật thông tin vật liệu không cập nhật giá.\n- Cập nhật giá phải dùng endpoint /update-price để hệ thống tạo MaterialPriceHistory mới và hạ giá cũ khỏi IsCurrent.\n- Deactive chỉ tạm ngưng vật liệu, không soft delete.\n- Delete là xóa mềm và bị chặn nếu vật liệu đã được dùng trong technical draft hoặc biến thể đang mở bán.",
         "operationId": "PostApiMaterialAdd",
         "requestBody": {
           "x-name": "command",
@@ -2538,7 +2591,8 @@
         "tags": [
           "Material"
         ],
-        "summary": "[Manager] Lấy danh sách vật liệu",
+        "summary": "[Staff/Manager] Lấy toàn bộ danh sách vật liệu",
+        "description": "API tương thích cũ. Khuyến nghị FE dùng POST /api/material/query cho paging/filter.",
         "operationId": "GetApiMaterialAll",
         "responses": {
           "200": {
@@ -2552,7 +2606,8 @@
         "tags": [
           "Material"
         ],
-        "summary": "[Manager] Xem chi tiết vật liệu",
+        "summary": "[Staff/Manager] Xem chi tiết vật liệu",
+        "description": "Trả thông tin vật liệu kèm lịch sử giá.",
         "operationId": "GetApiMaterialDetail",
         "parameters": [
           {
@@ -2573,12 +2628,69 @@
         }
       }
     },
+    "/api/material/{id}/price-history": {
+      "get": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Staff/Manager] Lấy lịch sử giá vật liệu",
+        "description": "Hỗ trợ paging và lọc IsCurrent qua query string.",
+        "operationId": "GetApiMaterialPriceHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 2
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            },
+            "x-position": 3
+          },
+          {
+            "name": "isCurrent",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "x-position": 4
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/{id}/update": {
       "put": {
         "tags": [
           "Material"
         ],
-        "summary": "[Manager] Cập nhật vật liệu",
+        "summary": "[Manager] Cập nhật thông tin vật liệu",
+        "description": "Chỉ cập nhật Name, Description, IsActive. Không cập nhật giá; muốn cập nhật giá dùng /update-price.",
         "operationId": "PutApiMaterialUpdate",
         "parameters": [
           {
@@ -2611,12 +2723,94 @@
         }
       }
     },
+    "/api/material/{id}/active": {
+      "patch": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Manager] Kích hoạt vật liệu",
+        "description": "Chỉ kích hoạt được khi vật liệu đã có giá hiện hành.",
+        "operationId": "PatchApiMaterialActive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/{id}/deactive": {
+      "patch": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Manager] Tạm ngưng vật liệu",
+        "description": "Không soft delete. Bị chặn nếu vật liệu đang được dùng bởi biến thể sản phẩm đang mở bán.",
+        "operationId": "PatchApiMaterialDeactive",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/material/{id}/delete": {
+      "delete": {
+        "tags": [
+          "Material"
+        ],
+        "summary": "[Manager] Xóa mềm vật liệu",
+        "description": "Xóa mềm vật liệu. Bị chặn nếu đã dùng trong technical draft hoặc biến thể đang mở bán.",
+        "operationId": "DeleteApiMaterialDelete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/material/{id}/toggle-active": {
       "delete": {
         "tags": [
           "Material"
         ],
-        "summary": "Chuyển đổi trạng thái Active của vật liệu",
+        "summary": "[Deprecated][Manager] Chuyển đổi trạng thái active của vật liệu",
+        "description": "API tương thích cũ. Chỉ đổi IsActive, không set Deleted. Khuyến nghị dùng /active hoặc /deactive.",
         "operationId": "DeleteApiMaterialToggleActive",
         "parameters": [
           {
@@ -2630,18 +2824,6 @@
             "x-position": 1
           }
         ],
-        "requestBody": {
-          "x-name": "command",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeleteMaterialCommand"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
         "responses": {
           "200": {
             "description": ""
@@ -2655,6 +2837,7 @@
           "Material"
         ],
         "summary": "[Manager] Cập nhật giá của vật liệu",
+        "description": "Tạo một MaterialPriceHistory mới IsCurrent=true, đồng thời hạ các giá hiện hành cũ về IsCurrent=false.",
         "operationId": "PostApiMaterialUpdatePrice",
         "parameters": [
           {
@@ -2692,7 +2875,7 @@
         "tags": [
           "Material"
         ],
-        "summary": "[Manager] Công cụ tự động tính toán nhanh giá tiền sản phẩm",
+        "summary": "[Staff/Manager] Công cụ tính nhanh giá vật liệu",
         "description": "Nhập ID vật liệu trên route và truyền khối lượng ?weightInGrams=... qua query string.",
         "operationId": "GetApiMaterialEstimateCost",
         "parameters": [
@@ -5547,29 +5730,69 @@
           }
         }
       },
+      "GetMaterialsWithPaginationQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "search": {
+                "type": "string",
+                "default": "",
+                "nullable": true
+              },
+              "isActive": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "hasCurrentPrice": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "sortBy": {
+                "type": "string",
+                "default": "name",
+                "nullable": true
+              },
+              "sortDescending": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          }
+        ]
+      },
       "CreateMaterialCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "PLA"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Nhựa PLA phổ biến cho in 3D, dễ in và phù hợp sản phẩm trang trí."
           },
           "baseCostPerGram": {
             "type": "number",
             "format": "decimal",
+            "default": 2.5,
             "nullable": true
           },
           "totalServiceCostPerGram": {
             "type": "number",
             "format": "decimal",
+            "default": 5.0,
             "nullable": true
           },
           "effectiveDate": {
             "type": "string",
             "format": "date-time",
+            "default": "2026-05-22",
             "nullable": true
           }
         }
@@ -5579,31 +5802,20 @@
         "additionalProperties": false,
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "default": "PLA",
+            "nullable": true
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "default": "Nhựa PLA phổ biến cho in 3D.",
+            "nullable": true
           },
           "isActive": {
-            "type": "boolean"
-          },
-          "baseCostPerGram": {
-            "type": "number",
-            "format": "decimal"
-          },
-          "totalServiceCostPerGram": {
-            "type": "number",
-            "format": "decimal"
-          },
-          "effectiveDate": {
-            "type": "string",
-            "format": "date-time"
+            "type": "boolean",
+            "nullable": true
           }
         }
-      },
-      "DeleteMaterialCommand": {
-        "type": "object",
-        "additionalProperties": false
       },
       "UpdateMaterialPriceCommand": {
         "type": "object",
@@ -5612,16 +5824,17 @@
           "baseCostPerGram": {
             "type": "number",
             "format": "decimal",
-            "default": "10.0"
+            "default": 2.5
           },
           "totalServiceCostPerGram": {
             "type": "number",
             "format": "decimal",
-            "default": "10.0"
+            "default": 5.0
           },
           "effectiveDate": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "default": "2026-05-22"
           }
         }
       },

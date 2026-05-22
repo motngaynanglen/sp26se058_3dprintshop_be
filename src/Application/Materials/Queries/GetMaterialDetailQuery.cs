@@ -7,8 +7,10 @@ using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Queries;
 
+[Authorize(Roles = Roles.StaffOrManager)]
 public class GetMaterialDetailQuery : IRequest<MaterialDTO>
 {
+    [System.ComponentModel.DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
     public class GetMaterialDetailQueryHandler : IRequestHandler<GetMaterialDetailQuery, MaterialDTO>
     {
@@ -23,6 +25,7 @@ public class GetMaterialDetailQuery : IRequest<MaterialDTO>
         {
             var material = await _context.Materials
                 .AsNoTracking()
+                .Include(m => m.PriceHistories)
                 .ProjectTo<MaterialDTO>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
             if (material == null)
