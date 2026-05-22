@@ -1,0 +1,14 @@
+global using AutoMapper;
+global using FluentAssertions;
+global using FluentValidation.Results;
+global using Microsoft.EntityFrameworkCore;
+global using Moq;
+global using NUnit.Framework;
+global using sp26se058_3dprintshop_be.Application.Common.Exceptions;
+global using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+global using sp26se058_3dprintshop_be.Application.Common.Models;
+global using sp26se058_3dprintshop_be.Domain.Constants;
+global using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+global using sp26se058_3dprintshop_be.Domain.Constants.Types;
+global using sp26se058_3dprintshop_be.Domain.Entities;
+global using sp26se058_3dprintshop_be.Infrastructure.Data;
