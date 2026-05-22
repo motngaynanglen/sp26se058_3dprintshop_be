@@ -64,6 +64,7 @@ public class MarkShipmentAsInTransitCommandHandler : IRequestHandler<MarkShipmen
 
         // Cập nhật thông tin vận chuyển tích hợp
         shipment.ShipmentStatus = ShipmentStatuses.InTransit;
+        shipment.CarrierName = request.CarrierName;
         shipment.TrackingNumber = request.TrackingNumber;
         shipment.EstimatedDeliveryTime = request.EstimatedDeliveryTime;
 

@@ -34,7 +34,7 @@ public class GetTransactionByOrderIdQuery : IRequest<TransactionDTO>
 
             if (_user.Role == Roles.CUSTOMER)
             {
-                query = query.Where(t => t.Invoice.Order.CustomerId == userId);
+                query = query.Where(t => t.Invoice.Order.Customer.AccountId == userId);
             }
             var entity = await query
                 .ProjectTo<TransactionDTO>(_mapper.ConfigurationProvider)

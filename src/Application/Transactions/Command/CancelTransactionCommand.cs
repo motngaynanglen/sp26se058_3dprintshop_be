@@ -40,11 +40,23 @@ public class CancelTransactionCommandHandler : IRequestHandler<CancelTransaction
     {
         // 1. Tìm giao dịch (Dùng DataNotFoundException - DB_004)
         var transaction = await _context.Transactions
+            .Include(t => t.Invoice)
+                .ThenInclude(i => i.Order)
+                    .ThenInclude(o => o.Customer)
             .FirstOrDefaultAsync(t => t.Id == request.TransactionId, cancellationToken);
 
         if (transaction == null)
         {
             throw new DataNotFoundException(nameof(Transaction), request.TransactionId);
+        }
+
+        ValidateCancelPermission(transaction);
+
+        if (transaction.Invoice.PaymentStatus != InvoiceStatuses.Unpaid)
+        {
+            throw new BusinessException(
+                "Chỉ có thể hủy giao dịch khi hóa đơn chưa thanh toán.",
+                ResponseCodeConstants.VAL_INVALID_STATE);
         }
         // 2. Kiểm tra trạng thái giao dịch (Dùng VAL_002 - Sai trạng thái nghiệp vụ)
         // Nếu đã CANCELLED rồi thì không báo lỗi (Idempotent), nhưng nếu đã Success thì KHÔNG được hủy.
@@ -95,5 +107,27 @@ public class CancelTransactionCommandHandler : IRequestHandler<CancelTransaction
         }
 
         return true;
+    }
+
+    private void ValidateCancelPermission(Transaction transaction)
+    {
+        var role = _user.Role ?? Roles.GUEST;
+        var userId = _user.Id.ToGuid();
+        var isStaffOrManager = role == Roles.STAFF || role == Roles.MANAGER;
+
+        if (isStaffOrManager)
+        {
+            return;
+        }
+
+        if (role != Roles.CUSTOMER)
+        {
+            throw new ForbiddenAccessException("Bạn không có quyền hủy giao dịch này.");
+        }
+
+        if (transaction.Invoice.Order.Customer.AccountId != userId)
+        {
+            throw new ForbiddenAccessException("Bạn không có quyền hủy giao dịch của đơn hàng này.");
+        }
     }
 }
