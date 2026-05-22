@@ -70,9 +70,21 @@ public class UpdateDesignWorkCommandHandler : IRequestHandler<UpdateDesignWorkCo
 
         var oldStatus = entity.Status;
 
-        if (request.Status != null && DesignWorkStatus.All.All(x => x.Value != request.Status))
+        if (request.Status != null)
         {
-            throw new BusinessException("Trạng thái công việc thiết kế không hợp lệ.");
+            var currentDef = DesignWorkStatus.All.FirstOrDefault(x => x.Value == entity.Status);
+            var targetDef = DesignWorkStatus.All.FirstOrDefault(x => x.Value == request.Status);
+
+            if (targetDef == null)
+                throw new BusinessException("Trạng thái công việc thiết kế không hợp lệ.");
+
+            if (request.Status != entity.Status
+                && (currentDef?.AllowedNextStatuses == null
+                    || !currentDef.AllowedNextStatuses.Contains(request.Status)))
+            {
+                throw new BusinessException(
+                    $"Không thể chuyển trạng thái từ '{entity.Status}' sang '{request.Status}'.");
+            }
         }
 
         // 2. Cập nhật các trường thông tin (Chỉ cập nhật nếu request có giá trị)

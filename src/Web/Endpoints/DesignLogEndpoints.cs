@@ -63,9 +63,17 @@ public class DesignLogEndpoints : EndpointGroupBase
             ));
     }
 
-    public async Task<IResult> CreateVersionUpdateLog([FromServices] ISender sender, [FromBody] CreateVersionUpdateLogCommand request)
+    public async Task<IResult> CreateVersionUpdateLog(
+        [FromServices] ISender sender,
+        [FromServices] IHubContext<DesignWorkChatHub> hubContext,
+        [FromBody] CreateVersionUpdateLogCommand request)
     {
         var result = await sender.Send(request);
+
+        await hubContext.Clients
+            .Group(DesignWorkChatHub.GetGroupName(result.DesignWorkId))
+            .SendAsync(DesignWorkChatHub.ReceiveDesignLogEvent, result);
+
         return TypedResults.Ok(BaseResponseModel<DesignLogDTO>.OkResponseModel(
                 code: ResponseCodeConstants.SUCCESS,
                 data: result,

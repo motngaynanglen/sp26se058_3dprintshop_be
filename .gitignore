@@ -485,3 +485,4 @@ $RECYCLE.BIN/
 /.codex_tmp
 /.docs
 src/Web/appsettings.json
+/.claude
