@@ -55,14 +55,6 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
     public async Task<ShippingAddressDTO> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
     {
         Guid userId= _user.Id.ToGuid();
-        // Nếu IsDefault = true, phải bỏ default của các địa chỉ cũ
-        if (request.IsDefault)
-        {
-            var defaults = await _context.ShippingAddresses
-                .Where(s => s.CustomerId == userId && s.IsDefault)
-                .ToListAsync();
-            defaults.ForEach(x => x.IsDefault = false);
-        }
         var account = await _context.Accounts.Include(a => a.Customer).FirstOrDefaultAsync(a => a.Id == userId);
         if (account == null)
         {
@@ -72,6 +64,14 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
         if (customer == null)
         {
             throw new ForbiddenAccessException("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
+        }
+        // Nếu IsDefault = true, phải bỏ default của các địa chỉ cũ
+        if (request.IsDefault)
+        {
+            var defaults = await _context.ShippingAddresses
+                .Where(s => s.CustomerId == customer.Id && s.IsDefault)
+                .ToListAsync();
+            defaults.ForEach(x => x.IsDefault = false);
         }
         var entity = new ShippingAddress
         {
