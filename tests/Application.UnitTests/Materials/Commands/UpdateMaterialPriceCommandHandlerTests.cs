@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Logging;
 using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.UnitTests.Common.TestHelpers;
+using sp26se058_3dprintshop_be.Infrastructure.Service;
 
 namespace sp26se058_3dprintshop_be.Application.UnitTests.Materials.Commands;
 
@@ -9,6 +11,8 @@ public class UpdateMaterialPriceCommandHandlerTests
     private ApplicationDbContext _context = null!;
     private IMapper _mapper = null!;
     private Mock<IUser> _user = null!;
+    private IPricingEngine _pricingEngine = null!;
+    private Mock<ILogger<UpdateMaterialPriceCommandHandler>> _logger = null!;
     private UpdateMaterialPriceCommandHandler _handler = null!;
 
     [SetUp]
@@ -18,7 +22,9 @@ public class UpdateMaterialPriceCommandHandlerTests
         _mapper = TestDbContextFactory.CreateMapper();
         _user = new Mock<IUser>();
         _user.Setup(u => u.Username).Returns("manager01");
-        _handler = new UpdateMaterialPriceCommandHandler(_context, _mapper, _user.Object);
+        _pricingEngine = new PricingEngine(_context);
+        _logger = new Mock<ILogger<UpdateMaterialPriceCommandHandler>>();
+        _handler = new UpdateMaterialPriceCommandHandler(_context, _mapper, _user.Object, _pricingEngine, _logger.Object);
     }
 
     [TearDown]
