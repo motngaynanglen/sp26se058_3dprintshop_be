@@ -73,16 +73,16 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         if (version == null)
             throw new DataNotFoundException(nameof(DesignVersionHistory), request.DesignVersionHistoryId);
 
-        var currentMaterialPrice = await _context.Materials.AsNoTracking()
-                .Where(m => m.Id == request.MaterialId)
-                .ProjectTo<MaterialDTO>(_mapper.ConfigurationProvider)
+        var currentMaterialPrice = await _context.MaterialPriceHistories.AsNoTracking()
+                .Where(p => p.MaterialId == request.MaterialId && p.IsCurrent && p.Material.IsActive)
+                .Select(p => (decimal?)p.TotalServiceCostPerGram)
                 .FirstOrDefaultAsync(ct);
 
         if (currentMaterialPrice == null)
         {
-            throw new DataNotFoundException(nameof(Material), request.MaterialId);
+            throw new BusinessException("Vật liệu không tồn tại, đang tạm ngưng hoặc chưa có giá hiện hành.");
         }
-        decimal unitPrice = request.EstimatedWeightPerUnit * currentMaterialPrice.TotalServiceCostPerGram;
+        decimal unitPrice = request.EstimatedWeightPerUnit * currentMaterialPrice.Value;
                                 
 
         // 2. Kiểm tra Logic trạng thái (State Machine Validation)

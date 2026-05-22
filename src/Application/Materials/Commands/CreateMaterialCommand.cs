@@ -1,28 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Constants;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using System.ComponentModel;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
-using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
-[Authorize(Roles = Roles.StaffOrManager)]
+[Authorize(Roles = Roles.MANAGER)]
 public record CreateMaterialCommand : IRequest<MaterialDTO>
 {
-    public string Name { get; set; } = null!;
-    public string Description { get; set; } = null!;
+    [DefaultValue("PLA")]
+    public string Name { get; init; } = null!;
 
-    // Cho phép nullable để linh hoạt
+    [DefaultValue("Nhựa PLA phổ biến cho in 3D, dễ in và phù hợp sản phẩm trang trí.")]
+    public string Description { get; init; } = null!;
+
+    [DefaultValue(2.5)]
     public decimal? BaseCostPerGram { get; init; }
+
+    [DefaultValue(5.0)]
     public decimal? TotalServiceCostPerGram { get; init; }
+
+    [DefaultValue("2026-05-22")]
     public DateTime? EffectiveDate { get; init; }
 }
+
 public class CreateMaterialCommandValidator : AbstractValidator<CreateMaterialCommand>
 {
     private readonly IApplicationDbContext _context;
@@ -31,38 +31,53 @@ public class CreateMaterialCommandValidator : AbstractValidator<CreateMaterialCo
     {
         _context = context;
 
-        // 1. Kiểm tra Tên vật liệu
         RuleFor(v => v.Name)
             .NotEmpty().WithMessage("Tên vật liệu không được để trống.")
             .MaximumLength(100).WithMessage("Tên vật liệu không vượt quá 100 ký tự.")
             .MustAsync(BeUniqueName).WithMessage("Tên vật liệu này đã tồn tại trong hệ thống.");
 
-        // 2. Kiểm tra Mô tả
         RuleFor(v => v.Description)
             .NotEmpty().WithMessage("Mô tả vật liệu không được để trống.")
             .MaximumLength(1000).WithMessage("Mô tả không được vượt quá 1000 ký tự.");
 
-        // 3. Kiểm tra đơn giá gốc
+        RuleFor(v => v)
+            .Must(HaveFullPriceInfoOrNoPriceInfo)
+            .WithMessage("Nếu nhập giá vật liệu thì phải nhập đủ giá gốc, giá dịch vụ và ngày hiệu lực.");
+
         RuleFor(v => v.BaseCostPerGram)
-            .GreaterThan(0).WithMessage("Giá nhập phải lớn hơn 0.");
+            .GreaterThan(0).When(v => v.BaseCostPerGram.HasValue)
+            .WithMessage("Giá nhập phải lớn hơn 0.");
 
-        // 4. Kiểm tra phí dịch vụ
         RuleFor(v => v.TotalServiceCostPerGram)
-            .GreaterThan(v => v.BaseCostPerGram).WithMessage("Phí dịch vụ phải cao hơn giá nhập.");
+            .GreaterThanOrEqualTo(v => v.BaseCostPerGram!.Value)
+            .When(v => v.BaseCostPerGram.HasValue && v.TotalServiceCostPerGram.HasValue)
+            .WithMessage("Giá dịch vụ phải lớn hơn hoặc bằng giá nhập.");
 
-        // 5. Kiểm tra Ngày hiệu lực
         RuleFor(v => v.EffectiveDate)
-            .NotEmpty().WithMessage("Ngày hiệu lực không được để trống.")
-            .Must(date => date >= DateTime.Today).WithMessage("Ngày hiệu lực không được là ngày trong quá khứ.");
+            .Must(date => !date.HasValue || date.Value.Date >= DateTime.Today)
+            .WithMessage("Ngày hiệu lực không được là ngày trong quá khứ.");
     }
 
-    // Hàm kiểm tra trùng tên bất đồng bộ
     public async Task<bool> BeUniqueName(string name, CancellationToken cancellationToken)
     {
+        var normalizedName = name.Trim().ToLower();
         return !await _context.Materials
-            .AnyAsync(m => m.Name.ToLower() == name.ToLower(), cancellationToken);
+            .AnyAsync(m => m.Name.ToLower() == normalizedName, cancellationToken);
+    }
+
+    private static bool HaveFullPriceInfoOrNoPriceInfo(CreateMaterialCommand command)
+    {
+        var providedCount = new[]
+        {
+            command.BaseCostPerGram.HasValue,
+            command.TotalServiceCostPerGram.HasValue,
+            command.EffectiveDate.HasValue
+        }.Count(x => x);
+
+        return providedCount is 0 or 3;
     }
 }
+
 public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialCommand, MaterialDTO>
 {
     private readonly IApplicationDbContext _context;
@@ -78,18 +93,22 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
 
     public async Task<MaterialDTO> Handle(CreateMaterialCommand request, CancellationToken cancellationToken)
     {
-        bool hasPriceInfo = request.BaseCostPerGram.HasValue && request.EffectiveDate.HasValue;
+        var now = CoreHelper.SystemTimeNow;
+        bool hasPriceInfo = request.BaseCostPerGram.HasValue
+            && request.TotalServiceCostPerGram.HasValue
+            && request.EffectiveDate.HasValue;
 
         var newMaterial = new Material
         {
-            Name = request.Name,
-            Description = request.Description,
+            Name = request.Name.Trim(),
+            Description = request.Description.Trim(),
             IsActive = hasPriceInfo,
-            Created = CoreHelper.SystemTimeNow,
+            Created = now,
             CreatedBy = _user.Username,
-            LastModified = CoreHelper.SystemTimeNow,
+            LastModified = now,
             LastModifiedBy = _user.Username,
         };
+
         _context.Materials.Add(newMaterial);
 
         if (hasPriceInfo)
@@ -98,15 +117,16 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
             {
                 Material = newMaterial,
                 BaseCostPerGram = request.BaseCostPerGram!.Value,
-                TotalServiceCostPerGram = request.TotalServiceCostPerGram ?? 0,
+                TotalServiceCostPerGram = request.TotalServiceCostPerGram!.Value,
                 EffectiveDate = request.EffectiveDate!.Value,
                 IsCurrent = true,
-                Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username
+                Created = now,
+                CreatedBy = _user.Username,
+                LastModified = now,
+                LastModifiedBy = _user.Username
             };
             _context.MaterialPriceHistories.Add(priceHistory);
         }
-
 
         try
         {
@@ -117,8 +137,6 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
             throw new CreateFailureException(nameof(Material), ex.Message);
         }
 
-
         return _mapper.Map<MaterialDTO>(newMaterial);
     }
 }
-

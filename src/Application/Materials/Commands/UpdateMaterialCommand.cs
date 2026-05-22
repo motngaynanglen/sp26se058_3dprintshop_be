@@ -1,96 +1,112 @@
-﻿using System;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
-using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
-[Authorize(Roles = Roles.StaffOrManager)]
+[Authorize(Roles = Roles.MANAGER)]
 public record UpdateMaterialCommand : IRequest<MaterialDTO>
 {
     [JsonIgnore]
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
 
-    public string Name { get; set; } = null!;
-    public string Description { get; set; } = null!;
-    public bool IsActive { get; set; }
-    public decimal BaseCostPerGram { get; set; }
-    public decimal TotalServiceCostPerGram { get; set; }
-    public DateTime EffectiveDate { get; set; }
+    [DefaultValue("PLA")]
+    public string? Name { get; init; }
 
-    public class UpdateMaterialCommandHandler : IRequestHandler<UpdateMaterialCommand, MaterialDTO>
+    [DefaultValue("Nhựa PLA phổ biến cho in 3D.")]
+    public string? Description { get; init; }
+
+    [DefaultValue(null)]
+    public bool? IsActive { get; init; }
+}
+
+public class UpdateMaterialCommandValidator : AbstractValidator<UpdateMaterialCommand>
+{
+    public UpdateMaterialCommandValidator()
     {
-        private readonly IApplicationDbContext _context;
-        private readonly IMapper _mapper;
-        private readonly IUser _user;
+        RuleFor(x => x.Name)
+            .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
+            .WithMessage("Tên vật liệu không được để trống.")
+            .MaximumLength(100)
+            .When(x => x.Name != null)
+            .WithMessage("Tên vật liệu không vượt quá 100 ký tự.");
 
-        public UpdateMaterialCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+        RuleFor(x => x.Description)
+            .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
+            .WithMessage("Mô tả vật liệu không được để trống.")
+            .MaximumLength(1000)
+            .When(x => x.Description != null)
+            .WithMessage("Mô tả không được vượt quá 1000 ký tự.");
+    }
+}
+
+public class UpdateMaterialCommandHandler : IRequestHandler<UpdateMaterialCommand, MaterialDTO>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
+    private readonly IUser _user;
+
+    public UpdateMaterialCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    {
+        _context = context;
+        _mapper = mapper;
+        _user = user;
+    }
+
+    public async Task<MaterialDTO> Handle(UpdateMaterialCommand request, CancellationToken cancellationToken)
+    {
+        var material = await _context.Materials
+            .Include(m => m.PriceHistories)
+            .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
+
+        if (material == null)
         {
-            _context = context;
-            _mapper = mapper;
-            _user = user;
+            throw new DataNotFoundException(nameof(Material), request.Id);
         }
 
-        public async Task<MaterialDTO> Handle(UpdateMaterialCommand request, CancellationToken cancellationToken)
+        if (!string.IsNullOrWhiteSpace(request.Name))
         {
-            // Validation
-            if (request.BaseCostPerGram <= 0)
+            var name = request.Name.Trim();
+            var duplicated = await _context.Materials
+                .AnyAsync(x => x.Id != request.Id && x.Name.ToLower() == name.ToLower(), cancellationToken);
+
+            if (duplicated)
             {
-                throw new BusinessException("Đơn giá gốc phải lớn hơn 0.");
+                throw new DuplicateException(nameof(Material), nameof(request.Name), request.Name);
             }
 
-            if (request.TotalServiceCostPerGram < request.BaseCostPerGram)
+            material.Name = name;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Description))
+        {
+            material.Description = request.Description.Trim();
+        }
+
+        if (request.IsActive.HasValue)
+        {
+            if (request.IsActive.Value && !material.PriceHistories.Any(x => x.IsCurrent))
             {
-                throw new BusinessException("Tổng phí dịch vụ phải cao hơn đơn giá gốc.");
+                throw new BusinessException("Không thể kích hoạt vật liệu khi chưa có giá hiện hành.");
             }
 
-            var material = await _context.Materials
-                .Include(m => m.PriceHistories)
-                .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
+            material.IsActive = request.IsActive.Value;
+        }
 
-            if (material == null)
-            {
-                throw new DataNotFoundException(nameof(Material), request.Id);
-            }
+        material.LastModified = CoreHelper.SystemTimeNow;
+        material.LastModifiedBy = _user.Username;
 
-            // Cập nhật thông tin cơ bản của Material
-            material.Name = request.Name;
-            material.Description = request.Description;
-            material.IsActive = request.IsActive;
-            material.LastModified = DateTime.UtcNow;
-            material.LastModifiedBy = _user.Username;
-
-            // TẠO MỚI PriceHistory nhưng KHÔNG thay đổi IsCurrent
-            var newPriceHistory = new Domain.Entities.MaterialPriceHistory
-            {
-                Material = material,                    // hoặc MaterialId = material.Id
-                BaseCostPerGram = request.BaseCostPerGram,
-                TotalServiceCostPerGram = request.TotalServiceCostPerGram,
-                EffectiveDate = request.EffectiveDate,
-
-                // Không set IsCurrent = true
-                // Mặc định để false hoặc để giá trị mặc định của entity
-                IsCurrent = false,                      // ← Quan trọng: không set thành true
-
-                Created = DateTime.UtcNow,
-                CreatedBy = _user.Username
-            };
-
-            _context.MaterialPriceHistories.Add(newPriceHistory);
-
-            // KHÔNG tắt IsCurrent của các bản ghi cũ
-
+        try
+        {
             await _context.SaveChangesAsync(cancellationToken);
-
-            // Trả về DTO
-            var materialDto = _mapper.Map<MaterialDTO>(material);
-
-            return materialDto;
         }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(Material), ex.Message);
+        }
+
+        return _mapper.Map<MaterialDTO>(material);
     }
 }
