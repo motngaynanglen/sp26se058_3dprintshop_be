@@ -57,11 +57,14 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
     private readonly IMapper _mapper;
-    public CreateTechnicalDraftCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
+    private readonly IPricingEngine _pricingEngine;
+
+    public CreateTechnicalDraftCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper, IPricingEngine pricingEngine)
     {
         _context = context;
         _user = user;
         _mapper = mapper;
+        _pricingEngine = pricingEngine;
     }
     public async Task<object> Handle(CreateTechnicalDraftCommand request, CancellationToken ct)
     {
@@ -82,7 +85,12 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
         {
             throw new BusinessException("Vật liệu không tồn tại, đang tạm ngưng hoặc chưa có giá hiện hành.");
         }
-        decimal unitPrice = request.EstimatedWeightPerUnit * currentMaterialPrice.Value;
+
+        // Idea 3a: apply markup in suggestion so staff sees the same price customer will pay
+        decimal suggestedUnitPrice = _pricingEngine.CalculatePrintCost(
+            request.EstimatedWeightPerUnit,
+            currentMaterialPrice.Value,
+            request.MarkupPercentage);
                                 
 
         // 2. Kiểm tra Logic trạng thái (State Machine Validation)
@@ -110,7 +118,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             LayerHeight = request.LayerHeight,
             EstimatedWeightPerUnit = request.EstimatedWeightPerUnit,
             EstimatedPrintTimePerUnit = request.EstimatedPrintTimePerUnit,
-            UnitPrice = request.UnitPrice ?? unitPrice,
+            UnitPrice = request.UnitPrice ?? suggestedUnitPrice,
             MarkupPercentage = request.MarkupPercentage,
             TechnicalNote = request.TechnicalNote,
 

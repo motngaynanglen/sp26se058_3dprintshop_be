@@ -44,10 +44,12 @@ public class CalculateMaterialPriceCommandValidator : AbstractValidator<Calculat
 public class CalculateMaterialPriceCommandHandler : IRequestHandler<CalculateMaterialPriceCommand, MaterialEstimationResultDto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPricingEngine _pricingEngine;
 
-    public CalculateMaterialPriceCommandHandler(IApplicationDbContext context)
+    public CalculateMaterialPriceCommandHandler(IApplicationDbContext context, IPricingEngine pricingEngine)
     {
         _context = context;
+        _pricingEngine = pricingEngine;
     }
 
     public async Task<MaterialEstimationResultDto> Handle(CalculateMaterialPriceCommand request, CancellationToken cancellationToken)
@@ -77,7 +79,9 @@ public class CalculateMaterialPriceCommandHandler : IRequestHandler<CalculateMat
         decimal weightDecimal = (decimal)request.WeightInGrams;
 
         decimal totalBaseCost = baseCostPerGram * weightDecimal;
-        decimal totalServiceCost = serviceCostPerGram * weightDecimal;
+
+        // Route through IPricingEngine — markup=0 for this raw estimation endpoint (no markup applied)
+        decimal finalPrice = _pricingEngine.CalculatePrintCost(weightDecimal, serviceCostPerGram, 0);
 
         return new MaterialEstimationResultDto(
             MaterialId: material.Id,
@@ -86,7 +90,7 @@ public class CalculateMaterialPriceCommandHandler : IRequestHandler<CalculateMat
             CurrentBaseCostPerGram: baseCostPerGram,
             CurrentServiceCostPerGram: serviceCostPerGram,
             TotalBaseCost: Math.Round(totalBaseCost, 2),
-            FinalPrice: Math.Round(totalServiceCost, 2)
+            FinalPrice: Math.Round(finalPrice, 2)
         );
     }
 }

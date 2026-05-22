@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
@@ -47,12 +49,21 @@ public class UpdateMaterialPriceCommandHandler : IRequestHandler<UpdateMaterialP
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IPricingEngine _pricingEngine;
+    private readonly ILogger<UpdateMaterialPriceCommandHandler> _logger;
 
-    public UpdateMaterialPriceCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public UpdateMaterialPriceCommandHandler(
+        IApplicationDbContext context,
+        IMapper mapper,
+        IUser user,
+        IPricingEngine pricingEngine,
+        ILogger<UpdateMaterialPriceCommandHandler> logger)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _pricingEngine = pricingEngine;
+        _logger = logger;
     }
 
     public async Task<MaterialDTO> Handle(UpdateMaterialPriceCommand request, CancellationToken cancellationToken)
@@ -110,11 +121,72 @@ public class UpdateMaterialPriceCommandHandler : IRequestHandler<UpdateMaterialP
             throw new UpdateFailureException(nameof(Material), ex.Message);
         }
 
+        // Idea 2: Auto-sync DesignVariant.Price for variants using this material.
+        // Best-effort — failure must NOT roll back the material price update.
+        await SyncDesignVariantPricesAsync(request.MaterialId, request.TotalServiceCostPerGram, cancellationToken);
+
         return await _context.Materials
             .AsNoTracking()
             .Include(x => x.PriceHistories)
             .Where(x => x.Id == request.MaterialId)
             .ProjectTo<MaterialDTO>(_mapper.ConfigurationProvider)
             .FirstAsync(cancellationToken);
+    }
+
+    private async Task SyncDesignVariantPricesAsync(
+        Guid materialId,
+        decimal newPricePerGram,
+        CancellationToken ct)
+    {
+        try
+        {
+            var variants = await _context.DesignVariants
+                .Where(v => v.MaterialId == materialId
+                    && v.IsActive
+                    && v.EstimatedWeightPerUnit != null
+                    && v.EstimatedWeightPerUnit > 0
+                    && v.CatalogStatus != CatalogStatuses.Archived)
+                .ToListAsync(ct);
+
+            var now = CoreHelper.SystemTimeNow;
+            int syncedCount = 0;
+
+            foreach (var variant in variants)
+            {
+                var newPrice = _pricingEngine.CalculatePrintCost(
+                    variant.EstimatedWeightPerUnit!.Value,
+                    newPricePerGram,
+                    variant.MarkupPercentage);
+
+                if (newPrice <= 0)
+                {
+                    _logger.LogWarning(
+                        "Skipping DesignVariant {VariantId}: calculated price {Price} is not positive.",
+                        variant.Id, newPrice);
+                    continue;
+                }
+
+                variant.Price = newPrice;
+                variant.LastModified = now;
+                variant.LastModifiedBy = _user.Username ?? "SYSTEM";
+                syncedCount++;
+            }
+
+            if (syncedCount > 0)
+            {
+                await _context.SaveChangesAsync(ct);
+            }
+
+            _logger.LogInformation(
+                "Material price updated for {MaterialId}. Auto-synced {Count} DesignVariant prices.",
+                materialId, syncedCount);
+        }
+        catch (Exception ex)
+        {
+            // Sync failure must NOT affect the material price update that already committed
+            _logger.LogError(ex,
+                "Failed to auto-sync DesignVariant prices for material {MaterialId}. Main price update was NOT rolled back.",
+                materialId);
+        }
     }
 }
