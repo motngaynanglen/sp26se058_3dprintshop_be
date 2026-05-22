@@ -13,7 +13,7 @@ public class ShipmentDTO
     public Guid Id { get; set; }
     public Guid? OrderId { get; set; }
     public Guid? ShippingAddressId { get; set; }
-    public Guid? ShippingMethodId { get; set; }
+    //public Guid? ShippingMethodId { get; set; }
     public string? FullAddress { get; set; }
     public string? RecipientName { get; set; }
     public string? RecipientPhone { get; set; }
