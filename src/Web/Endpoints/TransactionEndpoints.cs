@@ -30,6 +30,9 @@ public class TransactionEndpoints : EndpointGroupBase
         group.MapPost("/perform-transaction", PerformTransaction)
                     .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.")
                     .WithDescription("Trước mắt hỗ trợ 2 phương thức: 'PAYOS' và 'CASH'. CASH là thanh toán trực tiếp, có thể dùng để test!");
+        group.MapPost("/confirm-manual", ConfirmManualPayment)
+                    .WithSummary("[Staff/Manager] Xác nhận thanh toán thủ công (CASH hoặc BANK_TRANSFER).")
+                    .WithDescription("Dùng khi khách đã trả tiền mặt tại quầy hoặc chuyển khoản ngoài hệ thống. Kèm mã tham chiếu nếu có.");
         group.MapPost("/{id}/cancel", CancelTransaction)
                    .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
         group.MapGet("/{orderId}/detail-by-order-id", GetDetailByOrderID)
@@ -72,6 +75,16 @@ public class TransactionEndpoints : EndpointGroupBase
             ));
 
     }
+    public async Task<IResult> ConfirmManualPayment([FromServices] ISender sender, [FromBody] ConfirmManualPaymentCommand command)
+    {
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel.OkResponseModel(
+                data: result,
+                message: "Xác nhận thanh toán thủ công thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+    }
+
     public async Task<IResult> CancelTransaction([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelTransactionCommand command)
     {
 
