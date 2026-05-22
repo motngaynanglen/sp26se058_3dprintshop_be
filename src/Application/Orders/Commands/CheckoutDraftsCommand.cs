@@ -154,9 +154,9 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             }
 
             // Lấy giá vật liệu hiện tại (Price History)
-            var currentMaterialPrice = await _context.Materials.AsNoTracking()
-                .Where(m => m.Id == draft.MaterialId)
-                .ProjectTo<MaterialDTO>(_mapper.ConfigurationProvider)
+            var currentMaterialPrice = await _context.MaterialPriceHistories.AsNoTracking()
+                .Where(p => p.MaterialId == draft.MaterialId && p.IsCurrent && p.Material.IsActive)
+                .Select(p => (decimal?)p.TotalServiceCostPerGram)
                 .FirstOrDefaultAsync(ct);
 
             if (currentMaterialPrice == null)
@@ -166,7 +166,7 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             }
 
             // CÔNG THỨC TÍNH GIÁ: (Khối lượng * Giá mỗi gram) * (1 + Phụ thu độ khó)
-            decimal unitPrice = (draft.EstimatedWeightPerUnit * currentMaterialPrice.TotalServiceCostPerGram)
+            decimal unitPrice = (draft.EstimatedWeightPerUnit * currentMaterialPrice.Value)
                                 * (1 + (draft.MarkupPercentage / 100));
 
             var orderItem = new OrderItem
