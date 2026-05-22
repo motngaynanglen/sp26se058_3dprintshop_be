@@ -1,7 +1,7 @@
-﻿using System.Reflection;
+using System.Reflection;
 using sp26se058_3dprintshop_be.Application.Common.Behaviours;
 using sp26se058_3dprintshop_be.Application.Common.Config;
-
+using sp26se058_3dprintshop_be.Application.Materials.Commands;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +23,7 @@ public static class DependencyInjection
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(PerformanceBehaviour<,>));
         });
         services.AddTransient<PayOsCodeGenerator>();
+        services.AddScoped<MaterialActiveStatusService>();
         return services;
     }
 }
