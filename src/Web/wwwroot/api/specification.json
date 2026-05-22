@@ -4328,7 +4328,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProcessOnlinePaymentCommand"
+                "$ref": "#/components/schemas/ProcessOnlinePaymentV2Command"
               }
             }
           },
@@ -6532,7 +6532,7 @@
           }
         }
       },
-      "ProcessOnlinePaymentCommand": {
+      "ProcessOnlinePaymentV2Command": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
