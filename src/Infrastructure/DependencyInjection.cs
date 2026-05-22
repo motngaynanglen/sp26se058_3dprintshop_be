@@ -68,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderWorkflowService, OrderWorkflowService>();
         services.AddScoped<IOrderPendingService, OrderPendingService>();
         services.AddSingleton<ICodeGeneratorService, CodeGeneratorService>();
+        services.AddScoped<IPricingEngine, PricingEngine>();
         services.Configure<ExpiredPendingOrderJobOptions>(configuration.GetSection(ExpiredPendingOrderJobOptions.SectionName));
         services.AddHostedService<ExpiredPendingOrderHostedService>();
 

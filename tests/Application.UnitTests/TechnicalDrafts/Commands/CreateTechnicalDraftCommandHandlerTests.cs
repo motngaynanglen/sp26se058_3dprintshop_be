@@ -2,6 +2,7 @@ using sp26se058_3dprintshop_be.Application.TechnicalDrafts.Commands;
 using sp26se058_3dprintshop_be.Application.UnitTests.Common.TestHelpers;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using sp26se058_3dprintshop_be.Infrastructure.Service;
 
 namespace sp26se058_3dprintshop_be.Application.UnitTests.TechnicalDrafts.Commands;
 
@@ -11,6 +12,7 @@ public class CreateTechnicalDraftCommandHandlerTests
     private ApplicationDbContext _context = null!;
     private IMapper _mapper = null!;
     private Mock<IUser> _user = null!;
+    private IPricingEngine _pricingEngine = null!;
     private CreateTechnicalDraftCommandHandler _handler = null!;
 
     [SetUp]
@@ -21,7 +23,8 @@ public class CreateTechnicalDraftCommandHandlerTests
         _user = new Mock<IUser>();
         _user.Setup(u => u.Username).Returns("staff01");
         _user.Setup(u => u.Role).Returns(Roles.STAFF);
-        _handler = new CreateTechnicalDraftCommandHandler(_context, _user.Object, _mapper);
+        _pricingEngine = new PricingEngine(_context);
+        _handler = new CreateTechnicalDraftCommandHandler(_context, _user.Object, _mapper, _pricingEngine);
     }
 
     [TearDown]
