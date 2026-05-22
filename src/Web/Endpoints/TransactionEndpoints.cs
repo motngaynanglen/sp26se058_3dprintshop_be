@@ -39,7 +39,7 @@ public class TransactionEndpoints : EndpointGroupBase
 
     }
 
-    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentCommand command)
+    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentV2Command command)
     {
 
         var result = await sender.Send(command);
