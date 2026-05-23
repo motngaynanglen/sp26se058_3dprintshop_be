@@ -29,7 +29,8 @@ public class DesignWorkEndpoints : EndpointGroupBase
         // Gắn API Quick Print cho khách hàng
         group.MapPost("/quick-print", CreateQuickPrint)
             .WithSummary("[Customer] Gửi yêu cầu in 3D từ file có sẵn")
-            .WithDescription("Khách hàng upload tối đa 5 file và gửi yêu cầu để nhân viên báo giá.");
+            .WithDescription("Khách hàng upload tối đa 5 file (.glb/.stl/.obj) và gửi yêu cầu để nhân viên kiểm tra kỹ thuật và báo giá. " +
+                             "Tạo mới DesignWork loại PRINT_SERVICE ở trạng thái REVIEWING.");
         group.MapPost("/add", Create)
             .WithSummary("[Staff/Manager] Tạo mới công việc thiết kế")
             .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Yêu cầu nhập đầy đủ mã và tên.");
@@ -40,14 +41,32 @@ public class DesignWorkEndpoints : EndpointGroupBase
             .WithSummary("[Staff/Manager] Cập nhật trạng thái phê duyệt công việc thiết kế")
             .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái phê duyệt của công việc thiết kế.");
         group.MapPatch("/{id}/mark-printable", UpdateIsPrintable)
-            .WithSummary("[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế")
-            .WithDescription("Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái có thể in của công việc thiết kế.");
+            .WithSummary("[Staff/Manager] [DEPRECATED] Cập nhật trạng thái có thể in")
+            .WithDescription("⚠️ DEPRECATED — Dùng POST /{id}/review-file thay thế. Endpoint này sẽ bị xóa trong phiên bản kế tiếp.");
+
+        group.MapPost("/{versionHistoryId}/review-file", ReviewFileVersion)
+            .WithSummary("[Staff/Manager] Duyệt file kỹ thuật (dùng chung cho cả Design Service và Quick Print)")
+            .WithDescription("Nhân viên xác nhận hoặc từ chối một file DesignVersionHistory dựa trên tiêu chuẩn kỹ thuật in. " +
+                             "Khi từ chối: phải nhập lý do (ReviewNote). " +
+                             "Quick Print: nếu tất cả file bị từ chối, DesignWork chuyển về SKETCHING để khách upload lại.");
         group.MapPatch("/{id}/lock", Lock)
             .WithSummary("[Customer/Staff/Manager] Khóa công việc thiết kế")
             .WithDescription("Khóa DesignWork để bảo toàn lịch sử sau khi đã chốt file hoặc kết thúc hỗ trợ.");
         group.MapPost("/{id}/request-rework", RequestRework)
             .WithSummary("[Customer] Yêu cầu chỉnh sửa thêm")
             .WithDescription("Tạo một phiên bản chỉnh sửa mới từ công việc thiết kế đã có, giữ quan hệ cha/gốc để tra lịch sử.");
+
+        group.MapPost("/{id}/add-files", AddFilesToQuickPrint)
+            .WithSummary("[Customer] Re-upload file vào yêu cầu in nhanh")
+            .WithDescription("Khách hàng upload lại file sau khi tất cả file bị nhân viên từ chối (trạng thái SKETCHING). " +
+                             "Chỉ áp dụng cho yêu cầu in nhanh (PRINT_SERVICE). Tự động chuyển trạng thái về REVIEWING.");
+
+        group.MapDelete("/{id}/close", CloseQuickPrintRequest)
+            .WithSummary("[Customer/Staff/Manager] Đóng yêu cầu in nhanh")
+            .WithDescription("Khóa (đóng) một yêu cầu in nhanh CHƯA có đơn hàng. " +
+                             "Yêu cầu vẫn hiển thị trong lịch sử (IsLocked = true), nhưng không thể upload thêm file hoặc tạo draft. " +
+                             "Khách hàng chỉ đóng được yêu cầu của mình. Nhân viên/quản lý đóng được mọi yêu cầu. " +
+                             "Nếu đã có đơn hàng, dùng API hủy đơn hàng.");
 
     }
 
@@ -147,13 +166,57 @@ public class DesignWorkEndpoints : EndpointGroupBase
     //           code: ResponseCodeConstants.DELETED
     //       ));
     //}
-    public async Task<IResult> CreateQuickPrint([FromServices] ISender sender, [FromBody] CheckoutQuickPrintCommand request)
+    public async Task<IResult> ReviewFileVersion(
+        [FromServices] ISender sender,
+        [FromRoute] Guid versionHistoryId,
+        [FromBody] ReviewFileVersionCommand command)
     {
-        var result = await sender.Send(request);
+        var finalCmd = command with { VersionHistoryId = versionHistoryId };
+        var result = await sender.Send(finalCmd);
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                data: result,
+                message: "Duyệt file thành công!",
+                code: ResponseCodeConstants.UPDATED
+            ));
+    }
+
+    public async Task<IResult> CreateQuickPrint([FromServices] ISender sender, [FromBody] AddFilesToQuickPrintCommand request)
+    {
+        // DesignWorkId is null (not in body) — handler creates a new Quick Print DesignWork
+        var result = await sender.Send(request);
+        return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
                 data: result,
                 message: "Gửi yêu cầu in thành công! Vui lòng chờ nhân viên kỹ thuật kiểm tra file và báo giá.",
                 code: ResponseCodeConstants.CREATED
+            ));
+    }
+
+    public async Task<IResult> AddFilesToQuickPrint(
+        [FromServices] ISender sender,
+        [FromRoute] Guid id,
+        [FromBody] AddFilesToQuickPrintCommand command)
+    {
+        // DesignWorkId injected from route — handler re-uploads files to existing SKETCHING work
+        var finalCmd = command with { DesignWorkId = id };
+        var result = await sender.Send(finalCmd);
+        return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
+                data: result,
+                message: "Upload file thành công! Yêu cầu in đã được gửi lại cho nhân viên kiểm tra.",
+                code: ResponseCodeConstants.CREATED
+            ));
+    }
+
+    public async Task<IResult> CloseQuickPrintRequest(
+        [FromServices] ISender sender,
+        [FromRoute] Guid id,
+        [FromBody] CloseQuickPrintRequestCommand command)
+    {
+        var finalCmd = command with { DesignWorkId = id };
+        var result = await sender.Send(finalCmd);
+        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                data: result,
+                message: "Yêu cầu in đã được đóng thành công.",
+                code: ResponseCodeConstants.UPDATED
             ));
     }
 }

@@ -26,6 +26,14 @@ public class DesignWork : BaseAuditableEntity
     public string Status { get; set; } = "SKETCHING";
     public bool IsLocked { get; set; } = false; // Khóa khi Completed
 
+    /// <summary>
+    /// Distinguishes the two DesignWork flows.
+    /// null = legacy data (treated as DESIGN_SERVICE).
+    /// Set by CheckoutDesignWorkCommand ("DESIGN_SERVICE") and CheckoutQuickPrintCommand ("PRINT_SERVICE").
+    /// See DesignWorkTypes constants.
+    /// </summary>
+    public string? WorkType { get; set; }
+
     // === NAVIGATION PROPERTIES ===
     public virtual DesignWork? ParentDesignWork { get; set; }
     public virtual ICollection<DesignWork> ChildDesignWorks { get; set; } = new List<DesignWork>();

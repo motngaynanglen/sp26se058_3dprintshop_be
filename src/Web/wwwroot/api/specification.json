@@ -1558,7 +1558,7 @@
           "Design Template"
         ],
         "summary": "[Staff/Manager] Tạo mới mẫu thiết kế",
-        "description": "Tạo một mẫu thiết kế trong catalog.\n\nTrạng thái catalog hỗ trợ:\n- DRAFT: bản nháp nội bộ. Staff/Manager xem và chỉnh sửa được; Customer/Guest không thấy trong shop và không mua được.\n- PUBLISHED: đã công khai. Customer/Guest có thể thấy trong shop nếu IsActive=true và các biến thể liên quan cũng PUBLISHED/IsActive=true.\n- ARCHIVED: đã lưu trữ/xóa mềm theo nghiệp vụ. Không dùng khi tạo mới; hệ thống dùng khi xóa mềm hoặc ngưng kinh doanh.\n\nKhuyến nghị khi tạo mới:\n- Nên tạo với catalogStatus=DRAFT để kiểm tra file, ảnh, tag, biến thể và giá trước khi mở bán.\n- Nếu không truyền catalogStatus, hệ thống mặc định theo rule command hiện tại: DRAFT, trừ khi dùng IsAcitve=true thì sẽ được hiểu là PUBLISHED.\n- IsActive được đồng bộ theo catalogStatus: PUBLISHED => true, DRAFT/ARCHIVED => false.\n\nCách publish:\n- Gọi PATCH /api/design-template/{id}/update với body: { \"catalogStatus\": \"PUBLISHED\" }.\n- Nếu template có biến thể, cần publish từng biến thể bằng PATCH /api/design-variant/{id}/update với catalogStatus=PUBLISHED để khách có thể mua.",
+        "description": "Tạo một mẫu thiết kế trong catalog.\r\n\r\nTrạng thái catalog hỗ trợ:\r\n- DRAFT: bản nháp nội bộ. Staff/Manager xem và chỉnh sửa được; Customer/Guest không thấy trong shop và không mua được.\r\n- PUBLISHED: đã công khai. Customer/Guest có thể thấy trong shop nếu IsActive=true và các biến thể liên quan cũng PUBLISHED/IsActive=true.\r\n- ARCHIVED: đã lưu trữ/xóa mềm theo nghiệp vụ. Không dùng khi tạo mới; hệ thống dùng khi xóa mềm hoặc ngưng kinh doanh.\r\n\r\nKhuyến nghị khi tạo mới:\r\n- Nên tạo với catalogStatus=DRAFT để kiểm tra file, ảnh, tag, biến thể và giá trước khi mở bán.\r\n- Nếu không truyền catalogStatus, hệ thống mặc định theo rule command hiện tại: DRAFT, trừ khi dùng IsAcitve=true thì sẽ được hiểu là PUBLISHED.\r\n- IsActive được đồng bộ theo catalogStatus: PUBLISHED => true, DRAFT/ARCHIVED => false.\r\n\r\nCách publish:\r\n- Gọi PATCH /api/design-template/{id}/update với body: { \"catalogStatus\": \"PUBLISHED\" }.\r\n- Nếu template có biến thể, cần publish từng biến thể bằng PATCH /api/design-variant/{id}/update với catalogStatus=PUBLISHED để khách có thể mua.",
         "operationId": "PostApiDesignTemplateAdd",
         "requestBody": {
           "x-name": "command",
@@ -1585,7 +1585,7 @@
           "Design Template"
         ],
         "summary": "[Staff/Manager] Tạo sản phẩm catalog hoàn chỉnh",
-        "description": "Tạo sản phẩm catalog hoàn chỉnh trong một transaction: DesignTemplate + DesignVariant + DesignTag.\n\nTrạng thái catalog hỗ trợ:\n- DRAFT: bản nháp nội bộ. Phù hợp khi vừa nhập sản phẩm, cần kiểm tra ảnh, model, giá, vật liệu và tag.\n- PUBLISHED: đã công khai. Chỉ nên dùng khi template và ít nhất một variant đã sẵn sàng mở bán.\n- ARCHIVED: đã lưu trữ/xóa mềm; không nên dùng khi tạo mới.\n\nRule khi tạo product:\n- Nếu product catalogStatus=PUBLISHED thì phải có ít nhất một variant PUBLISHED.\n- Variant có catalogStatus riêng. Nếu không truyền cho variant, hệ thống dùng status của product.\n- Ảnh sản phẩm nằm ở từng variant qua ImageUrls, vì mỗi variant có thể khác màu/chất liệu/hình ảnh.\n- Tags dùng để phân loại template. Chỉ được có tối đa một tag chính IsMainTag=true; nếu không có tag chính, hệ thống tự lấy tag đầu tiên làm tag chính.\n\nCách publish sau khi tạo nháp:\n- Publish template: PATCH /api/design-template/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n- Publish variant: PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n- Khách chỉ thấy/mua được khi cả template và variant đều PUBLISHED và IsActive=true.",
+        "description": "Tạo sản phẩm catalog hoàn chỉnh trong một transaction: DesignTemplate + DesignVariant + DesignTag.\r\n\r\nTrạng thái catalog hỗ trợ:\r\n- DRAFT: bản nháp nội bộ. Phù hợp khi vừa nhập sản phẩm, cần kiểm tra ảnh, model, giá, vật liệu và tag.\r\n- PUBLISHED: đã công khai. Chỉ nên dùng khi template và ít nhất một variant đã sẵn sàng mở bán.\r\n- ARCHIVED: đã lưu trữ/xóa mềm; không nên dùng khi tạo mới.\r\n\r\nRule khi tạo product:\r\n- Nếu product catalogStatus=PUBLISHED thì phải có ít nhất một variant PUBLISHED.\r\n- Variant có catalogStatus riêng. Nếu không truyền cho variant, hệ thống dùng status của product.\r\n- Ảnh sản phẩm nằm ở từng variant qua ImageUrls, vì mỗi variant có thể khác màu/chất liệu/hình ảnh.\r\n- Tags dùng để phân loại template. Chỉ được có tối đa một tag chính IsMainTag=true; nếu không có tag chính, hệ thống tự lấy tag đầu tiên làm tag chính.\r\n\r\nCách publish sau khi tạo nháp:\r\n- Publish template: PATCH /api/design-template/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\r\n- Publish variant: PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\r\n- Khách chỉ thấy/mua được khi cả template và variant đều PUBLISHED và IsActive=true.",
         "operationId": "PostApiDesignTemplateProductAdd",
         "requestBody": {
           "x-name": "command",
@@ -1612,7 +1612,7 @@
           "Design Template"
         ],
         "summary": "[Staff/Manager] Cập nhật thông tin mẫu thiết kế",
-        "description": "Cập nhật thông tin mẫu thiết kế theo từng phần.\n\nDùng endpoint này để publish/unpublish template:\n- Publish/mở bán template: gửi { \"catalogStatus\": \"PUBLISHED\" }.\n- Đưa về bản nháp/nội bộ: gửi { \"catalogStatus\": \"DRAFT\" }.\n- Lưu trữ theo nghiệp vụ: ưu tiên dùng DELETE /api/design-template/{id}/delete để hệ thống xử lý soft delete và audit.\n\nLưu ý khi publish:\n- Publish template chỉ mở trạng thái của template.\n- Khách vẫn chưa mua được nếu tất cả variant còn DRAFT/ARCHIVED hoặc IsActive=false.\n- Cần publish ít nhất một variant bằng PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\n\nTương thích cũ:\n- Có thể dùng IsAcitve=true để chuyển template sang PUBLISHED.\n- Có thể dùng IsAcitve=false để chuyển template sang DRAFT.\n- Ưu tiên dùng catalogStatus vì rõ nghĩa hơn IsAcitve.",
+        "description": "Cập nhật thông tin mẫu thiết kế theo từng phần.\r\n\r\nDùng endpoint này để publish/unpublish template:\r\n- Publish/mở bán template: gửi { \"catalogStatus\": \"PUBLISHED\" }.\r\n- Đưa về bản nháp/nội bộ: gửi { \"catalogStatus\": \"DRAFT\" }.\r\n- Lưu trữ theo nghiệp vụ: ưu tiên dùng DELETE /api/design-template/{id}/delete để hệ thống xử lý soft delete và audit.\r\n\r\nLưu ý khi publish:\r\n- Publish template chỉ mở trạng thái của template.\r\n- Khách vẫn chưa mua được nếu tất cả variant còn DRAFT/ARCHIVED hoặc IsActive=false.\r\n- Cần publish ít nhất một variant bằng PATCH /api/design-variant/{id}/update với { \"catalogStatus\": \"PUBLISHED\" }.\r\n\r\nTương thích cũ:\r\n- Có thể dùng IsAcitve=true để chuyển template sang PUBLISHED.\r\n- Có thể dùng IsAcitve=false để chuyển template sang DRAFT.\r\n- Ưu tiên dùng catalogStatus vì rõ nghĩa hơn IsAcitve.",
         "operationId": "PatchApiDesignTemplateUpdate",
         "parameters": [
           {
@@ -1915,14 +1915,14 @@
           "Design Work"
         ],
         "summary": "[Customer] Gửi yêu cầu in 3D từ file có sẵn",
-        "description": "Khách hàng upload tối đa 5 file và gửi yêu cầu để nhân viên báo giá.",
+        "description": "Khách hàng upload tối đa 5 file (.glb/.stl/.obj) và gửi yêu cầu để nhân viên kiểm tra kỹ thuật và báo giá. Tạo mới DesignWork loại PRINT_SERVICE ở trạng thái REVIEWING.",
         "operationId": "PostApiDesignWorkQuickPrint",
         "requestBody": {
           "x-name": "request",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CheckoutQuickPrintCommand"
+                "$ref": "#/components/schemas/AddFilesToQuickPrintCommand"
               }
             }
           },
@@ -2046,8 +2046,8 @@
         "tags": [
           "Design Work"
         ],
-        "summary": "[Staff/Manager] Cập nhật trạng thái có thể in công việc thiết kế",
-        "description": "Chỉ dành cho nhân viên hoặc quản lý. Cập nhật trạng thái có thể in của công việc thiết kế.",
+        "summary": "[Staff/Manager] [DEPRECATED] Cập nhật trạng thái có thể in",
+        "description": "⚠️ DEPRECATED — Dùng POST /{id}/review-file thay thế. Endpoint này sẽ bị xóa trong phiên bản kế tiếp.",
         "operationId": "PatchApiDesignWorkMarkPrintable",
         "parameters": [
           {
@@ -2067,6 +2067,45 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDesignVersionHistoryIsPrintableCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{versionHistoryId}/review-file": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Staff/Manager] Duyệt file kỹ thuật (dùng chung cho cả Design Service và Quick Print)",
+        "description": "Nhân viên xác nhận hoặc từ chối một file DesignVersionHistory dựa trên tiêu chuẩn kỹ thuật in. Khi từ chối: phải nhập lý do (ReviewNote). Quick Print: nếu tất cả file bị từ chối, DesignWork chuyển về SKETCHING để khách upload lại.",
+        "operationId": "PostApiDesignWorkReviewFile",
+        "parameters": [
+          {
+            "name": "versionHistoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewFileVersionCommand"
               }
             }
           },
@@ -2133,6 +2172,84 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestDesignWorkReworkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/add-files": {
+      "post": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Customer] Re-upload file vào yêu cầu in nhanh",
+        "description": "Khách hàng upload lại file sau khi tất cả file bị nhân viên từ chối (trạng thái SKETCHING). Chỉ áp dụng cho yêu cầu in nhanh (PRINT_SERVICE). Tự động chuyển trạng thái về REVIEWING.",
+        "operationId": "PostApiDesignWorkAddFiles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFilesToQuickPrintCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/design-work/{id}/close": {
+      "delete": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[Customer/Staff/Manager] Đóng yêu cầu in nhanh",
+        "description": "Khóa (đóng) một yêu cầu in nhanh CHƯA có đơn hàng. Yêu cầu vẫn hiển thị trong lịch sử (IsLocked = true), nhưng không thể upload thêm file hoặc tạo draft. Khách hàng chỉ đóng được yêu cầu của mình. Nhân viên/quản lý đóng được mọi yêu cầu. Nếu đã có đơn hàng, dùng API hủy đơn hàng.",
+        "operationId": "DeleteApiDesignWorkClose",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "command",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseQuickPrintRequestCommand"
               }
             }
           },
@@ -2565,7 +2682,7 @@
           "Material"
         ],
         "summary": "[Manager] Tạo mới vật liệu",
-        "description": "Quản lý vật liệu dùng cho catalog variant, technical draft và tính giá in.\n\nRule chính:\n- Material active phải có đúng ít nhất một giá hiện hành IsCurrent=true.\n- Cập nhật thông tin vật liệu không cập nhật giá.\n- Cập nhật giá phải dùng endpoint /update-price để hệ thống tạo MaterialPriceHistory mới và hạ giá cũ khỏi IsCurrent.\n- Deactive chỉ tạm ngưng vật liệu, không soft delete.\n- Delete là xóa mềm và bị chặn nếu vật liệu đã được dùng trong technical draft hoặc biến thể đang mở bán.",
+        "description": "Quản lý vật liệu dùng cho catalog variant, technical draft và tính giá in.\r\n\r\nRule chính:\r\n- Material active phải có đúng ít nhất một giá hiện hành IsCurrent=true.\r\n- Cập nhật thông tin vật liệu không cập nhật giá.\r\n- Cập nhật giá phải dùng endpoint /update-price để hệ thống tạo MaterialPriceHistory mới và hạ giá cũ khỏi IsCurrent.\r\n- Deactive chỉ tạm ngưng vật liệu, không soft delete.\r\n- Delete là xóa mềm và bị chặn nếu vật liệu đã được dùng trong technical draft hoặc biến thể đang mở bán.",
         "operationId": "PostApiMaterialAdd",
         "requestBody": {
           "x-name": "command",
@@ -3333,7 +3450,7 @@
           "Service Option"
         ],
         "summary": "[Staff/Manager] Tạo tùy chọn dịch vụ mới.",
-        "description": "Tạo một tùy chọn dịch vụ mới.\n\nDanh sách groupCode/groupName FE nên dùng:\n- DESIGN_PACKAGE / Gói thiết kế: selectionType=SINGLE. Gói chính của dịch vụ thiết kế, bắt buộc chọn 1 khi tạo order thiết kế mới. Có thể có adjustmentRoundDelta > 0 để cấp lượt chỉnh sửa ban đầu.\n- COMPLEXITY / Độ phức tạp: selectionType=SINGLE. Chọn 1 mức độ phức tạp: đơn giản, trung bình, cao. adjustmentRoundDelta nên là null.\n- DEADLINE / Thời gian xử lý: selectionType=SINGLE. Chọn 1 tốc độ xử lý: tiêu chuẩn, ưu tiên, hỏa tốc. adjustmentRoundDelta nên là null.\n- DELIVERABLE / File bàn giao: selectionType=MULTIPLE. Các loại file/kết quả khách nhận, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- PRINTABILITY / Tối ưu in 3D: selectionType=MULTIPLE. Các dịch vụ kiểm tra/tối ưu để mẫu in được, có thể chọn nhiều. adjustmentRoundDelta nên là null.\n- MODEL_SCOPE / Phạm vi mẫu: selectionType=QUANTITY. Dùng cho phần tính thêm theo số lượng chi tiết/cá nhân hóa. FE cần cho nhập quantity. adjustmentRoundDelta nên là null.\n- REVISION / Lượt chỉnh sửa: selectionType=QUANTITY. Mua thêm lượt chỉnh sửa trong phạm vi đã thanh toán. Bắt buộc adjustmentRoundDelta > 0.\n- NEW_SCOPE / Yêu cầu ngoài phạm vi: selectionType=ADDON. Dùng để tư vấn/mở order mới hoặc nhánh mới; không dùng để cộng lượt chỉnh sửa. adjustmentRoundDelta nên là null.\n\nRule selectionType cho FE:\n- SINGLE: radio/select, chỉ chọn một option trong cùng groupCode.\n- MULTIPLE: checkbox, có thể chọn nhiều option trong cùng groupCode.\n- QUANTITY: input/stepper số lượng, quantity phải nằm trong minQuantity/maxQuantity nếu có.\n- ADDON: tùy chọn bổ sung đơn lẻ.\n\nRule adjustmentRoundDelta:\n- null: option không liên quan lượt chỉnh sửa.\n- >= 0: hợp lệ nếu có giá trị.\n- REVISION: bắt buộc > 0.",
+        "description": "Tạo một tùy chọn dịch vụ mới.\r\n\r\nDanh sách groupCode/groupName FE nên dùng:\r\n- DESIGN_PACKAGE / Gói thiết kế: selectionType=SINGLE. Gói chính của dịch vụ thiết kế, bắt buộc chọn 1 khi tạo order thiết kế mới. Có thể có adjustmentRoundDelta > 0 để cấp lượt chỉnh sửa ban đầu.\r\n- COMPLEXITY / Độ phức tạp: selectionType=SINGLE. Chọn 1 mức độ phức tạp: đơn giản, trung bình, cao. adjustmentRoundDelta nên là null.\r\n- DEADLINE / Thời gian xử lý: selectionType=SINGLE. Chọn 1 tốc độ xử lý: tiêu chuẩn, ưu tiên, hỏa tốc. adjustmentRoundDelta nên là null.\r\n- DELIVERABLE / File bàn giao: selectionType=MULTIPLE. Các loại file/kết quả khách nhận, có thể chọn nhiều. adjustmentRoundDelta nên là null.\r\n- PRINTABILITY / Tối ưu in 3D: selectionType=MULTIPLE. Các dịch vụ kiểm tra/tối ưu để mẫu in được, có thể chọn nhiều. adjustmentRoundDelta nên là null.\r\n- MODEL_SCOPE / Phạm vi mẫu: selectionType=QUANTITY. Dùng cho phần tính thêm theo số lượng chi tiết/cá nhân hóa. FE cần cho nhập quantity. adjustmentRoundDelta nên là null.\r\n- REVISION / Lượt chỉnh sửa: selectionType=QUANTITY. Mua thêm lượt chỉnh sửa trong phạm vi đã thanh toán. Bắt buộc adjustmentRoundDelta > 0.\r\n- NEW_SCOPE / Yêu cầu ngoài phạm vi: selectionType=ADDON. Dùng để tư vấn/mở order mới hoặc nhánh mới; không dùng để cộng lượt chỉnh sửa. adjustmentRoundDelta nên là null.\r\n\r\nRule selectionType cho FE:\r\n- SINGLE: radio/select, chỉ chọn một option trong cùng groupCode.\r\n- MULTIPLE: checkbox, có thể chọn nhiều option trong cùng groupCode.\r\n- QUANTITY: input/stepper số lượng, quantity phải nằm trong minQuantity/maxQuantity nếu có.\r\n- ADDON: tùy chọn bổ sung đơn lẻ.\r\n\r\nRule adjustmentRoundDelta:\r\n- null: option không liên quan lượt chỉnh sửa.\r\n- >= 0: hợp lệ nếu có giá trị.\r\n- REVISION: bắt buộc > 0.",
         "operationId": "PostApiServiceOptionAdd",
         "requestBody": {
           "x-name": "command",
@@ -5495,23 +5612,30 @@
                 "type": "string",
                 "default": "Name",
                 "nullable": true
+              },
+              "workType": {
+                "type": "string",
+                "nullable": true
+              },
+              "hasUnreviewedFiles": {
+                "type": "boolean",
+                "nullable": true
               }
             }
           }
         ]
       },
-      "CheckoutQuickPrintCommand": {
+      "AddFilesToQuickPrintCommand": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "projectName": {
             "type": "string",
-            "default": "Dự án A",
+            "default": "Yêu cầu in 3D",
             "nullable": true
           },
           "description": {
             "type": "string",
-            "default": "Ghi chú yêu cầu về kỹ thuật in (màu sắc, độ mịn...)",
             "nullable": true
           },
           "fileUrls": {
@@ -5519,6 +5643,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -5584,7 +5712,26 @@
       },
       "UpdateDesignVersionHistoryIsPrintableCommand": {
         "type": "object",
-        "additionalProperties": false
+        "additionalProperties": false,
+        "properties": {
+          "isPrintable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReviewFileVersionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reviewStatus": {
+            "type": "string",
+            "default": "ACCEPTED"
+          },
+          "reviewNote": {
+            "type": "string",
+            "nullable": true
+          }
+        }
       },
       "RequestDesignWorkReworkCommand": {
         "type": "object",
@@ -5598,6 +5745,16 @@
           "sourceVersionHistoryId": {
             "type": "string",
             "format": "guid",
+            "nullable": true
+          }
+        }
+      },
+      "CloseQuickPrintRequestCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "type": "string",
             "nullable": true
           }
         }

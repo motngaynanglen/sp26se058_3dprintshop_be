@@ -34,8 +34,9 @@ public class TechnicalDraftDTO
             CreateMap<TechnicalDraft, TechnicalDraftDTO>()
                 .ForMember(d => d.VersionNumber, opt => opt.MapFrom(s => s.DesignVersionHistory.VersionNumber))
                 .ForMember(d => d.MaterialName, opt => opt.MapFrom(s => s.Material.Name))
-                .ForMember(d => d.FinalPrice, opt => opt.MapFrom(s => s.UnitPrice * (1 + s.MarkupPercentage)));
-            // logic tính giá: (UnitPrice) * (1 + % Markup)
+                // Bug fix: was (1 + MarkupPercentage) which multiplied by e.g. 16 instead of 1.15
+                // Correct formula: UnitPrice * (1 + MarkupPercentage / 100)
+                .ForMember(d => d.FinalPrice, opt => opt.MapFrom(s => s.UnitPrice * (1 + s.MarkupPercentage / 100m)));
 
         }
     }

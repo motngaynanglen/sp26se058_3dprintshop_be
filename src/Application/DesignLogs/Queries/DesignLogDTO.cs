@@ -71,14 +71,24 @@ public class DesignVersionDTO
     public string FileUrl { get; set; } = null!;
     public int VersionNumber { get; set; }
     public bool IsApproved { get; set; }
+
+    /// <summary>Legacy boolean — use FileReviewStatus for new code.</summary>
     public bool IsPrintable { get; set; }
+
+    /// <summary>PENDING / ACCEPTED / REJECTED — set by ReviewFileVersionCommand.</summary>
+    public string FileReviewStatus { get; set; } = "PENDING";
+
+    /// <summary>Rejection reason written by staff. Non-null when FileReviewStatus=REJECTED.</summary>
+    public string? FileReviewNote { get; set; }
 
     private class Mapping : Profile
     {
         public Mapping()
         {
             CreateMap<DesignVersionHistory, DesignVersionDTO>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Tilte))
                 .ForMember(dest => dest.FileUrl, opt => opt.MapFrom(src => src.FileUrl));
+            // FileReviewStatus, FileReviewNote, IsPrintable, IsApproved, VersionNumber, Id — auto-mapped by name
         }
     }
 }
