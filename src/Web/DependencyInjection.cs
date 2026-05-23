@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+﻿using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 using sp26se058_3dprintshop_be.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -132,16 +131,4 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddKeyVaultIfConfigured(this IServiceCollection services, ConfigurationManager configuration)
-    {
-        var keyVaultUri = configuration["AZURE_KEY_VAULT_ENDPOINT"];
-        if (!string.IsNullOrWhiteSpace(keyVaultUri))
-        {
-            configuration.AddAzureKeyVault(
-                new Uri(keyVaultUri),
-                new DefaultAzureCredential());
-        }
-
-        return services;
-    }
 }
