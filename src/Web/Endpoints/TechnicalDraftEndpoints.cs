@@ -19,8 +19,8 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
                        .WithTags("Technical Draft")
                        .WithOpenApi();
         group.MapPost("/", CreateTechnicalDraft)
-             .WithSummary("[Staff] Tạo bản nháp kỹ thuật mới")
-             .WithDescription("Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho nhân viên.");
+             .WithSummary("[Staff/Manager] Tạo bản nháp kỹ thuật mới")
+             .WithDescription("Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Dành cho nhân viên và quản lý.");
 
         group.MapGet("/my-drafts", GetMyDrafts)
             .WithSummary("[Customer] Lấy danh sách bản thảo kỹ thuật của tôi")

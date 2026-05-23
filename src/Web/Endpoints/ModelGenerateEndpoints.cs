@@ -13,7 +13,7 @@ public class ModelGenerateEndpoints : EndpointGroupBase
                        .WithTags("Model Generate")
                        .WithOpenApi();
         group.MapPost("", Generate)
-     .WithSummary("Tạo mô hình 3D từ ảnh")
+     .WithSummary("[Customer/Staff/Manager] Tạo mô hình 3D từ ảnh")
      .DisableAntiforgery()                    // Quan trọng khi dùng IFormFile trong .NET 8+
      .Accepts<GenerateModelCommand>("multipart/form-data");  // Buộc dùng multipart
     }

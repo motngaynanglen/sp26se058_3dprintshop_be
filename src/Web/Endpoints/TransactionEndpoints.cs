@@ -34,7 +34,8 @@ public class TransactionEndpoints : EndpointGroupBase
                     .WithSummary("[Staff/Manager] Xác nhận thanh toán thủ công (CASH hoặc BANK_TRANSFER).")
                     .WithDescription("Dùng khi khách đã trả tiền mặt tại quầy hoặc chuyển khoản ngoài hệ thống. Kèm mã tham chiếu nếu có.");
         group.MapPost("/{id}/cancel", CancelTransaction)
-                   .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.");
+                   .WithSummary("[Customer/Staff/Manager] Hủy giao dịch thanh toán theo ID.")
+                   .WithDescription("Hủy một giao dịch đang ở trạng thái chờ hoặc lỗi. Khách hàng chỉ hủy được giao dịch của mình.");
         group.MapGet("/{orderId}/detail-by-order-id", GetDetailByOrderID)
                     .WithSummary("[All] Tìm chi tiết giao dịch bằng ID hàng hóa.");
 

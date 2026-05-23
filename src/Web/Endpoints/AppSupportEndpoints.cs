@@ -41,15 +41,17 @@ public class AppSupportEndpoints : EndpointGroupBase
 
         // API dành riêng cho hình ảnh (Preview, Avatar, Minh họa)
         group.MapGet("/presigned-image-url", GetPresignedImageUrl)
-                .WithSummary("Lấy link upload ảnh (Max 5MB); Trước mắt không bắt giới hạn.")
-                .WithDescription("(Hỗ trợ: .jpg, .png, .webp); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
+                .WithSummary("[All] Lấy link upload ảnh (Max 5MB)")
+                .WithDescription("(Hỗ trợ: .jpg, .png, .webp); Trả về presigned URL để FE upload trực tiếp lên Backblaze B2. Nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
 
         // API dành cho file 3D nặng (GLB, STL)
         group.MapGet("/presigned-model-url", GetPresignedModelUrl)
-                .WithSummary("Lấy link upload file 3D (Max 100MB)")
-                .WithDescription("(Hỗ trợ: .glb, .stl); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
+                .WithSummary("[All] Lấy link upload file 3D (Max 100MB)")
+                .WithDescription("(Hỗ trợ: .glb, .stl); Trả về presigned URL để FE upload trực tiếp lên Backblaze B2. Nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.");
 
         group.MapPost("/test-upload-to-b2", TestUploadToB2)
+                .WithSummary("[Staff] Kiểm tra upload file lên Backblaze B2")
+                .WithDescription("Endpoint thử nghiệm: truyền presigned URL và file để kiểm tra luồng upload B2 hoạt động đúng.")
                 .DisableAntiforgery();
     }
 
