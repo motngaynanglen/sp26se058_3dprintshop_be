@@ -18,6 +18,8 @@ public class DesignWorkDTO
     public Guid? ResultDraftId { get; set; }
     public string? Status { get; set; }
     public bool IsLocked { get; set; }
+    /// <summary>null = legacy Design Service; "DESIGN_SERVICE" or "PRINT_SERVICE"</summary>
+    public string? WorkType { get; set; }
 
 
     public Guid CustomerId { get; set; }

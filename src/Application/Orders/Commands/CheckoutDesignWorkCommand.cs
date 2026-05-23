@@ -12,6 +12,7 @@ using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using Microsoft.Extensions.Logging;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
@@ -124,6 +125,9 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                 // Lấy luôn bản gốc
                 designWork = existingWork;
                 designWork.RootDesignWorkId = existingWork.RootDesignWorkId == Guid.Empty ? existingWork.Id : existingWork.RootDesignWorkId;
+                // Backfill WorkType for existing works that pre-date the WorkType field
+                if (string.IsNullOrEmpty(designWork.WorkType))
+                    designWork.WorkType = DesignWorkTypes.DesignService;
                 _context.DesignWorks.Update(designWork);
             }
             // CASE 2: Tạo nhánh (SourceLogId có giá trị)
@@ -141,6 +145,7 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                     RelationshipType = DesignRelationshipType.Branch,
                     CustomerId = customer.Id,
                     BaseImageUrl = existingWork.BaseImageUrl,
+                    WorkType = DesignWorkTypes.DesignService,
                     Status = DesignWorkStatus.Pending,
                     Created = CoreHelper.SystemTimeNow,
                     CreatedBy = _user.Username ?? "SYSTEM",
@@ -233,8 +238,12 @@ public class CheckoutDesignWorkCommandHandler : IRequestHandler<CheckoutDesignWo
                 Name = request.NewDesignName ?? "Yêu cầu thiết kế mới",
                 CustomerId = customer.Id,
                 BaseImageUrl = request.BaseImageUrl,
+                WorkType = DesignWorkTypes.DesignService,
                 Status = DesignWorkStatus.Pending,
-                Created = CoreHelper.SystemTimeNow
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username ?? "CUSTOMER",
+                LastModified = CoreHelper.SystemTimeNow,
+                LastModifiedBy = _user.Username ?? "CUSTOMER"
             };
             _context.DesignWorks.Add(designWork);
 

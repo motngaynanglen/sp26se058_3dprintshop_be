@@ -22,6 +22,20 @@ public class GetPaginationDesignWorkQuery : PaginationRequest, IRequest<Paginate
     [DefaultValue("Name")]
     public string? SortBy { get; init; }
 
+    /// <summary>
+    /// Filter by WorkType: "PRINT_SERVICE" for Quick Print, "DESIGN_SERVICE" for Design Service.
+    /// Leave empty to return both. null rows (legacy data) match when this is not set.
+    /// </summary>
+    [DefaultValue(null)]
+    public string? WorkType { get; init; }
+
+    /// <summary>
+    /// When true, return only DesignWorks that have at least one DesignVersionHistory
+    /// with FileReviewStatus = "PENDING". Useful for staff review dashboard.
+    /// </summary>
+    [DefaultValue(null)]
+    public bool? HasUnreviewedFiles { get; init; }
+
     public class GetPaginationDesignWorkQueryHandler : IRequestHandler<GetPaginationDesignWorkQuery, PaginatedList<DesignWorkDTO>>
     {
         private readonly IApplicationDbContext _context;
@@ -68,6 +82,19 @@ public class GetPaginationDesignWorkQuery : PaginationRequest, IRequest<Paginate
             {
                 var statusList = request.Status.Split(',').Select(s => s.Trim().Replace("'", ""));
                 query = query.Where(dw => statusList.Contains(dw.Status));
+            }
+
+            // Filter by WorkType ("PRINT_SERVICE" / "DESIGN_SERVICE")
+            if (!string.IsNullOrEmpty(request.WorkType))
+            {
+                query = query.Where(dw => dw.WorkType == request.WorkType);
+            }
+
+            // Filter: only works with at least one file pending staff review
+            if (request.HasUnreviewedFiles == true)
+            {
+                query = query.Where(dw =>
+                    dw.VersionHistories.Any(v => v.FileReviewStatus == "PENDING" && !v.Deleted.HasValue));
             }
 
             // Áp dụng sắp xếp

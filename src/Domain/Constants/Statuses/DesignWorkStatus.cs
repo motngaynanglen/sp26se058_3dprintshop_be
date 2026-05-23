@@ -20,7 +20,9 @@ public static class DesignWorkStatus
         new(Sketching, "Phác thảo ý tưởng", "Khách hàng đang khởi tạo ý tưởng hoặc sử dụng AI",[Pending]),
         new(Pending, "Đang chờ tiếp nhận", "Đã gửi yêu cầu thiết kế, chờ nhân viên xác nhận",[InProgress, Sketching]),
         new(InProgress, "Đang thực hiện", "Nhân viên đang thiết kế chi tiết",[Reviewing]),
-        new(Reviewing, "Đang kiểm duyệt", "Đang chờ khách hàng duyệt mẫu hoặc báo giá in",[InProgress, Completed]),
+        // Bug fix: added Sketching as a valid next state from Reviewing.
+        // Required for: (1) POD all-files-rejected → SKETCHING, (2) CancelOrderCommand → SKETCHING.
+        new(Reviewing, "Đang kiểm duyệt", "Đang chờ khách hàng duyệt mẫu hoặc báo giá in",[InProgress, Completed, Sketching]),
         new(Completed, "Đã nghiệm thu", "Bản thiết kế đã được duyệt và đóng lại",[])
     };
 
