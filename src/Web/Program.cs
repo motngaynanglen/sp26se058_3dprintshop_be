@@ -27,10 +27,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var cs = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    options.UseMySql(
-        cs,
-        ServerVersion.AutoDetect(cs)
-    );
+    // Hardcoded version avoids an eager DB connection at startup (AutoDetect opens a real
+    // connection to detect the MySQL version, breaking NSwag generation and adding latency).
+    options.UseMySql(cs, new MySqlServerVersion(new Version(8, 0, 36)));
 });
 // AI Service
 builder.Services.AddHttpClient<IAIService, AIService>();
@@ -44,8 +43,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
-
-builder.Services.AddKeyVaultIfConfigured(builder.Configuration);
 
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);

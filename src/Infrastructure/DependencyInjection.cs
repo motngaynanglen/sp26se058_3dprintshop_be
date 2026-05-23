@@ -28,12 +28,13 @@ public static class DependencyInjection
         {
             options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
 
-            //options.UseSqlServer(connectionString);
+            // Use a hardcoded version instead of AutoDetect to avoid an eager DB connection
+            // at registration time (AutoDetect opens a real connection to detect the version,
+            // which breaks NSwag generation and increases startup latency in production).
             options.UseMySql(connectionString,
-                ServerVersion.AutoDetect(connectionString), // Tự động nhận diện bản MySQL/MariaDB
+                new MySqlServerVersion(new Version(8, 0, 36)),
                 mysqlOptions =>
                 {
-                    // Quan trọng nhất để fix lỗi bạn đang gặp
                     mysqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(30),
