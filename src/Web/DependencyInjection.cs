@@ -53,7 +53,9 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         // --- CẤU HÌNH AUTHENTICATION THỰC TẾ ---
         var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["Secret"];
+        var secretKey = RequireJwtSetting(jwtSettings, "Secret");
+        var issuer = RequireJwtSetting(jwtSettings, "Issuer");
+        var audience = RequireJwtSetting(jwtSettings, "Audience");
 
         services.AddAuthentication(options =>
         {
@@ -68,11 +70,12 @@ public static class DependencyInjection
                 ValidateAudience = true,
                 ValidateLifetime = true, // Kiểm tra xem Token còn hạn không
                 ValidateIssuerSigningKey = true, // Kiểm tra chữ ký bảo mật
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
+                ValidIssuer = issuer,
+                ValidAudience = audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
                 NameClaimType = ClaimTypes.Name,
                 RoleClaimType = ClaimTypes.Role,
+                ClockSkew = TimeSpan.FromMinutes(2),
 
                 // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
@@ -131,4 +134,19 @@ public static class DependencyInjection
         return services;
     }
 
+    private static string RequireJwtSetting(IConfigurationSection jwtSettings, string key)
+    {
+        var value = jwtSettings[key]?.Trim();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new InvalidOperationException($"JwtSettings:{key} is required.");
+        }
+
+        if (key == "Secret" && Encoding.UTF8.GetByteCount(value) < 32)
+        {
+            throw new InvalidOperationException("JwtSettings:Secret must be at least 32 bytes for HS256.");
+        }
+
+        return value;
+    }
 }
