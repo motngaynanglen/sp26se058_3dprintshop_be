@@ -21,12 +21,20 @@ public class S3StorageService : IS3StorageService
     // Dictionary để map extension sang Content-Type chuẩn
     private readonly Dictionary<string, string> _allowedExtensions = new()
     {
+        // Ảnh
         { ".jpg", "image/jpeg" },
         { ".jpeg", "image/jpeg" },
         { ".png", "image/png" },
         { ".webp", "image/webp" },
-        { ".glb", "model/gltf-binary" }, // Content-Type chuẩn cho file GLB
-        { ".stl", "application/vnd.ms-pki.stl" } // Thêm STL nếu cần vì bạn làm in 3D
+        { ".gif", "image/gif" },
+        { ".bmp", "image/bmp" },
+        { ".svg", "image/svg+xml" },
+        // Model 3D
+        { ".glb", "model/gltf-binary" },
+        { ".stl", "application/vnd.ms-pki.stl" },
+        { ".obj", "application/x-tgif" },
+        { ".fbx", "application/octet-stream" },
+        { ".3mf", "application/vnd.ms-package.3dmanufacturing-3dmodel+xml" },
     };
 
     public S3StorageService( IOptions<BackblazeB2Settings> b2Settings)
