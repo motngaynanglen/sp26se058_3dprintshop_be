@@ -18,8 +18,8 @@ public class DesignLogEndpoints : EndpointGroupBase
                        .WithTags("Design Log")
                        .WithOpenApi();
         group.MapPost("/createChatLog", CreateChatLog)
-             .WithSummary("[Staff/Manager] Tạo log giao tiếp")
-             .WithDescription("Tạo log giao tiếp liên quan đến công việc thiết kế. Chỉ dành cho Staff, Manager, Customer.");
+             .WithSummary("[Customer/Staff/Manager] Tạo log giao tiếp")
+             .WithDescription("Tạo log giao tiếp liên quan đến công việc thiết kế. Khách hàng, nhân viên và quản lý đều có thể gửi tin.");
         group.MapPost("/createNewVersionUpdateLog", CreateVersionUpdateLog)
              .WithSummary("[Staff/Manager] Tạo log ghi chú nội bộ")
              .WithDescription("Cập nhật phiên bản mới của thiết kế. Chỉ dành cho Staff hoặc Manager.");
@@ -30,7 +30,7 @@ public class DesignLogEndpoints : EndpointGroupBase
              .WithSummary("[Staff/Manager] Duyệt hoặc từ chối yêu cầu hiệu chỉnh")
              .WithDescription("Nếu duyệt in-scope thì trừ một lượt hiệu chỉnh đã thanh toán bằng cập nhật có điều kiện; nếu từ chối/out-of-scope thì không trừ lượt và yêu cầu khách tạo nhánh/đơn mới.");
         group.MapGet("/{designWorkId}/getLogsByWork", Get)
-             .WithSummary("[All Roles] Lấy danh sách log theo công việc thiết kế")
+             .WithSummary("[All] Lấy danh sách log theo công việc thiết kế")
              .WithDescription("Lấy log theo kiểu chat. Lần đầu không truyền beforeLogId để lấy log mới nhất; khi load tin cũ hơn, truyền beforeLogId là id log cũ nhất đang có trên màn hình.");
     }
 
