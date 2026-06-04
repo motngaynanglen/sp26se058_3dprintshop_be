@@ -63,15 +63,29 @@ jobs:
               --name 3dprint-api \
               --restart always \
               -p 8080:8080 \
+              -e ASPNETCORE_ENVIRONMENT="Production" \
+              -e AllowedHosts="*" \
               -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRING }}" \
+              -e Cors__AllowedOrigins__0="http://localhost:3000" \
+              -e Cors__AllowedOrigins__1="https://capstone-backup-fe.vercel.app" \
+              -e Cors__AllowedOrigins__2="https://3dprintshop.store" \
               -e JwtSettings__Secret="${{ secrets.JWT_SECRET }}" \
+              -e JwtSettings__Issuer="3DPrintShop_Backend" \
+              -e JwtSettings__Audience="3DPrintShop_Clients" \
               -e PayOS__ClientId="${{ secrets.PAYOS_CLIENT_ID }}" \
               -e PayOS__ApiKey="${{ secrets.PAYOS_API_KEY }}" \
               -e PayOS__ChecksumKey="${{ secrets.PAYOS_CHECKSUM }}" \
+              -e PayOS__ReturnUrl="https://capstone-backup-fe.vercel.app/order-confirmation" \
+              -e PayOS__CancelUrl="https://capstone-backup-fe.vercel.app/order-confirmation" \
               -e EmailSettings__SmtpServer="${{ secrets.EMAILSETTINGS__SMTPSERVER }}" \
+              -e EmailSettings__Port="${{ secrets.EMAILSETTINGS__PORT }}" \
               -e EmailSettings__FromEmail="${{ secrets.EMAILSETTINGS__FROMEMAIL }}" \
               -e EmailSettings__AppPassword="${{ secrets.EMAILSETTINGS__APPPASSWORD }}" \
+              -e EmailSettings__DisplayName="3D Print Shop Support" \
+              -e DevAccount__Username="admin_dev" \
               -e DevAccount__Password="${{ secrets.DEV_ADMIN_PASSWORD }}" \
+              -e DevAccount__Fullname="Dev Administrator" \
+              -e AI__GenerateUrl="https://nestable-lucille-nonruinously.ngrok-free.dev/generate" \
               -e BackblazeB2__KeyId="${{ secrets.BACKBLAZEB2_KEYID }}" \
               -e BackblazeB2__ApplicationKey="${{ secrets.BACKBLAZEB2_APPLICATIONKEY }}" \
               -e BackblazeB2__BucketName="${{ secrets.BACKBLAZEB2_BUCKETNAME }}" \
