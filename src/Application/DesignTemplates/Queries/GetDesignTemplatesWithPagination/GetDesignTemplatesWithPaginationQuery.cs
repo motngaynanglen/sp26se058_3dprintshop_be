@@ -17,7 +17,7 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
     [DefaultValue("")]
     public string? Search { get; init; }
     [DefaultValue(true)]
-    public bool IsActive { get; init; } = true;
+    public bool? IsActive { get; init; }
     [DefaultValue(CatalogStatuses.Published)]
     public string? CatalogStatus { get; init; }
     [DefaultValue(false)]
@@ -61,7 +61,7 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
 
                     query = query.Where(dv => dv.CatalogStatus == status);
                 }
-                else
+                if(request.IsActive.HasValue)
                 {
                     query = query.Where(dv => dv.IsActive == request.IsActive);
                 }
