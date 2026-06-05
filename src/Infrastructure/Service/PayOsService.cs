@@ -40,10 +40,16 @@ public class PayOsService : IPaymentService
             Price = (int)x.UnitPrice
         }).ToList();
 
+        // Phí vận chuyển lưu ở Invoice — cộng vào link thanh toán như một dòng riêng
+        // để tổng Items khớp Amount.
+        var shippingFee = (int)(order.Invoice?.ShippingFee ?? 0);
+        if (shippingFee > 0)
+            items.Add(new PaymentLinkItem { Name = "Phí vận chuyển", Quantity = 1, Price = shippingFee });
+
         var paymentData = new CreatePaymentLinkRequest
         {
             OrderCode = orderCode,
-            Amount = (int)order.TotalPrice,
+            Amount = (int)(order.Invoice?.TotalAmount ?? order.TotalPrice),
             Description = $"#{order.Code}",
             Items = items,
             CancelUrl = cancelUrl,

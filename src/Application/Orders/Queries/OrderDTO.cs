@@ -104,6 +104,8 @@ public class OrderInvoiceSummaryDTO
     public Guid Id { get; set; }
     public string InvoiceCode { get; set; } = string.Empty;
     public string PaymentStatus { get; set; } = string.Empty;
+    public decimal SubTotal { get; set; }
+    public decimal ShippingFee { get; set; }
     public decimal TotalAmount { get; set; }
     public DateTime? DueDate { get; set; }
     public string? PaymentMethod { get; set; }

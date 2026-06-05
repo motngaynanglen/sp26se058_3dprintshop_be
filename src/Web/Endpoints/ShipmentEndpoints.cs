@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
@@ -384,6 +385,34 @@ public class ShipmentEndpoints : EndpointGroupBase
             var form = await request.ReadFormAsync();
             foreach (var f in form)
                 dict[f.Key] = f.Value.ToString();
+            return dict;
+        }
+
+        // GHN bắn webhook bằng body JSON (Content-Type: application/json) — phải đọc body,
+        // không chỉ Form/Query. Flatten các field cấp 1 ra dictionary (giữ raw cho object/array).
+        request.EnableBuffering();
+        using var reader = new StreamReader(request.Body, leaveOpen: true);
+        var raw = await reader.ReadToEndAsync();
+        request.Body.Position = 0;
+        if (string.IsNullOrWhiteSpace(raw))
+            return dict;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var prop in doc.RootElement.EnumerateObject())
+                {
+                    dict[prop.Name] = prop.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array
+                        ? prop.Value.GetRawText()
+                        : prop.Value.ToString();
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Body không phải JSON hợp lệ — bỏ qua, đã có Query phía trên.
         }
 
         return dict;
