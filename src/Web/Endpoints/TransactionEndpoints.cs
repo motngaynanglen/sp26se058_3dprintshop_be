@@ -25,6 +25,7 @@ public class TransactionEndpoints : EndpointGroupBase
                        .RequireCors("AllowFrontend"); // Ép Swagger phải nhận diện group này
 
         group.MapPost("/payos-webhook", HandlePayOSWebhook)
+                    .AllowAnonymous()
                     .WithSummary("[PayOS] Đây là api để payos gọi để xác thực đã thanh toán");
 
         group.MapPost("/perform-transaction", PerformTransaction)
@@ -43,9 +44,10 @@ public class TransactionEndpoints : EndpointGroupBase
 
     }
 
-    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] ProcessOnlinePaymentV2Command command)
+    public async Task<IResult> HandlePayOSWebhook([FromServices] ISender sender, [FromBody] Webhook webhookBody)
     {
-
+        // PayOS gửi body dạng Webhook trực tiếp, cần wrap vào command
+        var command = new ProcessOnlinePaymentV2Command { WebhookBody = webhookBody };
         var result = await sender.Send(command);
         return TypedResults.Ok(BaseResponseModel.OkResponseModel(
                 data: result,
