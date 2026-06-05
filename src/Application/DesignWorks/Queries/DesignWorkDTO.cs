@@ -43,6 +43,11 @@ public class DesignWorkDetailDTO : DesignWorkDTO
     // Có thể bao gồm thêm thông tin Selection để FE hiển thị giá tiền
     public ICollection<ServiceSelectionDTO>? Selections { get; init; }
     public ICollection<DesignWorkDTO>? SubRevisions { get; set; }
+    public Guid? DesignServiceOrderId { get; set; }
+    public string? DesignServiceOrderCode { get; set; }
+    public string? DesignServiceOrderStatus { get; set; }
+    public string? DesignServicePaymentStatus { get; set; }
+    public decimal? DesignServiceTotalAmount { get; set; }
     private class Mapping : Profile
     {
         public Mapping()

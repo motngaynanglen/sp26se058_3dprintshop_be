@@ -85,6 +85,26 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
         _context.DesignWorks.Add(designWork);
         _context.DesignLogs.Add(initialLog);
 
+        var attachmentUrls = new List<string>();
+        if (!string.IsNullOrWhiteSpace(request.BaseImageUrl))
+        {
+            attachmentUrls.Add(request.BaseImageUrl);
+        }
+        if (!string.IsNullOrWhiteSpace(request.InitialFileUrl))
+        {
+            attachmentUrls.Add(request.InitialFileUrl);
+        }
+
+        if (attachmentUrls.Count > 0)
+        {
+            initialLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                sourceImageUrl = request.BaseImageUrl,
+                designFileUrls = string.IsNullOrWhiteSpace(request.InitialFileUrl) ? Array.Empty<string>() : new[] { request.InitialFileUrl },
+                attachmentUrls
+            });
+        }
+
         // 3. Nếu có file đính kèm, tạo VersionHistory đầu tiên
         if (!string.IsNullOrEmpty(request.InitialFileUrl))
         {
@@ -106,7 +126,6 @@ public class CreateDesignWorkCommandHandler : IRequestHandler<CreateDesignWorkCo
             _context.DesignVersionHistorys.Add(firstVersion);
 
             initialLog.LogType = DesignLogType.VersionUpdate;
-            initialLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new List<string> { request.InitialFileUrl });
         }
 
         try

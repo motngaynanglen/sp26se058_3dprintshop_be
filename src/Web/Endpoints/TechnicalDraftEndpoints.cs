@@ -33,6 +33,9 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
         group.MapGet("/{id}/detail", GetById)
             .WithSummary("[Customer/Staff/Manager] Lấy chi tiết bản nháp kỹ thuật")
             .WithDescription("Lấy thông tin chi tiết về thông số in và vật liệu của một Technical Draft.");
+        group.MapPatch("/{id}/confirm", Confirm)
+            .WithSummary("[Customer] Duyệt báo giá kỹ thuật")
+            .WithDescription("Khách hàng duyệt một báo giá kỹ thuật để đưa vào kho thiết kế. Không khóa cuộc trò chuyện.");
         group.MapPatch("/{id}/update", Update)
             .WithSummary("[Staff/Manager] Cập nhật bản nháp kỹ thuật chưa xác nhận");
         group.MapDelete("/{id}/delete", Delete)
@@ -95,6 +98,16 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
                 code: ResponseCodeConstants.UPDATED,
                 data: result,
                 message: "Cập nhật bản nháp kỹ thuật thành công"
+            ));
+    }
+
+    public async Task<IResult> Confirm([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new ConfirmTechnicalDraftCommand(id));
+        return TypedResults.Ok(BaseResponseModel<TechnicalDraftDTO>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
+                data: result,
+                message: "Duyệt báo giá kỹ thuật thành công"
             ));
     }
 

@@ -159,6 +159,12 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
                 continue;
             }
 
+            if (!draft.IsConfirmed)
+            {
+                failures.AddFailure(nameof(itemReq.TechnicalDraftId), "Vui lòng duyệt báo giá kỹ thuật trước khi đặt in.");
+                continue;
+            }
+
             // Lấy giá vật liệu hiện tại (Price History)
             var currentMaterialPrice = await _context.MaterialPriceHistories.AsNoTracking()
                 .Where(p => p.MaterialId == draft.MaterialId && p.IsCurrent && p.Material.IsActive)
@@ -198,24 +204,13 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             order.OrderItems.Add(orderItem);
             order.TotalPrice += orderItem.TotalPrice;
 
-            draft.IsConfirmed = true;
-            draft.LastModified = CoreHelper.SystemTimeNow;
-            draft.LastModifiedBy = _user.Username;
-
-            draft.DesignVersionHistory.IsApproved = true;
-            draft.DesignVersionHistory.DesignWork.ResultDraftId = draft.Id;
-            draft.DesignVersionHistory.DesignWork.Status = DesignWorkStatus.Completed;
-            draft.DesignVersionHistory.DesignWork.IsLocked = true;
-            draft.DesignVersionHistory.DesignWork.LastModified = CoreHelper.SystemTimeNow;
-            draft.DesignVersionHistory.DesignWork.LastModifiedBy = _user.Username;
-
             _context.DesignLogs.Add(new DesignLog
             {
                 Id = Guid.NewGuid(),
                 DesignWorkId = draft.DesignVersionHistory.DesignWorkId,
                 AccountId = _user.Id != null ? Guid.Parse(_user.Id) : null,
                 LogType = DesignLogType.StatusChange,
-                Content = "Khách hàng đã xác nhận báo giá kỹ thuật và tạo đơn in. Công việc thiết kế được khóa.",
+                Content = "Khách hàng đã tạo đơn in từ báo giá kỹ thuật đã duyệt.",
                 Created = CoreHelper.SystemTimeNow,
                 CreatedBy = _user.Username ?? "SYSTEM"
             });
