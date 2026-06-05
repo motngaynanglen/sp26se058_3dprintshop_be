@@ -24,6 +24,8 @@ public record CheckoutDraftsCommand : IRequest<object>
 {
     public Guid ShippingAddressId { get; init; }
     public string? Note { get; init; }
+    public decimal ShippingFee { get; init; } = 0;
+    public string? ShippingCarrier { get; init; }
     public List<CheckoutDraftsItemRequest> Items { get; init; } = new();
 }
 public class CheckoutDraftsCommandCommandValidator : AbstractValidator<CheckoutDraftsCommand>
@@ -79,6 +81,8 @@ public class CheckoutDraftsCommandCommandHandler : IRequestHandler<CheckoutDraft
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
+            ShippingFee = request.ShippingFee,
+            Carrier = request.ShippingCarrier ?? "MANUAL",
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,

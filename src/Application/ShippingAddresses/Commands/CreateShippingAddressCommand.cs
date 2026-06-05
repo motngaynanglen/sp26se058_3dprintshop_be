@@ -38,6 +38,10 @@ public record CreateShippingAddressCommand : IRequest<ShippingAddressDTO>
     [DefaultValue("Việt Nam")]
     public string Province { get; set; } = "Việt Nam";
 
+    public int? GhnDistrictId { get; set; }
+
+    public string? GhnWardCode { get; set; }
+
     [DefaultValue(false)]
     public bool IsDefault { get; set; } = false;
 }
@@ -85,6 +89,8 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
             District = request.District,
             City = request.City,
             Province = request.Province,
+            GhnDistrictId = request.GhnDistrictId,
+            GhnWardCode = request.GhnWardCode?.Trim(),
             IsDefault = request.IsDefault,
         };
 
