@@ -1970,6 +1970,33 @@
         }
       }
     },
+    "/api/design-work/{id}/detail": {
+      "get": {
+        "tags": [
+          "Design Work"
+        ],
+        "summary": "[All] Xem chi tiết một công việc thiết kế",
+        "description": "Trả về thông tin chi tiết, dịch vụ đã chọn và đơn phí thiết kế liên quan.",
+        "operationId": "GetApiDesignWorkDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-work/quick-print": {
       "post": {
         "tags": [
@@ -4531,6 +4558,15 @@
             "x-position": 1
           },
           {
+            "name": "IsConfirmed",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
             "name": "PageNumber",
             "in": "query",
             "required": true,
@@ -4538,7 +4574,7 @@
               "type": "integer",
               "format": "int32"
             },
-            "x-position": 2
+            "x-position": 3
           },
           {
             "name": "PageSize",
@@ -4548,7 +4584,7 @@
               "type": "integer",
               "format": "int32"
             },
-            "x-position": 3
+            "x-position": 4
           }
         ],
         "responses": {
@@ -4619,6 +4655,33 @@
         "summary": "[Customer/Staff/Manager] Lấy chi tiết bản nháp kỹ thuật",
         "description": "Lấy thông tin chi tiết về thông số in và vật liệu của một Technical Draft.",
         "operationId": "GetApiTechnicalDraftDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technical-draft/{id}/confirm": {
+      "patch": {
+        "tags": [
+          "Technical Draft"
+        ],
+        "summary": "[Customer] Duyệt báo giá kỹ thuật",
+        "description": "Khách hàng duyệt một báo giá kỹ thuật để đưa vào kho thiết kế. Không khóa cuộc trò chuyện.",
+        "operationId": "PatchApiTechnicalDraftConfirm",
         "parameters": [
           {
             "name": "id",

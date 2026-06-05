@@ -15,6 +15,7 @@ public class GetMyTechnicalDraftsQuery : PaginationRequest, IRequest<PaginatedLi
 
     // Lọc theo dự án cụ thể nếu cần
     public Guid? DesignWorkId { get; init; }
+    public bool? IsConfirmed { get; init; }
 }
 public class GetMyTechnicalDraftsQueryHandler : IRequestHandler<GetMyTechnicalDraftsQuery, PaginatedList<TechnicalDraftDTO>>
 {
@@ -52,6 +53,11 @@ public class GetMyTechnicalDraftsQueryHandler : IRequestHandler<GetMyTechnicalDr
         if (request.DesignWorkId.HasValue)
         {
             query = query.Where(td => td.DesignVersionHistory.DesignWorkId == request.DesignWorkId.Value);
+        }
+
+        if (request.IsConfirmed.HasValue)
+        {
+            query = query.Where(td => td.IsConfirmed == request.IsConfirmed.Value);
         }
 
         // 4. Sắp xếp mới nhất lên đầu và phân trang
