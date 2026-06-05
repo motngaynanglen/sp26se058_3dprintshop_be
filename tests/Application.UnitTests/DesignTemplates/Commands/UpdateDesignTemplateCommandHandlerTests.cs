@@ -24,16 +24,14 @@ public class UpdateDesignTemplateCommandHandlerTests
     [TearDown]
     public void TearDown() => _context.Dispose();
 
-    private DesignTemplate SeedTemplate(string code = "TPL-001", string catalogStatus = CatalogStatuses.Draft)
+    private DesignTemplate SeedTemplate(string code = "TPL-001")
     {
         var template = new DesignTemplate
         {
             Id = Guid.NewGuid(),
             Code = code,
             Name = "Original Template",
-            FileUrl = "https://storage.test/tpl.stl",
-            CatalogStatus = catalogStatus,
-            IsActive = catalogStatus == CatalogStatuses.Published
+            FileUrl = "https://storage.test/tpl.stl"
         };
         _context.DesignTemplates.Add(template);
         _context.SaveChanges();
@@ -98,9 +96,7 @@ public class UpdateDesignTemplateCommandHandlerTests
             Id = Guid.NewGuid(),
             Code = "TPL-002",
             Name = "Another Template",
-            FileUrl = "https://storage.test/other.stl",
-            CatalogStatus = CatalogStatuses.Draft,
-            IsActive = false
+            FileUrl = "https://storage.test/other.stl"
         });
         _context.SaveChanges();
 
@@ -129,37 +125,4 @@ public class UpdateDesignTemplateCommandHandlerTests
         act.Should().ThrowAsync<DataNotFoundException>();
     }
 
-    [Test]
-    public async Task Handle_CatalogStatusPublished_SetsIsActiveTrue()
-    {
-        var template = SeedTemplate(catalogStatus: CatalogStatuses.Draft);
-        var command = new UpdateDesignTemplateCommand
-        {
-            Id = template.Id,
-            CatalogStatus = CatalogStatuses.Published
-        };
-
-        await _handler.Handle(command, CancellationToken.None);
-
-        var updated = await _context.DesignTemplates.FirstAsync(t => t.Id == template.Id);
-        updated.IsActive.Should().BeTrue();
-        updated.CatalogStatus.Should().Be(CatalogStatuses.Published);
-    }
-
-    [Test]
-    public async Task Handle_CatalogStatusDraft_SetsIsActiveFalse()
-    {
-        var template = SeedTemplate(catalogStatus: CatalogStatuses.Published);
-        var command = new UpdateDesignTemplateCommand
-        {
-            Id = template.Id,
-            CatalogStatus = CatalogStatuses.Draft
-        };
-
-        await _handler.Handle(command, CancellationToken.None);
-
-        var updated = await _context.DesignTemplates.FirstAsync(t => t.Id == template.Id);
-        updated.IsActive.Should().BeFalse();
-        updated.CatalogStatus.Should().Be(CatalogStatuses.Draft);
-    }
 }

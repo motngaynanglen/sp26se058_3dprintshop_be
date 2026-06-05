@@ -328,13 +328,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("CatalogStatus")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasDefaultValue("PUBLISHED");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -377,8 +370,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CatalogStatus");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -525,6 +516,13 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<Guid>("DesignWorkId")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("FileReviewNote")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FileReviewStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("FileUrl")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -631,6 +629,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)")
                         .HasDefaultValue("SKETCHING");
+
+                    b.Property<string>("WorkType")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 

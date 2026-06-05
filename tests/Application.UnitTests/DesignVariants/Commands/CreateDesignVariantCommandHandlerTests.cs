@@ -31,9 +31,7 @@ public class CreateDesignVariantCommandHandlerTests
             Id = Guid.NewGuid(),
             Code = "TPL-001",
             Name = "Test Template",
-            FileUrl = "https://storage.test/template.stl",
-            CatalogStatus = CatalogStatuses.Published,
-            IsActive = true
+            FileUrl = "https://storage.test/template.stl"
         };
         var material = new Material { Name = "PLA", Description = "Test", IsActive = true };
         _context.DesignTemplates.Add(template);
