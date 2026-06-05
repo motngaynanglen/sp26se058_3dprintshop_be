@@ -1,3 +1,4 @@
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Shipments.Commands;
 using sp26se058_3dprintshop_be.Application.UnitTests.Common.TestHelpers;
 
@@ -9,6 +10,7 @@ public class CancelShipmentCommandHandlerTests
     private ApplicationDbContext _context = null!;
     private IMapper _mapper = null!;
     private Mock<IUser> _user = null!;
+    private Mock<IShippingCarrierResolver> _carriers = null!;
     private CancelShipmentCommandHandler _handler = null!;
 
     [SetUp]
@@ -19,7 +21,8 @@ public class CancelShipmentCommandHandlerTests
         _user = new Mock<IUser>();
         _user.Setup(u => u.Username).Returns("staff01");
         _user.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
-        _handler = new CancelShipmentCommandHandler(_context, _mapper, _user.Object);
+        _carriers = new Mock<IShippingCarrierResolver>();
+        _handler = new CancelShipmentCommandHandler(_context, _mapper, _user.Object, _carriers.Object);
     }
 
     [TearDown]

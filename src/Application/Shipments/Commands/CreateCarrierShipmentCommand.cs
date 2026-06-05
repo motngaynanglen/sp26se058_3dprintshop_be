@@ -155,10 +155,15 @@ public class CreateCarrierShipmentCommandHandler
         var now = CoreHelper.SystemTimeNow;
         var username = _user.Username ?? "staff";
 
+        // Lay luon URL phieu in (printA5) cho vac don vua tao.
+        var labelUrl = apiResult.LabelUrl;
+        if (string.IsNullOrWhiteSpace(labelUrl) && !string.IsNullOrWhiteSpace(apiResult.CarrierOrderCode))
+            labelUrl = await service.GetLabelUrlAsync(apiResult.CarrierOrderCode, cancellationToken);
+
         shipment.Carrier = carrierCode;
         shipment.CarrierOrderCode = apiResult.CarrierOrderCode;
         shipment.CarrierStatus = apiResult.CarrierStatus;
-        shipment.CarrierLabelUrl = apiResult.LabelUrl;
+        shipment.CarrierLabelUrl = labelUrl;
         shipment.CarrierMetaJson = apiResult.RawJson;
         shipment.TrackingNumber = apiResult.TrackingNumber ?? shipment.TrackingNumber;
         shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;

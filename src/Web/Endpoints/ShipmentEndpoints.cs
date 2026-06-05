@@ -104,6 +104,12 @@ public class ShipmentEndpoints : EndpointGroupBase
         group.MapPost("/order/{orderId}/create-carrier", CreateCarrierShipment)
             .WithSummary("[Staff/Manager] Tạo vận đơn GHN");
 
+        group.MapGet("/{id}/label", GetCarrierLabel)
+            .WithSummary("[Staff/Manager] Lấy phiếu in (printA5) cho vận đơn GHN");
+
+        group.MapPost("/{id}/sync-carrier", SyncCarrierShipment)
+            .WithSummary("[Staff/Manager] Đồng bộ trạng thái từ đơn vị vận chuyển");
+
         group.MapPost("/webhook/ghn", HandleGhnWebhook)
             .AllowAnonymous()
             .WithSummary("[GHN] Webhook cập nhật trạng thái vận chuyển");
@@ -358,6 +364,42 @@ public class ShipmentEndpoints : EndpointGroupBase
             return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
                 data: ex.Message,
                 message: "Tạo vận đơn thất bại."));
+        }
+    }
+
+    public async Task<IResult> GetCarrierLabel([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        try
+        {
+            var result = await sender.Send(new GetCarrierShipmentLabelQuery { Id = id });
+            return TypedResults.Ok(BaseResponseModel<CarrierShipmentLabelResult>.OkResponseModel(
+                data: result,
+                message: "OK",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Không lấy được phiếu in vận đơn."));
+        }
+    }
+
+    public async Task<IResult> SyncCarrierShipment([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        try
+        {
+            var result = await sender.Send(new SyncCarrierShipmentCommand { Id = id });
+            return TypedResults.Ok(BaseResponseModel<ShipmentDTO>.OkResponseModel(
+                data: result,
+                message: "Đã đồng bộ trạng thái vận chuyển.",
+                code: ResponseCodeConstants.UPDATED));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Không đồng bộ được trạng thái vận chuyển."));
         }
     }
 
