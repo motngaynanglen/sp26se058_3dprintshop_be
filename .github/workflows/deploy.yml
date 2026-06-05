@@ -90,6 +90,24 @@ jobs:
               -e BackblazeB2__ApplicationKey="${{ secrets.BACKBLAZEB2_APPLICATIONKEY }}" \
               -e BackblazeB2__BucketName="${{ secrets.BACKBLAZEB2_BUCKETNAME }}" \
               -e BackblazeB2__ServiceUrl="${{ secrets.BACKBLAZEB2_SERVICEURL }}" \
+              -e VNPay__TmnCode="${{ secrets.VNPAY_TMN_CODE }}" \
+              -e VNPay__HashSecret="${{ secrets.VNPAY_HASH_SECRET }}" \
+              -e VNPay__PaymentUrl="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html" \
+              -e VNPay__ReturnUrl="https://api.3dprintshop.store/api/transaction/vnpay-return" \
+              -e VNPay__IpnUrl="https://api.3dprintshop.store/api/transaction/vnpay-ipn" \
+              -e VNPay__ApiBaseUrl="https://api.3dprintshop.store" \
+              -e VNPay__FrontendReturnUrl="https://capstone-backup-fe.vercel.app" \
+              -e GHN__Token="${{ secrets.GHN_TOKEN }}" \
+              -e GHN__ShopId="${{ secrets.GHN_SHOP_ID }}" \
+              -e GHN__FromDistrictId="${{ secrets.GHN_FROM_DISTRICT_ID }}" \
+              -e GHN__FromWardCode="${{ secrets.GHN_FROM_WARD_CODE }}" \
+              -e GHN__FromProvinceId="${{ secrets.GHN_FROM_PROVINCE_ID }}" \
+              -e GHN__FromPhone="${{ secrets.GHN_FROM_PHONE }}" \
+              -e GHN__FromAddress="Lô E2a-7, Đường D1, Khu CNC TP.HCM, Phường Tăng Nhơn Phú A, TP. Thủ Đức, Hồ Chí Minh" \
+              -e GHN__FromName="3D Print Shop" \
+              -e GHN__DefaultWeightGrams="500" \
+              -e GHN__ServiceTypeId="2" \
+              -e GHN__FallbackFee="30000" \
               ${{ secrets.DOCKERHUB_USERNAME }}/3dprintshop-be:latest
 
             # 5. Dọn dẹp các Image cũ không dùng đến để tiết kiệm dung lượng VPS
