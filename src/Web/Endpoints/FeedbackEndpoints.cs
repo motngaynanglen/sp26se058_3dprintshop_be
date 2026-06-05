@@ -28,6 +28,9 @@ public class FeedbackEndpoints : EndpointGroupBase
                 .WithSummary("[Customer] Xem lại các đánh giá đã gửi.");
         group.MapPost("/template/{templateId}", GetFeedbackByTemplateId)
                 .WithSummary("[All] Xem danh sách feedback của một mẫu thiết kế (kèm paging, filter theo số sao).");
+
+        group.MapPost("/variant/{variantId}", GetFeedbackByVariantId)
+                .WithSummary("[All] Xem danh sách feedback của một biến thể sản phẩm (kèm paging, filter theo số sao).");
         group.MapPost("/query", QueryFeedbacks)
                 .WithSummary("[Staff/Manager] Lấy toàn bộ feedback để kiểm duyệt (Paging, Search).");
         group.MapPatch("/{id}/reply", ReplyFeedback)
@@ -91,6 +94,19 @@ public class FeedbackEndpoints : EndpointGroupBase
 
 
     }
+    public async Task<IResult> GetFeedbackByVariantId(
+        [FromServices] ISender sender,
+        [FromRoute] Guid variantId,
+        [FromBody] GetFeedbacksByVariantQuery query)
+    {
+        query.VariantId = variantId;
+        var result = await sender.Send(query);
+        return TypedResults.Ok(
+            BaseResponseModel<IEnumerable<FeedbackDTO>>
+                .ListResponseModel(data: result.Items, additionalData: new { paging = result.Metadata })
+        );
+    }
+
     public async Task<IResult> GetFeedbackByTemplateId([FromServices] ISender sender, [FromBody] GetFeedbacksByTemplateWithPaginationQuery query)
     {
 
