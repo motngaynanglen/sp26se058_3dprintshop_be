@@ -385,13 +385,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("CatalogStatus")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasDefaultValue("PUBLISHED");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -477,8 +470,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasDefaultValue(0);
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CatalogStatus");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -1385,7 +1376,22 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasColumnType("varchar(255)")
                         .HasDefaultValue("N/A");
 
+                    b.Property<string>("Carrier")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CarrierLabelUrl")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CarrierMetaJson")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("CarrierName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CarrierOrderCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CarrierStatus")
                         .HasColumnType("longtext");
 
                     b.Property<string>("City")
@@ -1599,6 +1605,12 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("GhnDistrictId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GhnWardCode")
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("IsDefault")
                         .ValueGeneratedOnAdd()

@@ -99,6 +99,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         var order = await _context.Orders
             .Include(o => o.OrderItems)
             .Include(o => o.Customer)
+            .Include(o => o.Shipments)
             .Include(o => o.Invoice)
                 .ThenInclude(i => i!.Transactions)
             .FirstOrDefaultAsync(o => o.Id == orderId, ct);
@@ -164,12 +165,15 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
     {
         if (order.Invoice == null)
         {
+            var shippingFee = order.Shipments?.FirstOrDefault()?.ShippingFee ?? 0;
             order.Invoice = new Invoice
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
                 InvoiceCode = _codeGenerator.GenerateInvoiceCode(),
-                TotalAmount = order.TotalPrice,
+                SubTotal = order.TotalPrice,
+                ShippingFee = shippingFee,
+                TotalAmount = order.TotalPrice + shippingFee,
                 PaymentStatus = InvoiceStatuses.Unpaid,
                 DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
                 Created = CoreHelper.SystemTimeNow,
@@ -243,7 +247,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             Id = Guid.NewGuid(),
             Invoice = order.Invoice!,
             InvoiceId = order.Invoice!.Id,
-            Amount = order.TotalPrice,
+            Amount = order.Invoice!.TotalAmount,
             PaymentMethod = method,
             InternalCode = string.Empty,
             TransactionStatus = TransactionStatuses.Pending,
