@@ -5116,15 +5116,6 @@
                 "default": "",
                 "nullable": true
               },
-              "isActive": {
-                "type": "boolean",
-                "default": true
-              },
-              "catalogStatus": {
-                "type": "string",
-                "default": "PUBLISHED",
-                "nullable": true
-              },
               "sortDescending": {
                 "type": "boolean",
                 "default": false
@@ -5132,6 +5123,10 @@
               "sortBy": {
                 "type": "string",
                 "default": "Name",
+                "nullable": true
+              },
+              "includeDeleted": {
+                "type": "boolean",
                 "nullable": true
               }
             }
@@ -5161,15 +5156,6 @@
           "thumbnailUrl": {
             "type": "string",
             "default": "https://example.com/thumbnail.png"
-          },
-          "catalogStatus": {
-            "type": "string",
-            "default": "DRAFT",
-            "nullable": true
-          },
-          "isAcitve": {
-            "type": "boolean",
-            "nullable": true
           }
         }
       },
@@ -5197,11 +5183,6 @@
           "thumbnailUrl": {
             "type": "string",
             "default": "https://example.com/thumbnail.png",
-            "nullable": true
-          },
-          "catalogStatus": {
-            "type": "string",
-            "default": "DRAFT",
             "nullable": true
           },
           "variants": {
@@ -5344,16 +5325,6 @@
           "thumbnailUrl": {
             "type": "string",
             "default": "https://example.com/thumbnail.png",
-            "nullable": true
-          },
-          "catalogStatus": {
-            "type": "string",
-            "default": "PUBLISHED",
-            "nullable": true
-          },
-          "isAcitve": {
-            "type": "boolean",
-            "default": true,
             "nullable": true
           }
         }

@@ -65,9 +65,7 @@ public class CreateFeedbackCommandHandlerTests
                 Id = Guid.NewGuid(),
                 Code = $"TPL-{Guid.NewGuid():N}".Substring(0, 15),
                 Name = "Template",
-                FileUrl = "https://storage.test/tpl.stl",
-                CatalogStatus = CatalogStatuses.Published,
-                IsActive = true
+                FileUrl = "https://storage.test/tpl.stl"
             };
             _context.DesignTemplates.Add(template);
 

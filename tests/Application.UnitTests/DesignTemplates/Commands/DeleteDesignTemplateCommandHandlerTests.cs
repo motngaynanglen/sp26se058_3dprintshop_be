@@ -31,9 +31,7 @@ public class DeleteDesignTemplateCommandHandlerTests
         {
             Code = $"TPL-{Guid.NewGuid():N}",
             Name = "Template to delete",
-            FileUrl = "https://storage.test/tpl.stl",
-            CatalogStatus = CatalogStatuses.Published,
-            IsActive = true
+            FileUrl = "https://storage.test/tpl.stl"
         };
         _context.DesignTemplates.Add(template);
 
@@ -90,8 +88,6 @@ public class DeleteDesignTemplateCommandHandlerTests
         var updated = await _context.DesignTemplates
             .IgnoreQueryFilters()
             .FirstAsync(t => t.Id == template.Id);
-        updated.CatalogStatus.Should().Be(CatalogStatuses.Archived);
-        updated.IsActive.Should().BeFalse();
         updated.Deleted.Should().NotBeNull();
         updated.DeletedBy.Should().Be("manager01");
     }

@@ -33,12 +33,6 @@ public record UpdateDesignTemplateCommand : IRequest<DesignTemplateDTO>
 
     [DefaultValue("https://example.com/thumbnail.png")]
     public string? ThumbnailUrl { get; init; }
-
-    [DefaultValue(CatalogStatuses.Published)]
-    public string? CatalogStatus { get; init; }
-
-    [DefaultValue(true)]
-    public bool? IsAcitve { get; init; }
 }
 
 public class UpdateDesignTemplateCommandValidator : AbstractValidator<UpdateDesignTemplateCommand>
@@ -56,10 +50,6 @@ public class UpdateDesignTemplateCommandValidator : AbstractValidator<UpdateDesi
         RuleFor(x => x.FileUrl)
             .Must(x => x == null || !string.IsNullOrWhiteSpace(x))
             .WithMessage("File thiết kế không được để trống.");
-
-        RuleFor(x => x.CatalogStatus)
-            .Must(x => string.IsNullOrWhiteSpace(x) || CatalogStatuses.IsValid(x))
-            .WithMessage("Trạng thái catalog không hợp lệ.");
     }
 }
 
@@ -111,19 +101,6 @@ public class UpdateDesignTemplateCommandHandler : IRequestHandler<UpdateDesignTe
 
         if (!string.IsNullOrEmpty(request.ThumbnailUrl))
             designTemplate.ThumbnailUrl = request.ThumbnailUrl;
-
-        if (!string.IsNullOrWhiteSpace(request.CatalogStatus))
-        {
-            var catalogStatus = request.CatalogStatus.ToUpperInvariant();
-
-            designTemplate.CatalogStatus = catalogStatus;
-            designTemplate.IsActive = catalogStatus == CatalogStatuses.Published;
-        }
-        else if (request.IsAcitve.HasValue)
-        {
-            designTemplate.IsActive = request.IsAcitve.Value;
-            designTemplate.CatalogStatus = request.IsAcitve.Value ? CatalogStatuses.Published : CatalogStatuses.Draft;
-        }
 
         designTemplate.LastModified = CoreHelper.SystemTimeNow;
         designTemplate.LastModifiedBy = _user.Username;

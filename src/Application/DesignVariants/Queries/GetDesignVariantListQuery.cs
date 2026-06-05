@@ -47,10 +47,8 @@ public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariant
         bool isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
         if (!isStaffOrManager)
         {
-            // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-            query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive
-                && dv.DesignTemplate.CatalogStatus == CatalogStatuses.Published
-                && dv.DesignTemplate.IsActive);
+            // Khách hàng hoặc Guest luôn chỉ thấy variant đang hoạt động
+            query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive);
         }
         else
         {

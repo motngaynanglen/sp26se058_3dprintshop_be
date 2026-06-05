@@ -61,8 +61,6 @@ public record CreateCatalogProductCommand : IRequest<DesignTemplateDTO>
     public string FileUrl { get; init; } = null!;
     [DefaultValue("https://example.com/thumbnail.png")]
     public string? ThumbnailUrl { get; init; }
-    [DefaultValue(CatalogStatuses.Draft)]
-    public string? CatalogStatus { get; init; }
     public List<CatalogVariantRequest> Variants { get; init; } = new();
     public List<CatalogTagRequest> Tags { get; init; } = new();
 }
@@ -128,10 +126,6 @@ public class CreateCatalogProductCommandValidator : AbstractValidator<CreateCata
         RuleFor(x => x.FileUrl)
             .NotEmpty().WithMessage("File thiết kế không được để trống.");
 
-        RuleFor(x => x.CatalogStatus)
-            .Must(x => string.IsNullOrWhiteSpace(x) || CatalogStatuses.IsValid(x))
-            .WithMessage("Trạng thái catalog không hợp lệ.");
-
         RuleFor(x => x.Variants)
             .NotEmpty().WithMessage("Sản phẩm phải có ít nhất một biến thể.");
 
@@ -150,9 +144,7 @@ public class CreateCatalogProductCommandValidator : AbstractValidator<CreateCata
             .Must(HaveUniqueTagIds)
             .WithMessage("Danh sách tag có tag bị trùng.");
 
-        RuleFor(x => x)
-            .Must(HavePublishedVariantWhenProductPublished)
-            .WithMessage("Sản phẩm đang bán phải có ít nhất một biến thể đang bán.");
+        // Template không có CatalogStatus — chỉ variant mới có.
     }
 
     private static bool HaveUniqueVariantCodes(List<CatalogVariantRequest>? variants)
@@ -171,16 +163,6 @@ public class CreateCatalogProductCommandValidator : AbstractValidator<CreateCata
         return tags.Select(x => x.ConceptTagId).Distinct().Count() == tags.Count;
     }
 
-    private static bool HavePublishedVariantWhenProductPublished(CreateCatalogProductCommand request)
-    {
-        var productStatus = NormalizeCatalogStatus(request.CatalogStatus);
-        if (productStatus != CatalogStatuses.Published) return true;
-
-        return request.Variants?.Any(x => NormalizeCatalogStatus(x.CatalogStatus ?? productStatus) == CatalogStatuses.Published) == true;
-    }
-
-    private static string NormalizeCatalogStatus(string? status)
-        => status?.ToUpperInvariant() ?? CatalogStatuses.Draft;
 }
 
 public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogProductCommand, DesignTemplateDTO>
@@ -199,7 +181,6 @@ public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogP
     public async Task<DesignTemplateDTO> Handle(CreateCatalogProductCommand request, CancellationToken cancellationToken)
     {
         var now = CoreHelper.SystemTimeNow;
-        var catalogStatus = NormalizeCatalogStatus(request.CatalogStatus);
         var templateCode = request.Code.Trim();
 
         await ValidateReferencesAsync(request, cancellationToken);
@@ -219,8 +200,6 @@ public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogP
             Description = request.Description,
             FileUrl = request.FileUrl.Trim(),
             ThumbnailUrl = request.ThumbnailUrl,
-            CatalogStatus = catalogStatus,
-            IsActive = catalogStatus == CatalogStatuses.Published,
             Created = now,
             CreatedBy = _user.Username,
             LastModified = now,
@@ -229,7 +208,7 @@ public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogP
 
         foreach (var variantRequest in request.Variants)
         {
-            var variantStatus = NormalizeCatalogStatus(variantRequest.CatalogStatus ?? catalogStatus);
+            var variantStatus = NormalizeCatalogStatus(variantRequest.CatalogStatus);
             template.Variants.Add(new DesignVariant
             {
                 Id = Guid.NewGuid(),

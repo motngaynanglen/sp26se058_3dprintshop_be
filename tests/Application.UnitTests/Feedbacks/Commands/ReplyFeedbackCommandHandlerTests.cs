@@ -50,9 +50,7 @@ public class ReplyFeedbackCommandHandlerTests
             Id = templateId,
             Code = "TPL-001",
             Name = "Test Template",
-            FileUrl = "https://storage.test/template.stl",
-            CatalogStatus = CatalogStatuses.Published,
-            IsActive = true
+            FileUrl = "https://storage.test/template.stl"
         };
         _context.DesignTemplates.Add(template);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -16,14 +16,19 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
 {
     [DefaultValue("")]
     public string? Search { get; init; }
-    [DefaultValue(true)]
-    public bool? IsActive { get; init; }
-    [DefaultValue(CatalogStatuses.Published)]
-    public string? CatalogStatus { get; init; }
     [DefaultValue(false)]
     public bool SortDescending { get; init; } = false;
     [DefaultValue("Name")]
     public string? SortBy { get; init; }
+
+    /// <summary>
+    /// true = chỉ template CHƯA bị soft-delete (Deleted == null).
+    /// false = bao gồm cả đã xóa mềm.
+    /// null (default) = chỉ chưa xóa.
+    /// </summary>
+    [DefaultValue(null)]
+    public bool? IncludeDeleted { get; init; }
+
     public class GetDesignTemplatesWithPaginationQueryHandler : IRequestHandler<GetDesignTemplatesWithPaginationQuery, PaginatedList<DesignTemplateDTO>>
     {
         private readonly IApplicationDbContext _context;
@@ -38,39 +43,29 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
         public async Task<PaginatedList<DesignTemplateDTO>> Handle(GetDesignTemplatesWithPaginationQuery request, CancellationToken cancellationToken)
         {
             var query = _context.DesignTemplates.AsNoTracking();
-            if(!string.IsNullOrEmpty(request.Search))
+
+            // Mặc định chỉ lấy chưa soft-delete
+            if (request.IncludeDeleted != true)
+            {
+                query = query.Where(dt => !dt.Deleted.HasValue);
+            }
+
+            if (!string.IsNullOrEmpty(request.Search))
             {
                 query = query.Where(dt => dt.Name.Contains(request.Search) || dt.Code.Contains(request.Search));
             }
-            
+
             bool isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
             if (!isStaffOrManager)
             {
-                // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-                query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive);
+                // Customer/Guest chỉ thấy template có ít nhất 1 variant PUBLISHED + IsActive
+                query = query.Where(dt =>
+                    dt.Variants.Any(v => v.CatalogStatus == CatalogStatuses.Published && v.IsActive));
             }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(request.CatalogStatus))
-                {
-                    var status = request.CatalogStatus.ToUpperInvariant();
-                    if (!CatalogStatuses.IsValid(status))
-                    {
-                        throw new BusinessException("Trạng thái catalog không hợp lệ.");
-                    }
-
-                    query = query.Where(dv => dv.CatalogStatus == status);
-                }
-                if(request.IsActive.HasValue)
-                {
-                    query = query.Where(dv => dv.IsActive == request.IsActive);
-                }
-            }
-
 
             // Sắp xếp
             if (request.SortDescending)
-                {
+            {
                 query = request.SortBy?.ToLower() switch
                 {
                     "name" => query.OrderByDescending(dt => dt.Name),
@@ -86,6 +81,7 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
                     _ => query.OrderBy(dt => dt.Id)
                 };
             }
+
             var count = await query.CountAsync(cancellationToken);
             var templates = await query
                 .Include(x => x.Variants)

@@ -208,8 +208,7 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
                     failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm với mã {itemReq.DesignVariantId} không tồn tại.");
                     continue;
                 }
-                if (variant.CatalogStatus != CatalogStatuses.Published || !variant.IsActive
-                    || variant.DesignTemplate.CatalogStatus != CatalogStatuses.Published || !variant.DesignTemplate.IsActive)
+                if (variant.CatalogStatus != CatalogStatuses.Published || !variant.IsActive)
                 {
                     failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm '{variant.Name}' hiện chưa được mở bán.");
                     continue;
