@@ -46,7 +46,7 @@ public class GetDesignTemplateDetailQueryHandler : IRequestHandler<GetDesignTemp
 
 
         var designTemplate = await query
-            .Include(x => x.Variants)
+            .Include(x => x.Variants).ThenInclude(v => v.Material)
             .Include(x => x.DesignTags).ThenInclude(x => x.ConceptTag)
             .FirstOrDefaultAsync(dt => dt.Id == request.Id, cancellationToken);
         if (designTemplate == null)

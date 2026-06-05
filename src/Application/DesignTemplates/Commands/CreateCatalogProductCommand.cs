@@ -3,6 +3,7 @@ using System.Text.Json;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
@@ -253,6 +254,38 @@ public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogP
         }
 
         _context.DesignTemplates.Add(template);
+
+        // Tạo InventoryTransaction cho mỗi variant có StockQuantity > 0
+        Guid? staffId = null;
+        if (_user.Id != null)
+        {
+            staffId = await _context.Staffs
+                .Where(s => s.AccountId == Guid.Parse(_user.Id))
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (staffId == Guid.Empty) staffId = null;
+        }
+
+        foreach (var variant in template.Variants)
+        {
+            if (variant.StockQuantity > 0)
+            {
+                _context.InventoryTransactions.Add(new InventoryTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    DesignVariantId = variant.Id,
+                    StaffId = staffId,
+                    Type = InventoryTransactionTypes.PurchaseIn,
+                    Quantity = variant.StockQuantity,
+                    Note = $"Nhập kho lần đầu khi tạo sản phẩm {template.Code}/{variant.Code}",
+                    Created = now,
+                    CreatedBy = _user.Username,
+                    LastModified = now,
+                    LastModifiedBy = _user.Username,
+                });
+            }
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
         await dbTransaction.CommitAsync(cancellationToken);
 
@@ -316,7 +349,7 @@ public class CreateCatalogProductCommandHandler : IRequestHandler<CreateCatalogP
     {
         var dto = await _context.DesignTemplates
             .AsNoTracking()
-            .Include(x => x.Variants)
+            .Include(x => x.Variants).ThenInclude(v => v.Material)
             .Include(x => x.DesignTags).ThenInclude(x => x.ConceptTag)
             .Where(x => x.Id == templateId)
             .FirstOrDefaultAsync(cancellationToken);
