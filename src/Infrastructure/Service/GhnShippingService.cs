@@ -330,6 +330,111 @@ public class GhnShippingService : IShippingCarrierService
         }
     }
 
+    public async Task<string?> GetLabelUrlAsync(string carrierOrderCode, CancellationToken cancellationToken)
+    {
+        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
+            return null;
+
+        try
+        {
+            var payload = new { order_codes = new[] { carrierOrderCode } };
+            using var req = CreateRequest(HttpMethod.Post, "/v2/a5/gen-token", payload);
+            using var res = await _http.SendAsync(req, cancellationToken);
+            var json = await res.Content.ReadAsStringAsync(cancellationToken);
+            if (!res.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("[GHN] gen-token HTTP {Status}: {Body}", res.StatusCode, json);
+                return null;
+            }
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("code", out var codeEl) && codeEl.GetInt32() != 200)
+                return null;
+
+            string? token = null;
+            if (root.TryGetProperty("data", out var data))
+            {
+                if (data.ValueKind == JsonValueKind.String)
+                    token = data.GetString();
+                else if (data.ValueKind == JsonValueKind.Object && data.TryGetProperty("token", out var t))
+                    token = t.GetString();
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+                return null;
+
+            var baseUrl = _settings.BaseUrl.TrimEnd('/');
+            return $"{baseUrl}/client/printA5?token={token}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[GHN] gen-token exception");
+            return null;
+        }
+    }
+
+    public async Task<string?> GetCarrierStatusAsync(string carrierOrderCode, CancellationToken cancellationToken)
+    {
+        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
+            return null;
+
+        try
+        {
+            var payload = new { order_code = carrierOrderCode };
+            using var req = CreateRequest(HttpMethod.Post, "/v2/shipping-order/detail", payload);
+            using var res = await _http.SendAsync(req, cancellationToken);
+            var json = await res.Content.ReadAsStringAsync(cancellationToken);
+            if (!res.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("[GHN] detail HTTP {Status}: {Body}", res.StatusCode, json);
+                return null;
+            }
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("code", out var codeEl) && codeEl.GetInt32() != 200)
+                return null;
+            if (root.TryGetProperty("data", out var data) && data.TryGetProperty("status", out var st))
+                return st.GetString();
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[GHN] detail exception");
+            return null;
+        }
+    }
+
+    public async Task<bool> CancelShipmentAsync(string carrierOrderCode, CancellationToken cancellationToken)
+    {
+        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
+            return false;
+
+        try
+        {
+            var payload = new { order_codes = new[] { carrierOrderCode } };
+            using var req = CreateRequest(HttpMethod.Post, "/v2/switch-status/cancel", payload);
+            using var res = await _http.SendAsync(req, cancellationToken);
+            var json = await res.Content.ReadAsStringAsync(cancellationToken);
+            if (!res.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("[GHN] cancel HTTP {Status}: {Body}", res.StatusCode, json);
+                return false;
+            }
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            return !root.TryGetProperty("code", out var codeEl) || codeEl.GetInt32() == 200;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[GHN] cancel exception");
+            return false;
+        }
+    }
+
     private async Task<ShippingQuoteDto> BuildEstimatedQuoteAsync(
         int toDistrictId,
         string toWardCode,
