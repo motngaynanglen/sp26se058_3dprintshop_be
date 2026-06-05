@@ -10,6 +10,15 @@ public interface IShippingCarrierService
         CarrierShipmentCreateContext context,
         CancellationToken cancellationToken);
     bool TryMapCarrierStatus(string? carrierStatus, out string shipmentStatus);
+
+    /// <summary>Lay URL phieu/tem in (printA5) cho ma van don. Null neu khong lay duoc.</summary>
+    Task<string?> GetLabelUrlAsync(string carrierOrderCode, CancellationToken cancellationToken);
+
+    /// <summary>Pull trang thai tho tu don vi van chuyen (vd. GHN detail). Null neu loi.</summary>
+    Task<string?> GetCarrierStatusAsync(string carrierOrderCode, CancellationToken cancellationToken);
+
+    /// <summary>Day lenh huy van don sang don vi van chuyen. false neu khong huy duoc.</summary>
+    Task<bool> CancelShipmentAsync(string carrierOrderCode, CancellationToken cancellationToken);
 }
 
 public interface IShippingCarrierResolver

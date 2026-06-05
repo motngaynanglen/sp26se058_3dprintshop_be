@@ -9,6 +9,7 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Commands;
@@ -40,6 +41,10 @@ public class ConfirmShipmentDeliveredCommandHandler : IRequestHandler<ConfirmShi
 
         if (shipment == null)
             throw new DataNotFoundException(nameof(Shipment), request.Id);
+        if (ShippingCarriers.IsThirdParty(shipment.Carrier))
+            throw new BusinessException(
+                "Đơn dùng đơn vị vận chuyển (GHN) — trạng thái giao hàng được cập nhật tự động qua webhook/đồng bộ.",
+                ResponseCodeConstants.VAL_INVALID_STATE);
         if (shipment.ShipmentStatus == ShipmentStatuses.Delivered)
         {
             throw new BusinessException("Kiện hàng này đã được xác nhận giao thành công trước đó.", ResponseCodeConstants.VAL_INVALID_STATE);

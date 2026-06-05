@@ -4327,6 +4327,58 @@
         }
       }
     },
+    "/api/shipment/{id}/label": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Lấy phiếu in (printA5) cho vận đơn GHN",
+        "operationId": "GetApiShipmentLabel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/{id}/sync-carrier": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Đồng bộ trạng thái từ đơn vị vận chuyển",
+        "operationId": "PostApiShipmentSyncCarrier",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/shipment/webhook/ghn": {
       "post": {
         "tags": [

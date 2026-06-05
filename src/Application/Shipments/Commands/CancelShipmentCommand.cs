@@ -1,9 +1,11 @@
 using System.Text.Json.Serialization;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Commands;
@@ -37,12 +39,14 @@ public class CancelShipmentCommandHandler : IRequestHandler<CancelShipmentComman
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IShippingCarrierResolver _carriers;
 
-    public CancelShipmentCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public CancelShipmentCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IShippingCarrierResolver carriers)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _carriers = carriers;
     }
 
     public async Task<ShipmentDTO> Handle(CancelShipmentCommand request, CancellationToken ct)
@@ -59,6 +63,19 @@ public class CancelShipmentCommandHandler : IRequestHandler<CancelShipmentComman
 
         if (!CancellableStatuses.Contains(shipment.ShipmentStatus))
             throw new BusinessException("Chỉ có thể hủy vận đơn khi chưa bàn giao cho đơn vị vận chuyển.", ResponseCodeConstants.VAL_INVALID_STATE);
+
+        // Đơn GHN đã tạo vận đơn thật → phải hủy bên GHN trước, tránh shipper vẫn đến lấy.
+        if (ShippingCarriers.IsThirdParty(shipment.Carrier)
+            && !string.IsNullOrWhiteSpace(shipment.CarrierOrderCode))
+        {
+            var service = _carriers.GetService(shipment.Carrier!);
+            var cancelledAtCarrier = service != null
+                && await service.CancelShipmentAsync(shipment.CarrierOrderCode!, ct);
+            if (!cancelledAtCarrier)
+                throw new BusinessException(
+                    "Không hủy được vận đơn bên đơn vị vận chuyển (có thể shipper đã lấy hàng). Kiểm tra lại trên hệ thống GHN.",
+                    ResponseCodeConstants.VAL_INVALID_STATE);
+        }
 
         shipment.ShipmentStatus = ShipmentStatuses.Cancelled;
         shipment.Note = AppendNote(shipment.Note, $"Hủy vận đơn: {request.Reason}");
