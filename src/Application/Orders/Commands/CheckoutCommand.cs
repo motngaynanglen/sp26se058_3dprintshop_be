@@ -39,6 +39,10 @@ public record CheckoutCommand : IRequest<object>
     [DefaultValue(SourceTypes.InStock + " hoặc " + SourceTypes.PreOrder)]
     public string SourceType { get; init; } = null!;
     public string? Note { get; init; }
+    [DefaultValue(0)]
+    public decimal ShippingFee { get; init; } = 0;
+    [DefaultValue("MANUAL")]
+    public string? ShippingCarrier { get; init; }
     public List<CheckoutItemRequest> Items { get; init; } = new();
 }
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
@@ -106,7 +110,8 @@ public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
             Id = Guid.NewGuid(),
             Order = order,
             OrderId = order.Id,
-            ShippingFee = 0,
+            ShippingFee = request.ShippingFee,
+            Carrier = request.ShippingCarrier ?? "MANUAL",
             ShipmentStatus = ShipmentStatuses.Preparing,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,

@@ -372,6 +372,38 @@
         }
       }
     },
+    "/api/ai-generated-design/register": {
+      "post": {
+        "tags": [
+          "AI Generated Design"
+        ],
+        "summary": "[Customer] Đăng ký mô hình AI để KTV kiểm tra và báo giá",
+        "description": "Khách upload GLB từ AI → gọi endpoint này → tạo DesignWork loại Quick Print → KTV review.",
+        "operationId": "PostApiAiGeneratedDesignRegister",
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAiGeneratedDesignWorkCommand"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
+      }
+    },
     "/api/app-support/catalog": {
       "get": {
         "tags": [
@@ -4163,6 +4195,150 @@
         }
       }
     },
+    "/api/shipment/quotes": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[All] Lấy báo giá phí vận chuyển từ các hãng",
+        "operationId": "PostApiShipmentQuotes",
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetShippingQuotesQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/ghn/provinces": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Public] Danh sách tỉnh/thành GHN",
+        "operationId": "GetApiShipmentGhnProvinces",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/ghn/districts": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Public] Danh sách quận/huyện theo tỉnh GHN",
+        "operationId": "GetApiShipmentGhnDistricts",
+        "parameters": [
+          {
+            "name": "provinceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/ghn/wards": {
+      "get": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Public] Danh sách phường/xã theo quận GHN",
+        "operationId": "GetApiShipmentGhnWards",
+        "parameters": [
+          {
+            "name": "districtId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/order/{orderId}/create-carrier": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[Staff/Manager] Tạo vận đơn GHN",
+        "operationId": "PostApiShipmentOrderCreateCarrier",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCarrierShipmentBody"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/shipment/webhook/ghn": {
+      "post": {
+        "tags": [
+          "Shipment"
+        ],
+        "summary": "[GHN] Webhook cập nhật trạng thái vận chuyển",
+        "operationId": "PostApiShipmentWebhookGhn",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/shipping-address/add": {
       "post": {
         "tags": [
@@ -4524,6 +4700,34 @@
         }
       }
     },
+    "/api/transaction/vnpay-return": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[VNPay] Browser redirect sau khi khách thanh toán",
+        "operationId": "GetApiTransactionVnpayReturn",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/transaction/vnpay-ipn": {
+      "get": {
+        "tags": [
+          "Transaction"
+        ],
+        "summary": "[VNPay] IPN server-to-server xác nhận thanh toán",
+        "operationId": "GetApiTransactionVnpayIpn",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/transaction/perform-transaction": {
       "post": {
         "tags": [
@@ -4838,6 +5042,27 @@
           "confirmNewPassword": {
             "type": "string",
             "default": "Matkhaumoi123456"
+          }
+        }
+      },
+      "RegisterAiGeneratedDesignWorkCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "modelFileUrl": {
+            "type": "string"
+          },
+          "sourceImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "prompt": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6137,6 +6362,16 @@
             "type": "string",
             "nullable": true
           },
+          "shippingFee": {
+            "type": "number",
+            "format": "decimal",
+            "default": 0
+          },
+          "shippingCarrier": {
+            "type": "string",
+            "default": "MANUAL",
+            "nullable": true
+          },
           "items": {
             "type": "array",
             "items": {
@@ -6579,6 +6814,60 @@
           }
         }
       },
+      "GetShippingQuotesQuery": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shippingAddressId": {
+            "type": "string",
+            "format": "guid",
+            "nullable": true
+          },
+          "weightGrams": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderValue": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "collectOnDelivery": {
+            "type": "boolean"
+          },
+          "ghnToDistrictId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ghnToWardCode": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateCarrierShipmentBody": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "carrier": {
+            "type": "string"
+          },
+          "weightGrams": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ghnDistrictId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ghnWardCode": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "CreateShippingAddressCommand": {
         "type": "object",
         "additionalProperties": false,
@@ -6877,6 +7166,10 @@
             "type": "string",
             "default": "PAYOS",
             "minLength": 1
+          },
+          "clientIp": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

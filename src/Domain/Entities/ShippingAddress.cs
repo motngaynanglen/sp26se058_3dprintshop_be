@@ -16,5 +16,10 @@ public class ShippingAddress : BaseAuditableEntity
     public string City { get; set; } = null!;
     public string Province { get; set; } = null!;
     public bool IsDefault { get; set; } = false;
+
+    // GHN address codes
+    public int? GhnDistrictId { get; set; }
+    public string? GhnWardCode { get; set; }
+
     public required virtual Customer Customer { get; set; } = null!;
 }
