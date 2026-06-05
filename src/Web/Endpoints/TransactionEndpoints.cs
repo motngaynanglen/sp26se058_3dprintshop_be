@@ -28,6 +28,14 @@ public class TransactionEndpoints : EndpointGroupBase
                     .AllowAnonymous()
                     .WithSummary("[PayOS] Đây là api để payos gọi để xác thực đã thanh toán");
 
+        group.MapGet("/vnpay-return", HandleVnPayReturn)
+                    .AllowAnonymous()
+                    .WithSummary("[VNPay] Browser redirect sau khi khách thanh toán");
+
+        group.MapGet("/vnpay-ipn", HandleVnPayIpn)
+                    .AllowAnonymous()
+                    .WithSummary("[VNPay] IPN server-to-server xác nhận thanh toán");
+
         group.MapPost("/perform-transaction", PerformTransaction)
                     .WithSummary("[All] Gửi yêu cầu thanh toán đơn hàng có ID.")
                     .WithDescription("Trước mắt hỗ trợ 2 phương thức: 'PAYOS' và 'CASH'. CASH là thanh toán trực tiếp, có thể dùng để test!");
@@ -56,6 +64,37 @@ public class TransactionEndpoints : EndpointGroupBase
             ));
 
     }
+
+    public async Task<IResult> HandleVnPayReturn([FromServices] ISender sender, HttpContext httpContext)
+    {
+        var result = await sender.Send(new ProcessVnPayCallbackCommand
+        {
+            QueryParams = ParseQueryParams(httpContext),
+            IsIpn = false,
+        });
+
+        if (!string.IsNullOrEmpty(result.RedirectUrl))
+            return TypedResults.Redirect(result.RedirectUrl);
+
+        return TypedResults.BadRequest(result.IpnResponse);
+    }
+
+    public async Task<IResult> HandleVnPayIpn([FromServices] ISender sender, HttpContext httpContext)
+    {
+        var result = await sender.Send(new ProcessVnPayCallbackCommand
+        {
+            QueryParams = ParseQueryParams(httpContext),
+            IsIpn = true,
+        });
+
+        return TypedResults.Text(result.IpnResponse);
+    }
+
+    private static Dictionary<string, string> ParseQueryParams(HttpContext httpContext)
+        => httpContext.Request.Query.ToDictionary(
+            q => q.Key,
+            q => q.Value.ToString(),
+            StringComparer.OrdinalIgnoreCase);
     public async Task<IResult> PerformTransaction([FromServices] ISender sender, [FromBody] PerformTransactionCommand command)
     {
 

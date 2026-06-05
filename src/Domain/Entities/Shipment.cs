@@ -22,6 +22,18 @@ public class Shipment : BaseAuditableEntity
 
     public string? CarrierName { get; set; }
     public string? TrackingNumber { get; set; }
+
+    /// <summary>MANUAL, GHN — see ShippingCarriers.</summary>
+    public string? Carrier { get; set; }
+
+    /// <summary>Ma don tren he thong GHN (order_code).</summary>
+    public string? CarrierOrderCode { get; set; }
+
+    /// <summary>Trang thai tho tu don vi van chuyen.</summary>
+    public string? CarrierStatus { get; set; }
+
+    public string? CarrierLabelUrl { get; set; }
+    public string? CarrierMetaJson { get; set; }
     public DateTime? EstimatedDeliveryTime { get; set; }
     public string ShipmentStatus { get; set; } = "PREPARING";
     public DateTime? ShippedAt { get; set; }

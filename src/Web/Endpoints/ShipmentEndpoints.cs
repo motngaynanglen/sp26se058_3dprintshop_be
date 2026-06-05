@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Materials.Commands;
 using sp26se058_3dprintshop_be.Application.Materials.Queries;
 using sp26se058_3dprintshop_be.Application.Shipments.Commands;
 using sp26se058_3dprintshop_be.Application.Shipments.Queries;
+using sp26se058_3dprintshop_be.Application.Shipping.Queries;
 using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 using sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -82,6 +84,28 @@ public class ShipmentEndpoints : EndpointGroupBase
             .WithSummary("[Staff/Manager] Tạo mới một vận đơn.")
             .WithDescription("Phòng trường hợp đơn gửi trước đó bị lỗi hoặc gặp vấn đề. Có thể tạo mới một lượt vận chuyển khác.");
 
+        // --- GHN SHIPPING ---
+        group.MapPost("/quotes", GetShippingQuotes)
+            .WithSummary("[All] Lấy báo giá phí vận chuyển từ các hãng");
+
+        group.MapGet("/ghn/provinces", GetGhnProvinces)
+            .AllowAnonymous()
+            .WithSummary("[Public] Danh sách tỉnh/thành GHN");
+
+        group.MapGet("/ghn/districts", GetGhnDistricts)
+            .AllowAnonymous()
+            .WithSummary("[Public] Danh sách quận/huyện theo tỉnh GHN");
+
+        group.MapGet("/ghn/wards", GetGhnWards)
+            .AllowAnonymous()
+            .WithSummary("[Public] Danh sách phường/xã theo quận GHN");
+
+        group.MapPost("/order/{orderId}/create-carrier", CreateCarrierShipment)
+            .WithSummary("[Staff/Manager] Tạo vận đơn GHN");
+
+        group.MapPost("/webhook/ghn", HandleGhnWebhook)
+            .AllowAnonymous()
+            .WithSummary("[GHN] Webhook cập nhật trạng thái vận chuyển");
 
     }
     public async Task<IResult> QueryShipments([FromServices] ISender sender, [FromBody] GetShipmentsWithPaginationQuery command)
@@ -232,4 +256,142 @@ public class ShipmentEndpoints : EndpointGroupBase
             message: "Đã từ chối yêu cầu đổi địa chỉ giao hàng.",
             code: ResponseCodeConstants.UPDATED));
     }
+
+    // --- GHN Shipping Handlers ---
+
+    public async Task<IResult> GetShippingQuotes(
+        [FromServices] ISender sender,
+        [FromBody] GetShippingQuotesQuery query)
+    {
+        try
+        {
+            var result = await sender.Send(query);
+            return TypedResults.Ok(BaseResponseModel<List<ShippingQuoteDto>>.OkResponseModel(
+                data: result,
+                message: "Báo phí vận chuyển thành công.",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Không tính được phí vận chuyển."));
+        }
+    }
+
+    public async Task<IResult> GetGhnProvinces([FromServices] IGhnMasterDataService ghn)
+    {
+        try
+        {
+            var list = await ghn.GetProvincesAsync();
+            return TypedResults.Ok(BaseResponseModel<IReadOnlyList<GhnProvinceDto>>.OkResponseModel(
+                data: list,
+                message: "OK",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(ex.Message));
+        }
+    }
+
+    public async Task<IResult> GetGhnDistricts(
+        [FromServices] IGhnMasterDataService ghn,
+        [FromQuery] int provinceId)
+    {
+        try
+        {
+            var list = await ghn.GetDistrictsAsync(provinceId);
+            return TypedResults.Ok(BaseResponseModel<IReadOnlyList<GhnDistrictDto>>.OkResponseModel(
+                data: list,
+                message: "OK",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(ex.Message));
+        }
+    }
+
+    public async Task<IResult> GetGhnWards(
+        [FromServices] IGhnMasterDataService ghn,
+        [FromQuery] int districtId)
+    {
+        try
+        {
+            var list = await ghn.GetWardsAsync(districtId);
+            return TypedResults.Ok(BaseResponseModel<IReadOnlyList<GhnWardDto>>.OkResponseModel(
+                data: list,
+                message: "OK",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(ex.Message));
+        }
+    }
+
+    public async Task<IResult> CreateCarrierShipment(
+        [FromServices] ISender sender,
+        [FromRoute] Guid orderId,
+        [FromBody] CreateCarrierShipmentBody body)
+    {
+        try
+        {
+            var result = await sender.Send(new CreateCarrierShipmentCommand
+            {
+                OrderId = orderId,
+                Carrier = body.Carrier,
+                WeightGrams = body.WeightGrams,
+                GhnDistrictId = body.GhnDistrictId,
+                GhnWardCode = body.GhnWardCode
+            });
+
+            return TypedResults.Ok(BaseResponseModel<CreateCarrierShipmentResult>.OkResponseModel(
+                data: result,
+                message: $"Đã tạo vận đơn {result.Carrier}.",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Tạo vận đơn thất bại."));
+        }
+    }
+
+    public async Task<IResult> HandleGhnWebhook(
+        [FromServices] ISender sender,
+        HttpRequest httpRequest)
+    {
+        var payload = await ReadFormOrQueryAsync(httpRequest);
+        var ok = await sender.Send(new ProcessCarrierWebhookCommand
+        {
+            Carrier = "GHN",
+            Payload = payload
+        });
+        return TypedResults.Ok(new { success = ok });
+    }
+
+    private static async Task<Dictionary<string, string>> ReadFormOrQueryAsync(HttpRequest request)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var q in request.Query)
+            dict[q.Key] = q.Value.ToString();
+
+        if (request.HasFormContentType)
+        {
+            var form = await request.ReadFormAsync();
+            foreach (var f in form)
+                dict[f.Key] = f.Value.ToString();
+        }
+
+        return dict;
+    }
+
+    public record CreateCarrierShipmentBody(
+        string Carrier,
+        int? WeightGrams,
+        int? GhnDistrictId = null,
+        string? GhnWardCode = null);
 }

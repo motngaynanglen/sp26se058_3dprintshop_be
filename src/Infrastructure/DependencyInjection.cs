@@ -83,6 +83,18 @@ public static class DependencyInjection
         });
         services.Configure<BackblazeB2Settings>(configuration.GetSection(BackblazeB2Settings.SectionName));
         services.AddScoped<IS3StorageService, S3StorageService>();
+
+        // Cấu hình VNPay
+        services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.SectionName));
+        services.AddScoped<IVnPayService, VnPayService>();
+
+        // Cấu hình GHN Shipping
+        services.Configure<GhnSettings>(configuration.GetSection(GhnSettings.SectionName));
+        services.AddHttpClient<IGhnMasterDataService, GhnMasterDataService>();
+        services.AddHttpClient<IShippingCarrierService, GhnShippingService>();
+        services.AddScoped<IGhnAddressResolver, GhnAddressResolver>();
+        services.AddScoped<IShippingCarrierResolver, ShippingCarrierResolver>();
+
         return services;
     }
 }
