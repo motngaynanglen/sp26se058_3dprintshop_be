@@ -271,26 +271,63 @@ public class GhnShippingService : IShippingCarrierService
         if (string.IsNullOrWhiteSpace(carrierStatus))
             return false;
 
+        // Bộ trạng thái GHN: https://api.ghn.vn/home/docs/detail?id=124
         var s = carrierStatus.Trim().ToLowerInvariant();
-        if (s is "delivered" or "delivery_success" or "success")
+        switch (s)
         {
-            shipmentStatus = ShipmentStatuses.Delivered;
-            return true;
-        }
+            case "delivered":
+            case "delivery_success":
+            case "success":
+                shipmentStatus = ShipmentStatuses.Delivered;
+                return true;
 
-        if (s is "picking" or "ready_to_pick" or "storing" or "waiting_for_pick")
-        {
-            shipmentStatus = ShipmentStatuses.ReadyForPickup;
-            return true;
-        }
+            case "ready_to_pick":
+            case "picking":
+            case "money_collect_picking":
+            case "storing":
+            case "waiting_for_pick":
+                shipmentStatus = ShipmentStatuses.ReadyForPickup;
+                return true;
 
-        if (s is "delivering" or "transporting" or "in_transit" or "picked")
-        {
-            shipmentStatus = ShipmentStatuses.InTransit;
-            return true;
-        }
+            case "picked":
+            case "transporting":
+            case "sorting":
+            case "delivering":
+            case "money_collect_delivering":
+            case "in_transit":
+                shipmentStatus = ShipmentStatuses.InTransit;
+                return true;
 
-        return false;
+            case "delivery_fail":
+                shipmentStatus = ShipmentStatuses.Failed;
+                return true;
+
+            case "waiting_to_return":
+            case "return":
+            case "returning":
+            case "return_transporting":
+            case "return_sorting":
+            case "return_fail":
+                shipmentStatus = ShipmentStatuses.Returning;
+                return true;
+
+            case "returned":
+                shipmentStatus = ShipmentStatuses.Returned;
+                return true;
+
+            case "exception":
+            case "damage":
+            case "lost":
+                shipmentStatus = ShipmentStatuses.LostOrDamaged;
+                return true;
+
+            case "cancel":
+                shipmentStatus = ShipmentStatuses.Cancelled;
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private async Task<ShippingQuoteDto> BuildEstimatedQuoteAsync(

@@ -21,7 +21,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Truy vấn danh sách tài khoản.",
+        "summary": "[Admin/Manager] Truy vấn danh sách tài khoản.",
         "description": "Quản trị hệ thống xem toàn bộ tài khoản. Quản lý chỉ xem và quản lý tài khoản nhân viên.",
         "operationId": "PostApiAccountQuery",
         "requestBody": {
@@ -75,7 +75,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Tạo tài khoản mới.",
+        "summary": "[Admin/Manager] Tạo tài khoản mới.",
         "description": "Quản trị hệ thống tạo tài khoản quản lý/nhân viên/khách hàng. Quản lý chỉ được tạo tài khoản nhân viên.",
         "operationId": "PostApiAccountAdd",
         "requestBody": {
@@ -102,7 +102,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Lấy thông tin chi tiết tài khoản.",
+        "summary": "[Admin/Manager] Lấy thông tin chi tiết tài khoản.",
         "description": "Quản trị hệ thống xem toàn bộ. Quản lý chỉ xem chi tiết tài khoản nhân viên.",
         "operationId": "GetApiAccountDetail",
         "parameters": [
@@ -156,7 +156,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Cập nhật thông tin tài khoản với mã. Quản lý chỉ cập nhật nhân viên.",
+        "summary": "[Admin/Manager] Cập nhật thông tin tài khoản với mã. Quản lý chỉ cập nhật nhân viên.",
         "operationId": "PatchApiAccountUpdate",
         "parameters": [
           {
@@ -194,7 +194,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Kích hoạt tài khoản có mã. Quản lý chỉ kích hoạt nhân viên.",
+        "summary": "[Admin/Manager] Kích hoạt tài khoản có mã. Quản lý chỉ kích hoạt nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountActive",
         "parameters": [
@@ -233,7 +233,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Tạm ngưng hoạt động tài khoản có mã. Quản lý chỉ vô hiệu hóa nhân viên.",
+        "summary": "[Admin/Manager] Tạm ngưng hoạt động tài khoản có mã. Quản lý chỉ vô hiệu hóa nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "PatchApiAccountDeactive",
         "parameters": [
@@ -272,7 +272,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "[SystemAdmin/Manager] Xóa mềm tài khoản có mã. Quản lý chỉ xóa mềm nhân viên.",
+        "summary": "[Admin/Manager] Xóa mềm tài khoản có mã. Quản lý chỉ xóa mềm nhân viên.",
         "description": "Để trống dữ liệu Request BODY khi gọi",
         "operationId": "DeleteApiAccountDelete",
         "parameters": [
@@ -521,8 +521,8 @@
         "tags": [
           "App Support"
         ],
-        "summary": "Lấy link upload ảnh (Max 5MB); Trước mắt không bắt giới hạn.",
-        "description": "(Hỗ trợ: .jpg, .png, .webp); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
+        "summary": "[All] Lấy link upload ảnh (Max 5MB)",
+        "description": "(Hỗ trợ: .jpg, .png, .webp); Trả về presigned URL để FE upload trực tiếp lên Backblaze B2. Nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
         "operationId": "GetApiAppSupportPresignedImageUrl",
         "parameters": [
           {
@@ -547,8 +547,8 @@
         "tags": [
           "App Support"
         ],
-        "summary": "Lấy link upload file 3D (Max 100MB)",
-        "description": "(Hỗ trợ: .glb, .stl); Trước mắt không bắt giới hạn dung lượng, nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
+        "summary": "[All] Lấy link upload file 3D (Max 100MB)",
+        "description": "(Hỗ trợ: .glb, .stl); Trả về presigned URL để FE upload trực tiếp lên Backblaze B2. Nhớ gửi đúng TÊN FILE kèm ĐUÔI để đăng kí đúng link.",
         "operationId": "GetApiAppSupportPresignedModelUrl",
         "parameters": [
           {
@@ -573,6 +573,8 @@
         "tags": [
           "App Support"
         ],
+        "summary": "[Staff] Kiểm tra upload file lên Backblaze B2",
+        "description": "Endpoint thử nghiệm: truyền presigned URL và file để kiểm tra luồng upload B2 hoạt động đúng.",
         "operationId": "PostApiAppSupportTestUploadToB2",
         "parameters": [
           {
@@ -1191,8 +1193,8 @@
         "tags": [
           "Design Log"
         ],
-        "summary": "[Staff/Manager] Tạo log giao tiếp",
-        "description": "Tạo log giao tiếp liên quan đến công việc thiết kế. Chỉ dành cho Staff, Manager, Customer.",
+        "summary": "[Customer/Staff/Manager] Tạo log giao tiếp",
+        "description": "Tạo log giao tiếp liên quan đến công việc thiết kế. Khách hàng, nhân viên và quản lý đều có thể gửi tin.",
         "operationId": "PostApiDesignLogCreateChatLog",
         "requestBody": {
           "x-name": "request",
@@ -1311,7 +1313,7 @@
         "tags": [
           "Design Log"
         ],
-        "summary": "[All Roles] Lấy danh sách log theo công việc thiết kế",
+        "summary": "[All] Lấy danh sách log theo công việc thiết kế",
         "description": "Lấy log theo kiểu chat. Lần đầu không truyền beforeLogId để lấy log mới nhất; khi load tin cũ hơn, truyền beforeLogId là id log cũ nhất đang có trên màn hình.",
         "operationId": "GetApiDesignLogGetLogsByWork",
         "parameters": [
@@ -3126,7 +3128,7 @@
         "tags": [
           "Model Generate"
         ],
-        "summary": "Tạo mô hình 3D từ ảnh",
+        "summary": "[Customer/Staff/Manager] Tạo mô hình 3D từ ảnh",
         "operationId": "PostApiModelGenerate",
         "parameters": [
           {
@@ -4461,8 +4463,8 @@
         "tags": [
           "Technical Draft"
         ],
-        "summary": "[Staff] Tạo bản nháp kỹ thuật mới",
-        "description": "Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Chỉ dành cho nhân viên.",
+        "summary": "[Staff/Manager] Tạo bản nháp kỹ thuật mới",
+        "description": "Tạo thông số in và báo giá dự kiến cho một phiên bản thiết kế. Dành cho nhân viên và quản lý.",
         "operationId": "PostApiTechnicalDraft",
         "requestBody": {
           "x-name": "request",
@@ -4787,7 +4789,8 @@
         "tags": [
           "Transaction"
         ],
-        "summary": "[All] Gửi yêu cầu thanh toán đơn hàng có ID.",
+        "summary": "[Customer/Staff/Manager] Hủy giao dịch thanh toán theo ID.",
+        "description": "Hủy một giao dịch đang ở trạng thái chờ hoặc lỗi. Khách hàng chỉ hủy được giao dịch của mình.",
         "operationId": "PostApiTransactionCancel",
         "parameters": [
           {

@@ -1,5 +1,6 @@
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Shipping.Queries;
@@ -114,6 +115,19 @@ public class GetShippingQuotesQueryHandler : IRequestHandler<GetShippingQuotesQu
             if (quote != null)
                 quotes.Add(quote);
         }
+
+        // MANUAL (Giao hàng Nova3D): mượn cách tính của GHN làm phí tham chiếu,
+        // không tạo vận đơn thật cho hình thức này.
+        var reference = quotes.OrderBy(q => q.Fee).FirstOrDefault();
+        quotes.Add(new ShippingQuoteDto
+        {
+            Carrier = ShippingCarriers.Manual,
+            CarrierName = "Giao hàng Nova3D",
+            Fee = reference?.Fee ?? 30_000,
+            LeadDays = reference?.LeadDays ?? 3,
+            IsEstimated = true,
+            Message = "Phí tham chiếu theo cách tính GHN."
+        });
 
         return quotes.OrderBy(q => q.Fee).ToList();
     }

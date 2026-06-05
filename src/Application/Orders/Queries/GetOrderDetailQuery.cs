@@ -62,6 +62,8 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
                 Id = entity.Invoice.Id,
                 InvoiceCode = entity.Invoice.InvoiceCode,
                 PaymentStatus = entity.Invoice.PaymentStatus,
+                SubTotal = entity.Invoice.SubTotal,
+                ShippingFee = entity.Invoice.ShippingFee,
                 TotalAmount = entity.Invoice.TotalAmount,
                 DueDate = entity.Invoice.DueDate,
                 PaymentMethod = activeTx?.PaymentMethod,
