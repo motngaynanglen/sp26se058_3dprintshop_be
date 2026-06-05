@@ -84,7 +84,10 @@ public class GetDesignVariantListQueryHandler : IRequestHandler<GetDesignVariant
         query = query.OrderBy(dv => dv.Code)
                      .ThenBy(dv => dv.Name);
 
-        var variants = await query.ToListAsync(cancellationToken);
+        var variants = await query
+            .Include(v => v.DesignTemplate)
+            .Include(v => v.Material)
+            .ToListAsync(cancellationToken);
         var result = _mapper.Map<List<DesignVariantDTO>>(variants);
 
         return result;

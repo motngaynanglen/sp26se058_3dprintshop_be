@@ -1672,6 +1672,33 @@
         }
       }
     },
+    "/api/design-variant/{id}/detail": {
+      "get": {
+        "tags": [
+          "Design Variant"
+        ],
+        "summary": "[All] Xem chi tiết một biến thể",
+        "description": "Trả về thông tin chi tiết biến thể bao gồm thông tin mẫu thiết kế (file, ảnh), vật liệu, media kế thừa. Customer/Guest chỉ thấy variant PUBLISHED.",
+        "operationId": "GetApiDesignVariantDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/design-variant/query": {
       "post": {
         "tags": [
