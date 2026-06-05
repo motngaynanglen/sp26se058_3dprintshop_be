@@ -19,6 +19,7 @@ public class CreateCatalogProductCommandHandlerTests
         _mapper = TestDbContextFactory.CreateMapper();
         _user = new Mock<IUser>();
         _user.Setup(u => u.Username).Returns("staff01");
+        _user.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _handler = new CreateCatalogProductCommandHandler(_context, _mapper, _user.Object);
     }
 

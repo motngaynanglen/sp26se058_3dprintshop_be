@@ -24,21 +24,25 @@ public record PerformTransactionCommand : IRequest<object>
     [Required]
     [DefaultValue(PaymentMethods.PAYOS)]
     public string PaymentMethod { get; init; } = null!;
+    /// <summary>IP client — dùng cho VNPay (tự lấy từ HttpContext nếu để trống).</summary>
+    public string? ClientIp { get; init; }
 }
 public class PerformTransactionCommandHandler : IRequestHandler<PerformTransactionCommand, object>
 {
     private readonly IApplicationDbContext _context;
     private readonly IOrderWorkflowService _orderWorkflowService;
     private readonly IPaymentService _paymentService;
+    private readonly IVnPayService _vnPayService;
     private readonly PayOsSettings _payOsSettings;
     private readonly IUser _user;
     private readonly ICodeGeneratorService _codeGenerator;
 
-    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IOptions<PayOsSettings> payOsSettings, IUser user, ICodeGeneratorService codeGenerator)
+    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IVnPayService vnPayService, IOptions<PayOsSettings> payOsSettings, IUser user, ICodeGeneratorService codeGenerator)
     {
         _context = context;
         _orderWorkflowService = orderWorkflowService;
         _paymentService = paymentService;
+        _vnPayService = vnPayService;
         _payOsSettings = payOsSettings.Value;
         _user = user;
         _codeGenerator = codeGenerator;
@@ -74,7 +78,7 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             await _orderWorkflowService.ActivateOrderWorkflowAsync(order, cancellationToken);
         }
         // 5. Tạo Transaction mới dựa trên phương thức thanh toán
-        var result = await CreateTransactionByMethodAsync(order, request.PaymentMethod, cancellationToken);
+        var result = await CreateTransactionByMethodAsync(order, request, cancellationToken);
 
         // 6. Lưu thay đổi
         try
@@ -215,8 +219,25 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
         return null;
     }
 
-    private async Task<object> CreateTransactionByMethodAsync(Order order, string method, CancellationToken ct)
+    private async Task<object> CreateTransactionByMethodAsync(Order order, PerformTransactionCommand request, CancellationToken ct)
     {
+        var method = request.PaymentMethod;
+
+        // Hủy các giao dịch VNPay PENDING cũ trước khi tạo mới (tránh trùng)
+        if (method == PaymentMethods.VNPAY || method == PaymentMethods.PAYOS)
+        {
+            var pendingVnPayTxns = order.Invoice!.Transactions
+                .Where(t => t.TransactionStatus == TransactionStatuses.Pending
+                             && t.PaymentMethod == PaymentMethods.VNPAY)
+                .ToList();
+            foreach (var old in pendingVnPayTxns)
+            {
+                old.TransactionStatus = TransactionStatuses.Failed;
+                old.Note = (old.Note ?? "") + " [Auto] Hủy do tạo giao dịch mới.";
+                old.LastModified = CoreHelper.SystemTimeNow;
+            }
+        }
+
         var transaction = new Transaction
         {
             Id = Guid.NewGuid(),
@@ -255,7 +276,21 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
             _context.Transactions.Add(transaction);
             return paymentResponse;
         }
-        else if (method == PaymentMethods.Cash) // Hoặc dùng Constant nếu bạn có PaymentMethods.CASH
+
+        if (method == PaymentMethods.VNPAY)
+        {
+            var ip = string.IsNullOrWhiteSpace(request.ClientIp) ? "127.0.0.1" : request.ClientIp;
+            var paymentResponse = _vnPayService.CreatePaymentUrl(order, ip);
+            transaction.InternalCode = paymentResponse.PaymentCode.ToString();
+            transaction.TransactionStatus = TransactionStatuses.Pending;
+            transaction.PaymentLink = paymentResponse.PaymentLink;
+            transaction.QrCode = string.Empty;
+            transaction.Note = $"Tạo link thanh toán VNPay cho đơn hàng {order.Code}";
+            _context.Transactions.Add(transaction);
+            return paymentResponse;
+        }
+
+        if (method == PaymentMethods.Cash)
         {
             // Xử lý thanh toán tiền mặt trực tiếp
             transaction.InternalCode = $"CASH-{order.Code}-{DateTime.UtcNow.Ticks}";
