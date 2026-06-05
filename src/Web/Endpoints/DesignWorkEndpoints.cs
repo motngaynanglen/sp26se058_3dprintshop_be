@@ -23,9 +23,9 @@ public class DesignWorkEndpoints : EndpointGroupBase
         group.MapPost("/query", Query)
             .WithSummary("[All] Truy vấn danh sách công việc thiết kế có phân trang")
             .WithDescription("Hệ thống tự động chỉ hiển thị dữ liệu đang hoạt động đối với khách hàng. Nhân viên/quản lý có thể xem toàn bộ.");
-        //group.MapGet("{id}/detail", GetDetail)
-        //    .WithSummary("[All] Xem chi tiết một công việc thiết kế")
-        //    .WithDescription("Trả về thông tin chi tiết cùng các thuộc tính cơ bản của công việc thiết kế.");
+        group.MapGet("/{id}/detail", GetDetail)
+            .WithSummary("[All] Xem chi tiết một công việc thiết kế")
+            .WithDescription("Trả về thông tin chi tiết, dịch vụ đã chọn và đơn phí thiết kế liên quan.");
         // Gắn API Quick Print cho khách hàng
         group.MapPost("/quick-print", CreateQuickPrint)
             .WithSummary("[Customer] Gửi yêu cầu in 3D từ file có sẵn")
@@ -87,7 +87,7 @@ public class DesignWorkEndpoints : EndpointGroupBase
         {
             Id = id
         });
-        return TypedResults.Ok(BaseResponseModel<DesignWorkDTO>.OkResponseModel(
+        return TypedResults.Ok(BaseResponseModel<DesignWorkDetailDTO>.OkResponseModel(
                 data: result,
                 message: "Lấy chi tiết công việc thiết kế thành công!",
                 code: ResponseCodeConstants.SUCCESS
