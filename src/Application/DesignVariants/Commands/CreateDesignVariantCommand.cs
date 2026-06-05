@@ -10,7 +10,8 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
-using sp26se058_3dprintshop_be.Domain.Utils;   // ← Thêm using này
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 [Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
@@ -162,13 +163,36 @@ public class CreateDesignVariantCommandHandler : IRequestHandler<CreateDesignVar
             LastModifiedBy = _user.Username,
         };
         _context.DesignVariants.Add(newDesignVariant);
+
+        // Tạo InventoryTransaction nếu có nhập tồn kho ban đầu
+        if (request.StockQuantity > 0)
+        {
+            var staffId = await _context.Staffs
+                .Where(s => s.AccountId == Guid.Parse(_user.Id!))
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            _context.InventoryTransactions.Add(new InventoryTransaction
+            {
+                Id = Guid.NewGuid(),
+                DesignVariantId = newDesignVariant.Id,
+                StaffId = staffId != Guid.Empty ? staffId : null,
+                Type = InventoryTransactionTypes.PurchaseIn,
+                Quantity = request.StockQuantity,
+                Note = $"Nhập kho lần đầu khi tạo biến thể {code}",
+                Created = CoreHelper.SystemTimeNow,
+                CreatedBy = _user.Username,
+                LastModified = CoreHelper.SystemTimeNow,
+                LastModifiedBy = _user.Username,
+            });
+        }
+
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            // Ném lỗi Create Failure nếu có vấn đề phát sinh từ DB (DB_003)
             throw new CreateFailureException(nameof(DesignVariant), ex.Message);
         }
         return _mapper.Map<DesignVariantDTO>(newDesignVariant);

@@ -84,7 +84,7 @@ public class GetDesignTemplatesWithPaginationQuery : PaginationRequest, IRequest
 
             var count = await query.CountAsync(cancellationToken);
             var templates = await query
-                .Include(x => x.Variants)
+                .Include(x => x.Variants).ThenInclude(v => v.Material)
                 .Include(x => x.DesignTags).ThenInclude(x => x.ConceptTag)
                 .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize)

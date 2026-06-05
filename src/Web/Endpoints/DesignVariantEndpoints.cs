@@ -17,6 +17,10 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
+        group.MapGet("/{id}/detail", GetDetail)
+            .WithSummary("[All] Xem chi tiết một biến thể")
+            .WithDescription("Trả về thông tin chi tiết biến thể bao gồm thông tin mẫu thiết kế (file, ảnh), vật liệu, media kế thừa. Customer/Guest chỉ thấy variant PUBLISHED.");
+
         group.MapPost("/query", GetAll)
             .WithSummary("[All] Truy vấn danh sách Biến thể")
             .WithDescription("Hỗ trợ lọc theo mã mẫu thiết kế và mã vật liệu. Tự động ẩn dữ liệu ngưng hoạt động đối với khách hàng.");
@@ -40,6 +44,16 @@ public class DesignVariantEndpoints : EndpointGroupBase
     }
 
 
+
+    public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new GetDesignVariantDetailQuery { Id = id });
+        return TypedResults.Ok(BaseResponseModel<DesignVariantDetailDTO>.OkResponseModel(
+                data: result,
+                message: "Lấy chi tiết biến thể thành công!",
+                code: ResponseCodeConstants.SUCCESS
+            ));
+    }
 
     public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateDesignVariantCommand command)
     {

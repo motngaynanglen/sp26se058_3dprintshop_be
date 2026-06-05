@@ -98,19 +98,9 @@ public class MaterialActiveStatusService
             throw new BusinessException("Không thể kích hoạt vật liệu khi chưa có giá hiện hành.");
         }
 
-        if (!isActive)
-        {
-            var isUsedByPublishedVariant = await _context.DesignVariants.AnyAsync(x =>
-                x.MaterialId == materialId &&
-                x.CatalogStatus == CatalogStatuses.Published &&
-                x.IsActive,
-                cancellationToken);
-
-            if (isUsedByPublishedVariant)
-            {
-                throw new BusinessException("Không thể tạm ngưng vật liệu đang được dùng bởi biến thể sản phẩm đang mở bán.");
-            }
-        }
+        // Vật liệu có thể deactivate dù có sản phẩm đã bán.
+        // Sau khi deactivate, vật liệu không hiện trong tìm kiếm khi tạo variant mới,
+        // nhưng các variant cũ vẫn giữ nguyên materialId.
 
         material.IsActive = isActive;
         material.LastModified = CoreHelper.SystemTimeNow;
