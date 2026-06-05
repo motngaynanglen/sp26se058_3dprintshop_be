@@ -4506,11 +4506,11 @@
         "summary": "[PayOS] Đây là api để payos gọi để xác thực đã thanh toán",
         "operationId": "PostApiTransactionPayosWebhook",
         "requestBody": {
-          "x-name": "command",
+          "x-name": "webhookBody",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProcessOnlinePaymentV2Command"
+                "$ref": "#/components/schemas/Webhook"
               }
             }
           },
@@ -6772,15 +6772,6 @@
           "technicalNote": {
             "type": "string",
             "nullable": true
-          }
-        }
-      },
-      "ProcessOnlinePaymentV2Command": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "webhookBody": {
-            "$ref": "#/components/schemas/Webhook"
           }
         }
       },
