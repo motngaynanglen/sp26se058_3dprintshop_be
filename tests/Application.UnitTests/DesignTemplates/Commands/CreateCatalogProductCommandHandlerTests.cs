@@ -77,7 +77,6 @@ public class CreateCatalogProductCommandHandlerTests
             Code = "TPL-001",
             Name = "Mô hình PLA",
             FileUrl = "https://example.com/file.stl",
-            CatalogStatus = CatalogStatuses.Draft,
             Variants = [BuildVariant(material.Id)]
         };
 
@@ -88,9 +87,8 @@ public class CreateCatalogProductCommandHandlerTests
 
         var template = await _context.DesignTemplates.FirstOrDefaultAsync(t => t.Code == "TPL-001");
         template.Should().NotBeNull();
-        template!.IsActive.Should().BeFalse(); // Draft → not active
 
-        var variants = _context.DesignVariants.Where(v => v.DesignTemplateId == template.Id).ToList();
+        var variants = _context.DesignVariants.Where(v => v.DesignTemplateId == template!.Id).ToList();
         variants.Should().HaveCount(1);
         variants[0].Code.Should().Be("VAR-001");
     }
@@ -104,14 +102,10 @@ public class CreateCatalogProductCommandHandlerTests
             Code = "TPL-PUB",
             Name = "Sản phẩm đang bán",
             FileUrl = "https://example.com/file.stl",
-            CatalogStatus = CatalogStatuses.Published,
             Variants = [BuildVariant(material.Id, "VAR-PUB", CatalogStatuses.Published)]
         };
 
         await _handler.Handle(command, CancellationToken.None);
-
-        var template = await _context.DesignTemplates.FirstAsync(t => t.Code == "TPL-PUB");
-        template.IsActive.Should().BeTrue();
 
         var variant = await _context.DesignVariants.FirstAsync(v => v.Code == "VAR-PUB");
         variant.IsActive.Should().BeTrue();

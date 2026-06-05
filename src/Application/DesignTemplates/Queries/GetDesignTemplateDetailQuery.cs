@@ -39,8 +39,9 @@ public class GetDesignTemplateDetailQueryHandler : IRequestHandler<GetDesignTemp
         bool isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
         if (!isStaffOrManager)
         {
-            // Khách hàng hoặc Guest luôn chỉ thấy hàng đang hoạt động
-            query = query.Where(dv => dv.CatalogStatus == CatalogStatuses.Published && dv.IsActive);
+            // Customer/Guest chỉ thấy template có ít nhất 1 variant PUBLISHED
+            query = query.Where(dt =>
+                dt.Variants.Any(v => v.CatalogStatus == CatalogStatuses.Published && v.IsActive));
         }
 
 

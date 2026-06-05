@@ -22,10 +22,6 @@ public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>
     public string FileUrl { get; init; } = null!;
     [DefaultValue("https://example.com/thumbnail.png")]
     public string ThumbnailUrl { get; init; } = null!;
-    [DefaultValue(CatalogStatuses.Draft)]
-    public string? CatalogStatus { get; init; }
-    [DefaultValue(null)]
-    public bool? IsAcitve { get; init; }
 }
 
 public class CreateDesignTemplateCommandValidator : AbstractValidator<CreateDesignTemplateCommand>
@@ -40,10 +36,6 @@ public class CreateDesignTemplateCommandValidator : AbstractValidator<CreateDesi
 
         RuleFor(x => x.FileUrl)
             .NotEmpty().WithMessage("File thiết kế không được để trống.");
-
-        RuleFor(x => x.CatalogStatus)
-            .Must(x => string.IsNullOrWhiteSpace(x) || CatalogStatuses.IsValid(x))
-            .WithMessage("Trạng thái catalog không hợp lệ.");
     }
 }
 
@@ -69,9 +61,6 @@ public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTe
             throw new DuplicateException(nameof(DesignTemplates), nameof(request.Code), request.Code);
         }
 
-        var catalogStatus = request.CatalogStatus?.ToUpperInvariant()
-            ?? (request.IsAcitve == true ? CatalogStatuses.Published : CatalogStatuses.Draft);
-
         var newDesignTemplate = new DesignTemplate
         {
             Code = code,
@@ -79,8 +68,6 @@ public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTe
             Description = request.Description,
             FileUrl = request.FileUrl.Trim(),
             ThumbnailUrl = request.ThumbnailUrl,
-            CatalogStatus = catalogStatus,
-            IsActive = catalogStatus == CatalogStatuses.Published,
             Created = CoreHelper.SystemTimeNow,
             CreatedBy = _user.Username,
         };

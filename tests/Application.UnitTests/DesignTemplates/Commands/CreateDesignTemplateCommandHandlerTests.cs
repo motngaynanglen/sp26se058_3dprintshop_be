@@ -30,8 +30,7 @@ public class CreateDesignTemplateCommandHandlerTests
         Name = "Test Template",
         Description = "Mô tả mẫu test",
         FileUrl = "https://storage.test/template.stl",
-        ThumbnailUrl = "https://storage.test/thumb.png",
-        CatalogStatus = CatalogStatuses.Draft
+        ThumbnailUrl = "https://storage.test/thumb.png"
     };
 
     [Test]
@@ -46,36 +45,13 @@ public class CreateDesignTemplateCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_DraftStatus_SetsIsActiveFalse()
-    {
-        var command = ValidCommand() with { CatalogStatus = CatalogStatuses.Draft };
-        await _handler.Handle(command, CancellationToken.None);
-
-        var saved = await _context.DesignTemplates.FirstAsync(t => t.Code == "TPL-NEW-001");
-        saved.IsActive.Should().BeFalse();
-        saved.CatalogStatus.Should().Be(CatalogStatuses.Draft);
-    }
-
-    [Test]
-    public async Task Handle_PublishedStatus_SetsIsActiveTrue()
-    {
-        var command = ValidCommand("TPL-PUB-001") with { CatalogStatus = CatalogStatuses.Published };
-        await _handler.Handle(command, CancellationToken.None);
-
-        var saved = await _context.DesignTemplates.FirstAsync(t => t.Code == "TPL-PUB-001");
-        saved.IsActive.Should().BeTrue();
-    }
-
-    [Test]
     public void Handle_DuplicateCode_ThrowsDuplicateException()
     {
         _context.DesignTemplates.Add(new DesignTemplate
         {
             Code = "TPL-NEW-001",
             Name = "Existing",
-            FileUrl = "https://storage.test/existing.stl",
-            CatalogStatus = CatalogStatuses.Draft,
-            IsActive = false
+            FileUrl = "https://storage.test/existing.stl"
         });
         _context.SaveChanges();
 

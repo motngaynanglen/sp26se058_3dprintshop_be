@@ -50,8 +50,6 @@ public class DeleteDesignTemplateHander : IRequestHandler<DeleteDesignTemplateCo
             );
         }
 
-        template.CatalogStatus = CatalogStatuses.Archived;
-        template.IsActive = false;
         template.Deleted = CoreHelper.SystemTimeNow;
         template.DeletedBy = _user.Username;
 
