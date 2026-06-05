@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
@@ -31,14 +33,10 @@ public class GetDesignWorkDetailQuerryHandler : IRequestHandler<GetDesignWorkDet
     {
         var query = _context.DesignWorks
             .AsNoTracking()
-            .Include(dw => dw.Customer)
-                .ThenInclude(c => c.Account)
-            .Include(dw => dw.MainAssignedStaff)
-                .ThenInclude(s => s!.Account)
             .Include(dw => dw.ServiceSelections)
                 .ThenInclude(ss => ss.ServiceSelectedOptions)
-            .Include(dw => dw.ChildDesignWorks)
             .AsQueryable();
+
         bool isStaffOrManager = _user.Role == Roles.STAFF || _user.Role == Roles.MANAGER;
         if (!isStaffOrManager)
         {
@@ -56,34 +54,60 @@ public class GetDesignWorkDetailQuerryHandler : IRequestHandler<GetDesignWorkDet
         }
         var designWork = await query.FirstOrDefaultAsync(dv => dv.Id.Equals(request.Id), cancellationToken);
 
-        if (designWork == null) {
+        if (designWork == null)
+        {
             throw new DataNotFoundException("Không tìm thấy công việc thiết kế.");
         }
+
         var dto = _mapper.Map<DesignWorkDetailDTO>(designWork);
 
-        var designServiceOrder = await _context.OrderItems
+        // Lấy hóa đơn đi kèm: đơn phí dịch vụ thiết kế gần nhất gắn với DesignWork này.
+        var serviceOrder = await _context.Orders
             .AsNoTracking()
-            .Include(oi => oi.Order)
-                .ThenInclude(o => o.Invoice)
-            .Where(oi => oi.DesignWorkId == request.Id && oi.SourceType == SourceTypes.DesignService)
-            .OrderByDescending(oi => oi.Created)
-            .Select(oi => new
-            {
-                oi.Order.Id,
-                oi.Order.Code,
-                oi.Order.OrderStatus,
-                PaymentStatus = oi.Order.Invoice != null ? oi.Order.Invoice.PaymentStatus : null,
-                TotalAmount = oi.Order.Invoice != null ? oi.Order.Invoice.TotalAmount : oi.Order.TotalPrice
-            })
+            .Include(o => o.Invoice)
+                .ThenInclude(i => i!.Transactions)
+            .Where(o => o.OrderItems.Any(oi =>
+                oi.DesignWorkId == designWork.Id
+                && oi.SourceType == SourceTypes.DesignService))
+            .OrderByDescending(o => o.Created)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (designServiceOrder != null)
+        if (serviceOrder != null)
         {
-            dto.DesignServiceOrderId = designServiceOrder.Id;
-            dto.DesignServiceOrderCode = designServiceOrder.Code;
-            dto.DesignServiceOrderStatus = designServiceOrder.OrderStatus;
-            dto.DesignServicePaymentStatus = designServiceOrder.PaymentStatus;
-            dto.DesignServiceTotalAmount = designServiceOrder.TotalAmount;
+            dto.DesignServiceOrderId = serviceOrder.Id;
+            dto.DesignServiceOrderCode = serviceOrder.Code;
+            dto.DesignServiceOrderStatus = serviceOrder.OrderStatus;
+
+            if (serviceOrder.Invoice != null)
+            {
+                var transactions = serviceOrder.Invoice.Transactions;
+
+                // Ưu tiên giao dịch ĐÃ THANH TOÁN (SUCCESS) để lấy đúng phương thức đã trả.
+                // Nếu chưa có (đơn còn PENDING/chưa thanh toán) thì mới lấy giao dịch đang chờ
+                // gần nhất để biết khách đang định trả bằng phương thức nào.
+                var paidTx = transactions
+                    ?.Where(t => t.TransactionStatus == TransactionStatuses.Success)
+                    .OrderByDescending(t => t.Created)
+                    .FirstOrDefault();
+
+                var activeTx = paidTx ?? transactions
+                    ?.Where(t => t.TransactionStatus == TransactionStatuses.Pending)
+                    .OrderByDescending(t => t.Created)
+                    .FirstOrDefault();
+
+                dto.DesignServicePaymentStatus = serviceOrder.Invoice.PaymentStatus;
+                dto.DesignServiceTotalAmount = serviceOrder.Invoice.TotalAmount;
+
+                dto.Invoice = new OrderInvoiceSummaryDTO
+                {
+                    Id = serviceOrder.Invoice.Id,
+                    InvoiceCode = serviceOrder.Invoice.InvoiceCode,
+                    PaymentStatus = serviceOrder.Invoice.PaymentStatus,
+                    TotalAmount = serviceOrder.Invoice.TotalAmount,
+                    DueDate = serviceOrder.Invoice.DueDate,
+                    PaymentMethod = activeTx?.PaymentMethod,
+                };
+            }
         }
 
         return dto;
