@@ -2394,6 +2394,44 @@
         }
       }
     },
+    "/api/feedback/variant/{variantId}": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "[All] Xem danh sách feedback của một biến thể sản phẩm (kèm paging, filter theo số sao).",
+        "operationId": "PostApiFeedbackVariant",
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "guid"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "query",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetFeedbacksByVariantQuery"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/feedback/query": {
       "post": {
         "tags": [
@@ -5825,6 +5863,29 @@
                 "type": "integer",
                 "format": "int32",
                 "default": 5,
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "GetFeedbacksByVariantQuery": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationRequest"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "variantId": {
+                "type": "string",
+                "format": "guid",
+                "default": "00000000-0000-0000-0000-000000000001"
+              },
+              "rating": {
+                "type": "integer",
+                "format": "int32",
                 "nullable": true
               }
             }
