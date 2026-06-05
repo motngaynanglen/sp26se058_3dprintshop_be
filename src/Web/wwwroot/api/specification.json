@@ -6468,6 +6468,14 @@
             "type": "string",
             "nullable": true
           },
+          "shippingFee": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "shippingCarrier": {
+            "type": "string",
+            "nullable": true
+          },
           "items": {
             "type": "array",
             "items": {
@@ -6908,6 +6916,15 @@
             "type": "string",
             "default": "Việt Nam"
           },
+          "ghnDistrictId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ghnWardCode": {
+            "type": "string",
+            "nullable": true
+          },
           "isDefault": {
             "type": "boolean",
             "default": false
@@ -6956,6 +6973,15 @@
           "province": {
             "type": "string",
             "default": "Việt Nam",
+            "nullable": true
+          },
+          "ghnDistrictId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ghnWardCode": {
+            "type": "string",
             "nullable": true
           },
           "isDefault": {

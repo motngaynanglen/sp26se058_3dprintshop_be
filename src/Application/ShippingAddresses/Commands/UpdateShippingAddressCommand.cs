@@ -40,6 +40,11 @@ public record UpdateShippingAddressCommand : IRequest<ShippingAddressDTO>
 
     [DefaultValue("Việt Nam")]
     public string? Province { get; set; }
+
+    public int? GhnDistrictId { get; set; }
+
+    public string? GhnWardCode { get; set; }
+
     [DefaultValue(false)]
     public bool? IsDefault { get; set; }
 }
@@ -90,6 +95,8 @@ public class UpdateShippingAddressCommandHandler : IRequestHandler<UpdateShippin
         entity.District = request.District ?? entity.District;
         entity.City = request.City ?? entity.City;
         entity.Province = request.Province ?? entity.Province;
+        entity.GhnDistrictId = request.GhnDistrictId ?? entity.GhnDistrictId;
+        entity.GhnWardCode = request.GhnWardCode?.Trim() ?? entity.GhnWardCode;
 
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;

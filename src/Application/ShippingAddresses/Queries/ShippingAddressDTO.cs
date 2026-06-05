@@ -19,6 +19,8 @@ public class ShippingAddressDTO
     public string? City { get; set; }
     public string? Province { get; set; }
     public bool IsDefault { get; set; } = false;
+    public int? GhnDistrictId { get; set; }
+    public string? GhnWardCode { get; set; }
     //public Customer Customer { get; set; }
     private class Mapping : Profile
     {
