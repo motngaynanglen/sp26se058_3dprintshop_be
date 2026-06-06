@@ -33,5 +33,4 @@ public class OrderItem : BaseAuditableEntity
     public virtual DesignVariant? DesignVariant { get; set; }
     public virtual TechnicalDraft? TechnicalDraft { get; set; }
     public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
-    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 }

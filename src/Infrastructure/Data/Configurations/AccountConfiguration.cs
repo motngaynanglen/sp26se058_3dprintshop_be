@@ -26,9 +26,10 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 
         builder.Property(a => a.IsActive).HasDefaultValue(true);
 
-        // 2. Đánh Index Unique cho Username và Email (Tránh trùng lặp)
+        // 2. Đánh Index Unique cho Username, Email và ContactPhone (Tránh trùng lặp)
         builder.HasIndex(a => a.Username).IsUnique();
         builder.HasIndex(a => a.Email).IsUnique();
+        builder.HasIndex(a => a.ContactPhone).IsUnique();
 
         // 3. Cấu hình quan hệ 1:1 với các bảng Role
         // Khi xóa Account, tự động xóa luôn bản ghi chi tiết ở bảng Role

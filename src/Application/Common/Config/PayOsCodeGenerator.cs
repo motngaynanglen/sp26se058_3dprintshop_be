@@ -32,7 +32,7 @@ namespace sp26se058_3dprintshop_be.Application.Common.Config
                 if (_counter >= 1000)
                 {
                     // Xử lý trường hợp có hơn 1000 order trong 1 giây (rất hiếm) :v rất vô lí
-                    throw new BusinessException("Hệ thống đang tạo quá nhiều mã thanh toán cùng lúc. Vui lòng thử lại sau.");
+                    throw new InvalidOperationException("Code Generator đã tới giới hạn 1000");
                     // Sau này có thể làm cái nâng cấp kiểu: delay qua giây tiếp theo mà gen code sau.
                 }
 
