@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignLogs.Commands;
@@ -8,6 +9,7 @@ using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
 using sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
 using sp26se058_3dprintshop_be.Application.TechnicalDrafts.Commands;
 using sp26se058_3dprintshop_be.Application.TechnicalDrafts.Queries;
+using sp26se058_3dprintshop_be.Web.Hubs;
 
 namespace sp26se058_3dprintshop_be.Web.Endpoints;
 
@@ -43,9 +45,26 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
 
     }
 
-    public async Task<IResult> CreateTechnicalDraft([FromServices] ISender sender, [FromBody] CreateTechnicalDraftCommand request)
+    public async Task<IResult> CreateTechnicalDraft(
+        [FromServices] ISender sender,
+        [FromServices] IHubContext<DesignWorkChatHub> hubContext,
+        [FromBody] CreateTechnicalDraftCommand request)
     {
         var result = await sender.Send(request);
+
+        // Broadcast SignalR để phía khách nhận realtime
+        if (result is TechnicalDraftDTO dto)
+        {
+            await hubContext.Clients
+                .Group(DesignWorkChatHub.GetGroupName(dto.DesignWorkId))
+                .SendAsync(DesignWorkChatHub.ReceiveDesignLogEvent, new
+                {
+                    type = "TECHNICAL_DRAFT_CREATED",
+                    designWorkId = dto.DesignWorkId,
+                    technicalDraftId = dto.Id,
+                });
+        }
+
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 code: ResponseCodeConstants.CREATED,
                 data: result,
