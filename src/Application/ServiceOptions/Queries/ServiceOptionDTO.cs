@@ -11,15 +11,8 @@ public class ServiceOptionDTO
     public Guid Id { get; set; }
     public string? Code { get; set; }
     public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? GroupCode { get; set; }
-    public string? GroupName { get; set; }
-    public string? SelectionType { get; set; }
+    public string? OptionType { get; set; } // ADDON | CONFIG
     public decimal? DefaultPrice { get; set; }
-    public int MinQuantity { get; set; }
-    public int? MaxQuantity { get; set; }
-    public int? AdjustmentRoundDelta { get; set; }
-    public int SortOrder { get; set; }
     public bool IsActive { get; set; }
 
     private class Mapping : Profile

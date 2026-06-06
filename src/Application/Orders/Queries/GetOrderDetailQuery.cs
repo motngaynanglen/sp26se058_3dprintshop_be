@@ -1,16 +1,15 @@
-using System.ComponentModel;
-using System.Text.Json;
+using Microsoft.Extensions.Options;
+using sp26se058_3dprintshop_be.Application.Common.Config;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Application.Feedbacks;
+using sp26se058_3dprintshop_be.Application.Mainflow2;
+using sp26se058_3dprintshop_be.Application.Orders;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Queries;
 
-[Authorize(Roles = Roles.MANAGER + "," + Roles.STAFF + "," + Roles.CUSTOMER)]
 public record GetOrderDetailQuery : IRequest<OrderDTO>
 {
-    [DefaultValue("00000000-0000-0000-0000-000000000000")]
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 }
 
 public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, OrderDTO>
@@ -18,120 +17,90 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
     private readonly IApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly PaymentOptions _paymentOptions;
 
-    public GetOrderDetailQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public GetOrderDetailQueryHandler(
+        IApplicationDbContext context,
+        IMapper mapper,
+        IUser user,
+        IOptions<PaymentOptions> paymentOptions)
     {
         _context = context;
         _mapper = mapper;
         _user = user;
+        _paymentOptions = paymentOptions.Value;
     }
 
     public async Task<OrderDTO> Handle(GetOrderDetailQuery request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Orders
-            .Include(o => o.Customer).ThenInclude(c => c.Account)
-            .Include(o => o.Invoice).ThenInclude(i => i!.Transactions)
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignVariant).ThenInclude(dv => dv!.DesignTemplate)
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignVariant).ThenInclude(dv => dv!.Material)
-            // Đơn in theo yêu cầu (PRINT_SERVICE) không có DesignVariant — lấy vật liệu/cân nặng/ảnh từ TechnicalDraft.
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.TechnicalDraft).ThenInclude(td => td!.Material)
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.TechnicalDraft).ThenInclude(td => td!.DesignVersionHistory).ThenInclude(v => v!.DesignWork)
-            .Include(o => o.OrderItems).ThenInclude(oi => oi.Feedbacks)
+        var order = await _context.Orders
             .AsNoTracking()
-            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
+            .Include(o => o.Customer).ThenInclude(c => c.Account)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignVariant!).ThenInclude(dv => dv.DesignTemplate)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignWork)
+            .Include(o => o.Invoice!).ThenInclude(i => i.Transactions)
+            .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken)
+            ?? throw new KeyNotFoundException("Không tìm thấy đơn hàng.");
 
-        if (entity == null)
-            throw new DataNotFoundException(nameof(Order), request.Id);
+        var dto = _mapper.Map<OrderDTO>(order);
 
-        if (_user.Role == Roles.CUSTOMER)
-        {
-            var userId = _user.Id.ToGuid();
-            if (entity.Customer.AccountId != userId)
-                throw new ForbiddenAccessException("Bạn không có quyền xem chi tiết đơn hàng này.");
-        }
-
-        var dto = _mapper.Map<OrderDTO>(entity);
-
-        // Enrich Invoice summary
-        if (entity.Invoice != null)
-        {
-            var activeTx = entity.Invoice.Transactions
-                ?.Where(t => t.TransactionStatus is not ("FAILED" or "CANCELLED"))
-                .OrderByDescending(t => t.Created)
-                .FirstOrDefault();
-
-            dto.Invoice = new OrderInvoiceSummaryDTO
-            {
-                Id = entity.Invoice.Id,
-                InvoiceCode = entity.Invoice.InvoiceCode,
-                PaymentStatus = entity.Invoice.PaymentStatus,
-                SubTotal = entity.Invoice.SubTotal,
-                ShippingFee = entity.Invoice.ShippingFee,
-                TotalAmount = entity.Invoice.TotalAmount,
-                DueDate = entity.Invoice.DueDate,
-                PaymentMethod = activeTx?.PaymentMethod,
-            };
-        }
-
-        // Enrich Shipment summary
         var shipment = await _context.Shipments
             .AsNoTracking()
             .Include(s => s.ShippingAddress)
-            .FirstOrDefaultAsync(s => s.OrderId == entity.Id, cancellationToken);
-
+            .Where(s => s.OrderId == order.Id)
+            .OrderByDescending(s => s.Created)
+            .FirstOrDefaultAsync(cancellationToken);
         if (shipment != null)
-        {
-            dto.Shipment = new OrderShipmentSummaryDTO
-            {
-                Id = shipment.Id,
-                ShipmentStatus = shipment.ShipmentStatus,
-                CarrierName = shipment.CarrierName,
-                Carrier = shipment.Carrier,
-                CarrierOrderCode = shipment.CarrierOrderCode,
-                TrackingNumber = shipment.TrackingNumber,
-                ShippingFee = shipment.ShippingFee,
-                EstimatedDeliveryTime = shipment.EstimatedDeliveryTime,
-                ShippedAt = shipment.ShippedAt,
-                DeliveredAt = shipment.DeliveredAt,
-            };
+            dto.Shipment = _mapper.Map<OrderShipmentSummaryDTO>(shipment);
 
-            // Build full address string
-            if (shipment.ShippingAddress != null)
+        if (order.Invoice != null)
+        {
+            dto.Invoice = _mapper.Map<OrderInvoiceSummaryDTO>(order.Invoice);
+            dto.Invoice.PaymentMethod = OrderPaymentHelper.ResolvePaymentMethod(order.Invoice);
+            dto.Invoice.IsCod = OrderPaymentHelper.IsCodOrder(order.Invoice);
+
+            if (OrderPaymentHelper.HasCustomProductionItems(order))
             {
-                var sa = shipment.ShippingAddress;
-                dto.ShippingAddress = string.Join(", ",
-                    new[] { sa.AddressLine, sa.Ward, sa.District, sa.City, sa.Province }
-                        .Where(s => !string.IsNullOrWhiteSpace(s)));
-                dto.Shipment.FullAddress = dto.ShippingAddress;
-            }
-            else
-            {
-                // Fallback to snapshot fields on shipment
-                dto.ShippingAddress = string.Join(", ",
-                    new[] { shipment.AddressLine, shipment.Ward, shipment.District, shipment.City, shipment.Province }
-                        .Where(s => !string.IsNullOrWhiteSpace(s) && s != "N/A"));
+                var designFee = await Mainflow2QuoteFeeHelper.ResolveDesignFeeForOrderAsync(
+                    _context, order, cancellationToken);
+                dto.Invoice.DesignFeeAmount = designFee;
+                dto.Invoice.CustomDepositAmount = designFee > 0
+                    ? OrderPaymentHelper.GetDepositAmount(designFee, _paymentOptions.CustomOrderDepositPercent)
+                    : OrderPaymentHelper.GetDepositAmount(
+                        order.Invoice.TotalAmount, _paymentOptions.CustomOrderDepositPercent);
+                dto.Invoice.RemainingBalance = OrderPaymentHelper.GetRemainingBalance(order.Invoice);
             }
         }
 
-        // Enrich items with feedback
-        var isCompleted = entity.OrderStatus == OrderStatuses.Completed;
-        foreach (var itemDto in dto.Items)
+        var itemIds = order.OrderItems.Select(i => i.Id).ToList();
+        var feedbackByItem = await _context.Feedbacks
+            .AsNoTracking()
+            .Include(f => f.FeedbackImages)
+            .Where(f => itemIds.Contains(f.OrderItemId))
+            .ToDictionaryAsync(f => f.OrderItemId, cancellationToken);
+
+        var shipmentStatus = shipment?.ShipmentStatus;
+        var reviewable = OrderFeedbackRules.IsOrderReviewable(
+            order.OrderStatus, shipmentStatus, order.CompletedAt);
+
+        var isOwner = false;
+        if (!string.IsNullOrWhiteSpace(_user.Id))
         {
-            var itemEntity = entity.OrderItems.FirstOrDefault(oi => oi.Id == itemDto.Id);
-            if (itemEntity == null) continue;
-
-            // Đơn in theo yêu cầu (PRINT_SERVICE): DesignVariant null nên mapper để trống
-            // vật liệu/cân nặng/ảnh — bổ sung từ TechnicalDraft đã chốt.
-            if (itemEntity.TechnicalDraft != null)
+            try
             {
-                itemDto.EstimatedWeightPerUnit ??= itemEntity.TechnicalDraft.EstimatedWeightPerUnit;
-                itemDto.MaterialName ??= itemEntity.TechnicalDraft.Material?.Name;
-                itemDto.ThumbnailUrl ??= itemEntity.TechnicalDraft.DesignVersionHistory?.DesignWork?.BaseImageUrl;
+                var customerId = await FeedbackCustomerHelper.GetCurrentCustomerIdAsync(
+                    _context, _user, cancellationToken);
+                isOwner = order.CustomerId == customerId;
             }
+            catch (UnauthorizedAccessException)
+            {
+                isOwner = false;
+            }
+        }
 
-            // Feedback
-            var fb = itemEntity.Feedbacks?.FirstOrDefault(f => !f.IsHidden);
-            if (fb != null)
+        foreach (var itemDto in dto.OrderItems)
+        {
+            if (feedbackByItem.TryGetValue(itemDto.Id, out var fb))
             {
                 itemDto.Feedback = new OrderItemFeedbackDto
                 {
@@ -140,11 +109,11 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
                     Comment = fb.Comment,
                     StaffReply = fb.StaffReply,
                     Created = fb.Created,
-                    ImageUrls = fb.FeedbackImages?.Select(fi => fi.ImageUrl).ToList() ?? new(),
+                    ImageUrls = fb.FeedbackImages.Select(x => x.ImageUrl).ToList(),
                 };
             }
 
-            itemDto.CanSubmitFeedback = isCompleted && fb == null && itemDto.DesignVariantId.HasValue;
+            itemDto.CanSubmitFeedback = isOwner && reviewable && itemDto.Feedback == null;
         }
 
         return dto;
