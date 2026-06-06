@@ -34,29 +34,45 @@ public class GetManagerRevenueChartQueryHandler : IRequestHandler<GetManagerReve
                 && x.Created.UtcDateTime >= from.Date
                 && x.Created.UtcDateTime < inclusiveTo);
 
-        var points = groupBy == "month"
-            ? await paidInvoices
+        // Gom nhóm + Sum/Count trong SQL, format chuỗi Key/Label ở memory
+        // (EF/MySQL không dịch được DateTime/int.ToString(format)).
+        List<DashboardChartPointDTO> points;
+        if (groupBy == "month")
+        {
+            var raw = await paidInvoices
                 .GroupBy(x => new { x.Created.Year, x.Created.Month })
-                .Select(x => new DashboardChartPointDTO
-                {
-                    Key = x.Key.Year + "-" + x.Key.Month.ToString("00"),
-                    Label = x.Key.Month.ToString("00") + "/" + x.Key.Year,
-                    Value = x.Sum(i => i.TotalAmount),
-                    Count = x.Count()
-                })
-                .OrderBy(x => x.Key)
-                .ToListAsync(ct)
-            : await paidInvoices
-                .GroupBy(x => x.Created.Date)
-                .Select(x => new DashboardChartPointDTO
-                {
-                    Key = x.Key.ToString("yyyy-MM-dd"),
-                    Label = x.Key.ToString("dd/MM"),
-                    Value = x.Sum(i => i.TotalAmount),
-                    Count = x.Count()
-                })
-                .OrderBy(x => x.Key)
+                .Select(g => new { g.Key.Year, g.Key.Month, Value = g.Sum(i => i.TotalAmount), Count = g.Count() })
                 .ToListAsync(ct);
+
+            points = raw
+                .OrderBy(r => r.Year).ThenBy(r => r.Month)
+                .Select(r => new DashboardChartPointDTO
+                {
+                    Key = $"{r.Year}-{r.Month:00}",
+                    Label = $"{r.Month:00}/{r.Year}",
+                    Value = r.Value,
+                    Count = r.Count
+                })
+                .ToList();
+        }
+        else
+        {
+            var raw = await paidInvoices
+                .GroupBy(x => x.Created.Date)
+                .Select(g => new { Day = g.Key, Value = g.Sum(i => i.TotalAmount), Count = g.Count() })
+                .ToListAsync(ct);
+
+            points = raw
+                .OrderBy(r => r.Day)
+                .Select(r => new DashboardChartPointDTO
+                {
+                    Key = r.Day.ToString("yyyy-MM-dd"),
+                    Label = r.Day.ToString("dd/MM"),
+                    Value = r.Value,
+                    Count = r.Count
+                })
+                .ToList();
+        }
 
         return new DashboardChartSeriesDTO
         {

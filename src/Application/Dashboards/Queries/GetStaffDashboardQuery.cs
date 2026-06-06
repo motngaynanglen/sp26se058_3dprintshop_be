@@ -43,17 +43,7 @@ public class GetStaffDashboardQueryHandler : IRequestHandler<GetStaffDashboardQu
         var assignedOrderCounts = await CountByStatusAsync(assignedOrdersQuery, x => x.OrderStatus, ct);
         var assignedDesignWorkCounts = await CountByStatusAsync(assignedDesignWorksQuery, x => x.Status, ct);
         var shipmentCounts = await CountByStatusAsync(_context.Shipments, x => x.ShipmentStatus, ct);
-
-        var assignedProcessingOrders = await assignedOrdersQuery.CountAsync(x => x.OrderStatus == OrderStatuses.Processing, ct);
-        var assignedFinishedOrders = await assignedOrdersQuery.CountAsync(x => x.OrderStatus == OrderStatuses.Finished, ct);
-        var assignedDesignInProgress = await assignedDesignWorksQuery.CountAsync(x => x.Status == DesignWorkStatus.InProgress, ct);
-        var assignedDesignReviewing = await assignedDesignWorksQuery.CountAsync(x => x.Status == DesignWorkStatus.Reviewing, ct);
-        var pendingAddressChangeRequests = await _context.ShipmentAddressChangeRequests
-            .CountAsync(x => x.Status == ShipmentAddressChangeRequestStatuses.Pending, ct);
-        var shipmentsPreparing = await _context.Shipments.CountAsync(x => x.ShipmentStatus == ShipmentStatuses.Preparing, ct);
-        var shipmentsReady = await _context.Shipments.CountAsync(x => x.ShipmentStatus == ShipmentStatuses.ReadyForPickup, ct);
-        var shipmentsFailed = await _context.Shipments.CountAsync(x => x.ShipmentStatus == ShipmentStatuses.Failed, ct);
-        var shipmentsReturning = await _context.Shipments.CountAsync(x => x.ShipmentStatus == ShipmentStatuses.Returning, ct);
+        var workQueue = await StaffDashboardWorkQueueBuilder.BuildAsync(_context, assignedOrdersQuery, assignedDesignWorksQuery, ct);
 
         var recentAssignedOrders = await assignedOrdersQuery
             .Include(x => x.Customer)
@@ -85,19 +75,6 @@ public class GetStaffDashboardQueryHandler : IRequestHandler<GetStaffDashboardQu
                 Created = x.Created
             })
             .ToListAsync(ct);
-
-        var workQueue = new List<DashboardActionItemDTO>
-        {
-            new() { Key = "assigned-processing-orders", Label = "Đơn đang xử lý", Count = assignedProcessingOrders, Severity = "INFO" },
-            new() { Key = "assigned-finished-orders", Label = "Đơn chờ giao/hoàn tất", Count = assignedFinishedOrders, Severity = "INFO" },
-            new() { Key = "assigned-design-in-progress", Label = "Thiết kế đang thực hiện", Count = assignedDesignInProgress, Severity = "INFO" },
-            new() { Key = "assigned-design-reviewing", Label = "Thiết kế chờ duyệt", Count = assignedDesignReviewing, Severity = "WARNING" },
-            new() { Key = "pending-address-change-requests", Label = "Yêu cầu đổi địa chỉ chờ xử lý", Count = pendingAddressChangeRequests, Severity = "WARNING" },
-            new() { Key = "shipments-preparing", Label = "Vận đơn đang đóng gói", Count = shipmentsPreparing, Severity = "INFO" },
-            new() { Key = "shipments-ready", Label = "Vận đơn chờ lấy hàng", Count = shipmentsReady, Severity = "INFO" },
-            new() { Key = "shipments-failed", Label = "Vận đơn giao thất bại", Count = shipmentsFailed, Severity = "WARNING" },
-            new() { Key = "shipments-returning", Label = "Vận đơn đang hoàn hàng", Count = shipmentsReturning, Severity = "WARNING" }
-        };
 
         return new StaffDashboardDTO
         {

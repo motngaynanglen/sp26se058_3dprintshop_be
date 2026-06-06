@@ -32,18 +32,29 @@ public class GetManagerTopVariantsChartQueryHandler : IRequestHandler<GetManager
         if (request.To.HasValue)
             query = query.Where(x => x.Order.Created.UtcDateTime < request.To.Value.Date.AddDays(1));
 
-        var points = await query
+        // Gom nhóm + Sum trong SQL, format Key (Guid→string) ở memory.
+        var raw = await query
             .GroupBy(x => new { x.DesignVariantId, x.DesignVariant!.Code, x.DesignVariant.Name })
-            .Select(x => new DashboardChartPointDTO
+            .Select(g => new
             {
-                Key = x.Key.DesignVariantId!.Value.ToString(),
-                Label = x.Key.Code + " - " + x.Key.Name,
-                Value = x.Sum(i => i.QuantityOrdered),
-                Count = x.Sum(i => i.QuantityOrdered)
+                g.Key.DesignVariantId,
+                g.Key.Code,
+                g.Key.Name,
+                Qty = g.Sum(i => i.QuantityOrdered)
             })
-            .OrderByDescending(x => x.Count)
+            .OrderByDescending(r => r.Qty)
             .Take(limit)
             .ToListAsync(ct);
+
+        var points = raw
+            .Select(r => new DashboardChartPointDTO
+            {
+                Key = r.DesignVariantId!.Value.ToString(),
+                Label = (r.Code ?? string.Empty) + " - " + (r.Name ?? string.Empty),
+                Value = r.Qty,
+                Count = r.Qty
+            })
+            .ToList();
 
         return new DashboardChartSeriesDTO
         {
