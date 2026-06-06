@@ -1,88 +1,48 @@
 ﻿using System;
-using System.ComponentModel;
 using MediatR;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
-using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
-using sp26se058_3dprintshop_be.Domain.Utils;
+using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination; // ← Thêm using này
 
 namespace sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
-[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
-public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>
+
+public record CreateDesignTemplateCommand : IRequest<DesignTemplateDTO>   // ← Thay Guid bằng DesignTemplateDTO
 {
-    [DefaultValue("CODE_DEFAULT")]
     public string Code { get; init; } = null!;
-    [DefaultValue("Product Name")]
     public string Name { get; init; } = null!;
-    [DefaultValue("Description here")]
     public string Description { get; init; } = null!;
-    [DefaultValue("https://example.com/file.stl")]
     public string FileUrl { get; init; } = null!;
-    [DefaultValue("https://example.com/thumbnail.png")]
     public string ThumbnailUrl { get; init; } = null!;
-}
-
-public class CreateDesignTemplateCommandValidator : AbstractValidator<CreateDesignTemplateCommand>
-{
-    public CreateDesignTemplateCommandValidator()
-    {
-        RuleFor(x => x.Code)
-            .NotEmpty().WithMessage("Mã mẫu thiết kế không được để trống.");
-
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Tên mẫu thiết kế không được để trống.");
-
-        RuleFor(x => x.FileUrl)
-            .NotEmpty().WithMessage("File thiết kế không được để trống.");
-    }
 }
 
 public class CreateDesignTemplateCommandHandler : IRequestHandler<CreateDesignTemplateCommand, DesignTemplateDTO>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly IUser _user;
+    private readonly IMapper _mapper;                    // ← Thêm IMapper
 
-    public CreateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user)
+    public CreateDesignTemplateCommandHandler(IApplicationDbContext context, IMapper mapper)
     {
         _context = context;
         _mapper = mapper;
-        _user = user;
     }
 
     public async Task<DesignTemplateDTO> Handle(CreateDesignTemplateCommand request, CancellationToken cancellationToken)
     {
-        var code = request.Code.Trim();
-        var isExist = await _context.DesignTemplates.AnyAsync(t => t.Code == code, cancellationToken);
-        if (isExist)
+        var newDesignTemplate = new Domain.Entities.DesignTemplate
         {
-            throw new DuplicateException(nameof(DesignTemplates), nameof(request.Code), request.Code);
-        }
-
-        var newDesignTemplate = new DesignTemplate
-        {
-            Code = code,
-            Name = request.Name.Trim(),
+            Code = request.Code,
+            Name = request.Name,
             Description = request.Description,
-            FileUrl = request.FileUrl.Trim(),
+            FileUrl = request.FileUrl,
             ThumbnailUrl = request.ThumbnailUrl,
-            Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username,
+            IsActive = false,
+            Created = DateTime.UtcNow
         };
 
         _context.DesignTemplates.Add(newDesignTemplate);
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Nếu có lỗi lạ từ DB (ví dụ lỗi DB chết, lỗi kết nối)
-            throw new CreateFailureException(nameof(DesignTemplate), ex.Message);
-        }
+        await _context.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<DesignTemplateDTO>(newDesignTemplate);
+        // Map sang DTO và trả về
+        var designTemplateDto = _mapper.Map<DesignTemplateDTO>(newDesignTemplate);
+
+        return designTemplateDto;
     }
 }

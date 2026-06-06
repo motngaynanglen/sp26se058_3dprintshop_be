@@ -5,18 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
-using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
-[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+
 public record DeleteDesignVariantCommand : IRequest<bool>
 {
     [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
 }
 
@@ -31,34 +26,26 @@ public class DeleteDesignVariantCommandHandler : IRequestHandler<DeleteDesignVar
     }
     public async Task<bool> Handle(DeleteDesignVariantCommand request, CancellationToken cancellationToken)
     {
+        var userId = _user.Id;
         var variant = await _context.DesignVariants
-             .Include(v => v.OrderItems)
-             .FirstOrDefaultAsync(v => v.Id == request.Id, cancellationToken);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(v => v.Id == request.Id, cancellationToken);
         if (variant == null)
         {
-            throw new DataNotFoundException(nameof(DesignVariant), request.Id);
-        }
-        if (variant.OrderItems.Any())
-        {
-            throw new DeleteFailureException(
-                entityName: nameof(DesignVariant),
-                reason: "Biến thể này đã có trong lịch sử đơn hàng, không thể xóa để đảm bảo báo cáo thống kê."
-            );
-        }
-        variant.CatalogStatus = CatalogStatuses.Archived;
-        variant.IsActive = false;
-        variant.Deleted = CoreHelper.SystemTimeNow;
-        variant.DeletedBy = _user.Username;
-
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            throw new DeleteFailureException(nameof(DesignVariant), ex.Message);
+            throw new Exception("Không tìm thấy biến thể thiết kế");
         }
 
+        variant.IsActive = !variant.IsActive;
+
+        if (variant.IsActive)
+        {
+            variant.Deleted = null;
+            variant.DeletedBy = null;
+        }
+
+        variant.LastModified = DateTimeOffset.UtcNow;
+        variant.LastModifiedBy = userId;
+        await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

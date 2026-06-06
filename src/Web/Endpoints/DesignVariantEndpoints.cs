@@ -3,8 +3,9 @@ using Mysqlx.Crud;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
-using sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
+using sp26se058_3dprintshop_be.Application.DesignVariant.Commands;
 using sp26se058_3dprintshop_be.Application.DesignVariants.Queries;
+using sp26se058_3dprintshop_be.Application.DesignVariants.Commands;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -17,102 +18,157 @@ public class DesignVariantEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/design-variant")
                        .WithTags("Design Variant")
                        .WithOpenApi();
-        group.MapGet("/{id}/detail", GetDetail)
-            .WithSummary("[All] Xem chi tiết một biến thể")
-            .WithDescription("Trả về thông tin chi tiết biến thể bao gồm thông tin mẫu thiết kế (file, ảnh), vật liệu, media kế thừa. Customer/Guest chỉ thấy variant PUBLISHED.");
-
-        group.MapPost("/query", GetAll)
-            .WithSummary("[All] Truy vấn danh sách Biến thể")
-            .WithDescription("Hỗ trợ lọc theo mã mẫu thiết kế và mã vật liệu. Tự động ẩn dữ liệu ngưng hoạt động đối với khách hàng.");
-
+        group.MapGet("/{id}/detail", GetById)
+            .WithSummary("Lấy chi tiết biến thể theo ID");
+        group.MapPost("", GetAll)
+            .WithSummary("Lấy danh sách Biến thể");
         group.MapPost("/add", Add)
-            .WithSummary("[Staff/Manager] Thêm mới biến thể")
-            .WithDescription("Tạo biến thể mới cho mẫu thiết kế. Tự động kiểm tra trùng Code và sự tồn tại của Material.");
+            .WithSummary("Thêm mới biến thể");
+        group.MapPut("/{id}/update", Update)
+            .WithSummary("Cập nhật biến thể");
+        group.MapPut("/{id}/quantity", UpdateQuantity)
+            .WithSummary("Cộng số lượng biến thể vào kho");
+        group.MapDelete("/{id}/toggle-active", ToggleActive)
+            .WithSummary("Chuyển đổi trạng thái Active của biến thể");
+        group.MapDelete("/{id}/delete", ToggleActive)
+            .WithSummary("Chuyển đổi trạng thái Active của biến thể (alias)");
 
-        group.MapPatch("/{id}/update", Update)
-            .WithSummary("[Staff/Manager] Cập nhật thông tin biến thể")
-            .WithDescription("Cập nhật từng phần (Partial Update). ID từ URL sẽ ghi đè ID trong body.");
+        /*
+        Của customer
+        group.MapGet("", GetByTemplateID)
+        group.MapGet("/detail/{id}", GetByID)
+        group.MapPatch("/price", UpdatePrice)
+        group.MapPatch("/stock-quantity", UpdateStockQuantity)
+         */
 
-        //group.MapPatch("/{id}/quantity", UpdateQuantity)
-        //    .WithSummary("Điều chỉnh số lượng kho")
-        //    .WithDescription("Cập nhật số lượng StockQuantity trong kho cho biến thể.");
 
-        group.MapDelete("/{id}/delete", Delete)
-            .WithSummary("[Staff/Manager] Xoá biến thể (Soft Delete)")
-            .WithDescription("Chuyển trạng thái xóa mềm. Ngăn xóa nếu đã có OrderItems.");
 
     }
 
-
-
-    public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
-    {
-        var result = await sender.Send(new GetDesignVariantDetailQuery { Id = id });
-        return TypedResults.Ok(BaseResponseModel<DesignVariantDetailDTO>.OkResponseModel(
-                data: result,
-                message: "Lấy chi tiết biến thể thành công!",
-                code: ResponseCodeConstants.SUCCESS
-            ));
-    }
+    
 
     public async Task<IResult> Add([FromServices] ISender sender, [FromBody] CreateDesignVariantCommand command)
     {
-        var result = await sender.Send(command);
-        return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
-                data: result,
-                message: "Tạo biến thể mới thành công!",
-                code: ResponseCodeConstants.CREATED
-            ));
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
+                    data: result,
+                    message: "Tạo biến thể thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch(Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Tạo biến thể thất bại!"
+                ));
+        }
     }
 
-    public async Task<IResult> Update([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignVariantCommand command)
+    public async Task<IResult> Update([FromServices] ISender sender,[FromBody] UpdateDesignVariantCommand command)
     {
-        // Đồng nhất ID từ Route vào Command
-        var finalCmd = command with { Id = id };
-        var result = await sender.Send(finalCmd);
-        return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
-                data: result,
-                message: "Cập nhật biến thể thành công!",
-                code: ResponseCodeConstants.UPDATED
-            ));
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
+                    data: result,
+                    message: "Cập nhật biến thể thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Cập nhật biến thể thất bại!"
+                ));
+        }
     }
 
-    //public async Task<IResult> UpdateQuantity([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateDesignVariantQuantityCommand command)
-    //{
-    //    // Đồng nhất ID từ Route
-    //    var finalCmd = command with { Id = id };
-    //    var result = await sender.Send(finalCmd);
-    //    return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
-    //            data: result,
-    //            message: "Cập nhật số lượng kho thành công!",
-    //            code: ResponseCodeConstants.SUCCESS
-    //        ));
-    //}
-
-    public async Task<IResult> GetAll([FromServices] ISender sender, [FromBody] GetDesignVariantListQuery query)
+    public async Task<IResult> UpdateQuantity(ISender sender, UpdateDesignVariantQuantityCommand command)
     {
-        var result = await sender.Send(query);
-        //bool isEmpty = result.Any();
-        //return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
-        //        data: result,
-        //        message: isEmpty ? "Lấy danh sách biến thể của mẫu thiết kế thành công!" : "Không tìm thấy kết quả nào phù hợp.",
-        //        code: isEmpty ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT
-        //    ));
-        return TypedResults.Ok(
-               BaseResponseModel<IEnumerable<DesignVariantDTO>>
-                   .ListResponseModel(data: result, 
-                   successMessage: "Lấy danh sách biến thể của mẫu thiết kế thành công!"
-                   )
-               );
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
+                    data: result,
+                    message: "Nhập kho thành công",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        { 
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Nhập kho thất bại"
+                ));
+        }
     }
 
-    public async Task<IResult> Delete([FromServices] ISender sender, [FromRoute] Guid id)
+    public async Task<IResult> GetById([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        var result = await sender.Send(new DeleteDesignVariantCommand { Id = id });
-        return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+        try
+        {
+            var result = await sender.Send(new GetDesignVariantByIdQuery { Id = id });
+            if (result is null)
+            {
+                return TypedResults.NotFound(BaseResponseModel<string>.NotFoundResponseModel(
+                    data: "Không tìm thấy sản phẩm."));
+            }
+
+            return TypedResults.Ok(BaseResponseModel<DesignVariantDTO>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
                 data: result,
-                message: "Xoá biến thể thành công!",
-                code: ResponseCodeConstants.DELETED
-            ));
+                message: "Lấy chi tiết biến thể thành công!"));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                data: ex.Message,
+                message: "Lấy chi tiết biến thể thất bại!"));
+        }
+    }
+
+    public async Task<IResult> GetAll( [FromServices] ISender sender, [FromBody] GetDesignVariantListQuery query)
+    {
+        try
+        {
+            var result = await sender.Send(query);
+            return TypedResults.Ok(BaseResponseModel<List<DesignVariantDTO>>.OkResponseModel(
+                    code: ResponseCodeConstants.SUCCESS,
+                    data: result,
+                    message: "Truy vấn biến thể thành công!"
+                ));
+
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Truy vấn biến thể thất bại!"
+                ));
+        }
+    }
+
+    public async Task<IResult> ToggleActive([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        try
+        {
+            var result = await sender.Send(new DeleteDesignVariantCommand { Id = id });
+            return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
+                    data: result,
+                    message: "Cập nhật trạng thái biến thể thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.BadRequest(BaseResponseModel<string>.BadRequestResponseModel(
+                    data: ex.Message,
+                    message: "Cập nhật trạng thái biến thể thất bại!"
+                ));
+        }
     }
 }

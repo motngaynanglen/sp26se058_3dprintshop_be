@@ -3,18 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTags.Commands;
-[Authorize(Roles = Roles.MANAGER)]
 public record UpdateDesignTagCommand : IRequest<UpdateDesignTagCommand>
 {
     [DefaultValue("00000000-0000-0000-0000-000000000001")]
-    [JsonIgnore]
     public Guid Id { get; set; }
     [DefaultValue(false)]
     public bool IsMainTag { get; set; }
@@ -27,7 +22,7 @@ public class UpdateDesignTagCommandHandler : IRequestHandler<UpdateDesignTagComm
     public async Task<UpdateDesignTagCommand> Handle(UpdateDesignTagCommand request, CancellationToken ct)
     {
         var entity = await _context.DesignTags.FindAsync(request.Id);
-        if (entity == null) throw new DataNotFoundException(nameof(DesignTag), request.Id);
+        if (entity == null) throw new Exception("Tag không tồn tại.");
 
         if (request.IsMainTag)
         {
