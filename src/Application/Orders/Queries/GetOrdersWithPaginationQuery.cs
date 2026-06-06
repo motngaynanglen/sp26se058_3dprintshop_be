@@ -67,10 +67,62 @@ public class GetOrdersWithPaginationQuery : PaginationRequest, IRequest<Paginate
 
             // Sắp xếp
             query = ApplySorting(query, request);
-            
-            return await query
+
+            var result = await query
                 .ProjectTo<OrderDTO>(_mapper.ConfigurationProvider)
                 .PaginatedListAsync(request.PageNumber, request.PageSize);
+
+            // Enrich tóm tắt hóa đơn (cột TT) + vận đơn mới nhất (cột Vận chuyển) cho từng dòng.
+            // OrderDTO mapping vốn Ignore Invoice/Shipment (chỉ enrich ở GetOrderDetail) → list bị trống.
+            var orderIds = result.Items.Select(o => o.Id).ToList();
+            if (orderIds.Count > 0)
+            {
+                var invoices = await _context.Invoices.AsNoTracking()
+                    .Where(i => orderIds.Contains(i.OrderId))
+                    .Select(i => new { i.OrderId, i.Id, i.InvoiceCode, i.PaymentStatus, i.SubTotal, i.ShippingFee, i.TotalAmount, i.DueDate })
+                    .ToListAsync(cancellationToken);
+
+                var shipments = await _context.Shipments.AsNoTracking()
+                    .Where(s => orderIds.Contains(s.OrderId))
+                    .OrderByDescending(s => s.Created)
+                    .Select(s => new { s.OrderId, s.Id, s.ShipmentStatus, s.Carrier, s.CarrierName, s.CarrierOrderCode, s.TrackingNumber, s.ShippingFee })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var dto in result.Items)
+                {
+                    var inv = invoices.FirstOrDefault(i => i.OrderId == dto.Id);
+                    if (inv != null)
+                    {
+                        dto.Invoice = new OrderInvoiceSummaryDTO
+                        {
+                            Id = inv.Id,
+                            InvoiceCode = inv.InvoiceCode,
+                            PaymentStatus = inv.PaymentStatus,
+                            SubTotal = inv.SubTotal,
+                            ShippingFee = inv.ShippingFee,
+                            TotalAmount = inv.TotalAmount,
+                            DueDate = inv.DueDate,
+                        };
+                    }
+
+                    var ship = shipments.FirstOrDefault(s => s.OrderId == dto.Id); // FirstOrDefault = vận đơn mới nhất
+                    if (ship != null)
+                    {
+                        dto.Shipment = new OrderShipmentSummaryDTO
+                        {
+                            Id = ship.Id,
+                            ShipmentStatus = ship.ShipmentStatus,
+                            Carrier = ship.Carrier,
+                            CarrierName = ship.CarrierName,
+                            CarrierOrderCode = ship.CarrierOrderCode,
+                            TrackingNumber = ship.TrackingNumber,
+                            ShippingFee = ship.ShippingFee,
+                        };
+                    }
+                }
+            }
+
+            return result;
         }
         private IQueryable<Order> ApplySorting(IQueryable<Order> query, GetOrdersWithPaginationQuery request)
         {
