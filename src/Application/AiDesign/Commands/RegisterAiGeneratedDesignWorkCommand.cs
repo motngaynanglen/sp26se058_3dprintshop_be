@@ -1,20 +1,20 @@
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
-using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Application.Mainflow2.Commands;
 
 namespace sp26se058_3dprintshop_be.Application.AiDesign.Commands;
 
 /// <summary>
-/// Đăng ký GLB từ AI — tạo DesignWork loại PRINT_SERVICE với file AI.
-/// Tương đương Quick Print nhưng source là AI generated.
+/// Đăng ký GLB AI — chuyển sang luồng báo giá KTV (giống flow 2).
+/// Dùng <see cref="CreateAiGeneratedPrintRequestCommand"/> nội bộ.
 /// </summary>
-[Authorize(Roles = Roles.CUSTOMER)]
 public record RegisterAiGeneratedDesignWorkCommand : IRequest<Guid>
 {
     public string? Name { get; init; }
     public required string ModelFileUrl { get; init; }
     public string? SourceImageUrl { get; init; }
     public string? Prompt { get; init; }
+
+    /// <summary>Giá in (VND) — nếu có thì khách checkout ngay sau khi tạo mẫu; không có thì chờ KTV báo giá.</summary>
+    public decimal? QuotedPrice { get; init; }
 }
 
 public class RegisterAiGeneratedDesignWorkCommandValidator : AbstractValidator<RegisterAiGeneratedDesignWorkCommand>
@@ -37,19 +37,13 @@ public class RegisterAiGeneratedDesignWorkCommandHandler : IRequestHandler<Regis
         _sender = sender;
     }
 
-    public async Task<Guid> Handle(RegisterAiGeneratedDesignWorkCommand request, CancellationToken cancellationToken)
-    {
-        // Delegate sang AddFilesToQuickPrintCommand (Quick Print flow)
-        var result = await _sender.Send(new AddFilesToQuickPrintCommand
+    public Task<Guid> Handle(RegisterAiGeneratedDesignWorkCommand request, CancellationToken cancellationToken) =>
+        _sender.Send(new CreateAiGeneratedPrintRequestCommand
         {
-            ProjectName = request.Name ?? "Mô hình AI",
-            Description = request.Prompt,
-            FileUrls = new List<string> { request.ModelFileUrl },
-            Note = request.SourceImageUrl != null
-                ? $"AI generated. Source image: {request.SourceImageUrl}"
-                : "AI generated model",
+            Title = request.Name,
+            ModelFileUrl = request.ModelFileUrl,
+            SourceImageUrl = request.SourceImageUrl,
+            Prompt = request.Prompt,
+            QuotedPrice = request.QuotedPrice
         }, cancellationToken);
-
-        return result.Id;
-    }
 }
