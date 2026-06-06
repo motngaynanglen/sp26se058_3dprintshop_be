@@ -48,6 +48,7 @@ public class TechnicalDraftDTO
                 .ForMember(d => d.DesignWorkName, opt => opt.MapFrom(s => s.DesignVersionHistory.DesignWork.Name))
                 .ForMember(d => d.BaseImageUrl, opt => opt.MapFrom(s => s.DesignVersionHistory.DesignWork.BaseImageUrl))
                 .ForMember(d => d.DesignVersionFileUrl, opt => opt.MapFrom(s => s.DesignVersionHistory.FileUrl))
+                .ForMember(d => d.PreviewModelUrl, opt => opt.MapFrom(s => s.PreviewModelUrl ?? s.DesignVersionHistory.FileUrl))
                 .ForMember(d => d.MaterialName, opt => opt.MapFrom(s => s.Material.Name))
                 .ForMember(d => d.MaterialBaseCostPerGram, opt => opt.MapFrom(s => s.Material.PriceHistories
                     .Where(p => p.IsCurrent)

@@ -7134,6 +7134,10 @@
             "type": "string",
             "default": "",
             "nullable": true
+          },
+          "previewModelUrl": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
