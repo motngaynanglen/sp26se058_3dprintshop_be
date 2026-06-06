@@ -38,6 +38,8 @@ public record CreateTechnicalDraftCommand : IRequest<object>
     public decimal MarkupPercentage { get; init; }
     [DefaultValue("")]
     public string? TechnicalNote { get; set; }
+    [DefaultValue(null)]
+    public string? PreviewModelUrl { get; set; }
 }
 public class CreateTechnicalDraftCommandValidator : AbstractValidator<CreateTechnicalDraftCommand>
 {
@@ -121,6 +123,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             UnitPrice = request.UnitPrice ?? suggestedUnitPrice,
             MarkupPercentage = request.MarkupPercentage,
             TechnicalNote = request.TechnicalNote,
+            PreviewModelUrl = request.PreviewModelUrl,
 
             // Audit fields
             Created = CoreHelper.SystemTimeNow,
