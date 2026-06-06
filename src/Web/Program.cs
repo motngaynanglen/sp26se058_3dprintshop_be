@@ -9,7 +9,7 @@ using sp26se058_3dprintshop_be.Web.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:3000", "http://localhost:5000", "http://localhost:5001", "https://capstone-backup-fe.vercel.app", "https://3dprintshop.store/"];
+    ?? ["http://localhost:3000", "http://localhost:5000", "http://localhost:5001", "https://capstone-backup-fe.vercel.app", "https://3dprintshop.store", "https://backup.3dprintshop.store"];
 
 builder.Services.AddCors(options =>
 {
