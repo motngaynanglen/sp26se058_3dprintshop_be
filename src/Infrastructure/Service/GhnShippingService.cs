@@ -29,7 +29,7 @@ public class GhnShippingService : IShippingCarrierService
     }
 
     public string CarrierCode => ShippingCarriers.Ghn;
-    public string DisplayName => "Giao Hang Nhanh (GHN)";
+    public string DisplayName => "Giao Hàng Nhanh (GHN)";
     public bool IsConfigured => _settings.IsConfigured;
 
     public async Task<ShippingQuoteDto?> GetQuoteAsync(
@@ -42,7 +42,7 @@ public class GhnShippingService : IShippingCarrierService
                 context.GhnToDistrictId ?? 0,
                 context.GhnToWardCode ?? string.Empty,
                 null,
-                "GHN chua cau hinh Token/ShopId — phi uoc tinh.",
+                "GHN chưa cấu hình Token/ShopId — phí ước tính.",
                 cancellationToken);
         }
 
@@ -54,7 +54,7 @@ public class GhnShippingService : IShippingCarrierService
                 0,
                 string.Empty,
                 null,
-                "Thieu ma quan/phuong GHN — dung phi uoc tinh.",
+                "Thiếu mã quận/phường GHN — dùng phí ước tính.",
                 cancellationToken);
         }
 
@@ -81,7 +81,7 @@ public class GhnShippingService : IShippingCarrierService
                     toDistrict.Value,
                     toWard,
                     serviceId,
-                    "GHN tu choi tinh phi — dung phi uoc tinh.",
+                    "GHN từ chối tính phí — dùng phí ước tính.",
                     cancellationToken);
             }
 
@@ -95,7 +95,7 @@ public class GhnShippingService : IShippingCarrierService
                     toDistrict.Value,
                     toWard,
                     serviceId,
-                    msg ?? "Loi GHN",
+                    msg ?? "Lỗi GHN",
                     cancellationToken);
             }
 
@@ -104,7 +104,7 @@ public class GhnShippingService : IShippingCarrierService
                     toDistrict.Value,
                     toWard,
                     serviceId,
-                    "GHN khong tra data phi.",
+                    "GHN không trả data phí.",
                     cancellationToken);
 
             var total = data.TryGetProperty("total", out var t) ? t.GetDecimal()
@@ -113,7 +113,7 @@ public class GhnShippingService : IShippingCarrierService
             if (total <= 0)
             {
                 _logger.LogWarning(
-                    "[GHN] Fee=0 (from {FromDistrict}/{FromWard} -> to {ToDistrict}/{ToWard}, service_id={ServiceId}): {Body}",
+                    "[GHN] Fee=0 (from {FromDistrict}/{FromWard} → to {ToDistrict}/{ToWard}, service_id={ServiceId}): {Body}",
                     _settings.FromDistrictId,
                     _settings.FromWardCode,
                     toDistrict,
@@ -124,7 +124,7 @@ public class GhnShippingService : IShippingCarrierService
                     toDistrict.Value,
                     toWard,
                     serviceId,
-                    "GHN tra phi 0d — dung phi uoc tinh theo khu vuc (noi thanh / lien tinh).",
+                    "GHN trả phí 0đ — dùng phí ước tính theo khu vực (nội thành / liên tỉnh).",
                     cancellationToken);
             }
 
@@ -165,23 +165,23 @@ public class GhnShippingService : IShippingCarrierService
             if (_settings.FromDistrictId <= 0) missing.Add("FromDistrictId");
             if (string.IsNullOrWhiteSpace(_settings.FromWardCode)) missing.Add("FromWardCode");
             return CarrierShipmentCreateResult.Fail(
-                $"GHN chua cau hinh (thieu: {string.Join(", ", missing)}). "
-                + "Dien GHN trong appsettings.Development.json (dotnet run) hoac appsettings.json / bien GHN__* (Docker). "
-                + "Sau do restart backend.");
+                $"GHN chưa cấu hình (thiếu: {string.Join(", ", missing)}). "
+                + "Điền GHN trong appsettings.Development.json (dotnet run) hoặc appsettings.json / biến GHN__* (Docker). "
+                + "Sau đó restart backend.");
         }
 
         var toDistrict = context.GhnToDistrictId ?? _settings.DefaultToDistrictId;
         var toWard = context.GhnToWardCode ?? _settings.DefaultToWardCode;
         if (toDistrict is null or <= 0 || string.IsNullOrWhiteSpace(toWard))
             return CarrierShipmentCreateResult.Fail(
-                "Dia chi giao hang thieu ma quan/phuong GHN — khach can chon Tinh -> Quan -> Phuong GHN khi checkout.");
+                "Địa chỉ giao hàng thiếu mã quận/phường GHN — khách cần chọn Tỉnh → Quận → Phường GHN khi checkout.");
 
         var codAmount = context.IsInvoicePaid ? 0 : (int)Math.Round(context.OrderValue, 0);
         var paymentType = codAmount > 0 ? 2 : 1;
 
         var fromPhone = NormalizePhone(_settings.FromPhone ?? "0938212312");
         var fromAddress = _settings.FromAddress
-            ?? "Lo E2a-7, Duong D1, Khu CNC TP.HCM, Phuong Tang Nhon Phu A, TP. Thu Duc, Ho Chi Minh";
+            ?? "Lô E2a-7, Đường D1, Khu CNC TP.HCM, Phường Tăng Nhơn Phú A, TP. Thủ Đức, Hồ Chí Minh";
         var fromName = string.IsNullOrWhiteSpace(_settings.FromName) ? "3D Print Shop" : _settings.FromName.Trim();
 
         var payload = new
@@ -235,17 +235,17 @@ public class GhnShippingService : IShippingCarrierService
                 if (codeMsg == "FROM_ADDRESS_CONVERT_FAIL")
                 {
                     return CarrierShipmentCreateResult.Fail(
-                        "GHN khong map duoc dia chi kho lay hang (from). "
-                        + "Kiem tra GHN:FromDistrictId, FromWardCode, FromAddress trong appsettings "
-                        + "va dang ky dia chi lay hang tren portal 5sao.ghn.dev cho ShopId "
-                        + $"{_settings.ShopId}. Chi tiet: {msg}");
+                        "GHN không map được địa chỉ kho lấy hàng (from). "
+                        + "Kiểm tra GHN:FromDistrictId, FromWardCode, FromAddress trong appsettings "
+                        + "và đăng ký địa chỉ lấy hàng trên portal 5sao.ghn.dev cho ShopId "
+                        + $"{_settings.ShopId}. Chi tiết: {msg}");
                 }
 
-                return CarrierShipmentCreateResult.Fail(msg ?? "GHN tao don that bai");
+                return CarrierShipmentCreateResult.Fail(msg ?? "GHN tạo đơn thất bại");
             }
 
             if (!root.TryGetProperty("data", out var data))
-                return CarrierShipmentCreateResult.Fail("GHN khong tra data don.");
+                return CarrierShipmentCreateResult.Fail("GHN không trả data đơn.");
 
             var orderCode = data.TryGetProperty("order_code", out var oc) ? oc.GetString() : null;
             var sortCode = data.TryGetProperty("sort_code", out var sc) ? sc.GetString() : null;
@@ -271,168 +271,26 @@ public class GhnShippingService : IShippingCarrierService
         if (string.IsNullOrWhiteSpace(carrierStatus))
             return false;
 
-        // Bộ trạng thái GHN: https://api.ghn.vn/home/docs/detail?id=124
         var s = carrierStatus.Trim().ToLowerInvariant();
-        switch (s)
+        if (s is "delivered" or "delivery_success" or "success")
         {
-            case "delivered":
-            case "delivery_success":
-            case "success":
-                shipmentStatus = ShipmentStatuses.Delivered;
-                return true;
-
-            case "ready_to_pick":
-            case "picking":
-            case "money_collect_picking":
-            case "storing":
-            case "waiting_for_pick":
-                shipmentStatus = ShipmentStatuses.ReadyForPickup;
-                return true;
-
-            case "picked":
-            case "transporting":
-            case "sorting":
-            case "delivering":
-            case "money_collect_delivering":
-            case "in_transit":
-                shipmentStatus = ShipmentStatuses.InTransit;
-                return true;
-
-            case "delivery_fail":
-                shipmentStatus = ShipmentStatuses.Failed;
-                return true;
-
-            case "waiting_to_return":
-            case "return":
-            case "returning":
-            case "return_transporting":
-            case "return_sorting":
-            case "return_fail":
-                shipmentStatus = ShipmentStatuses.Returning;
-                return true;
-
-            case "returned":
-                shipmentStatus = ShipmentStatuses.Returned;
-                return true;
-
-            case "exception":
-            case "damage":
-            case "lost":
-                shipmentStatus = ShipmentStatuses.LostOrDamaged;
-                return true;
-
-            case "cancel":
-                shipmentStatus = ShipmentStatuses.Cancelled;
-                return true;
-
-            default:
-                return false;
+            shipmentStatus = ShipmentStatuses.Delivered;
+            return true;
         }
-    }
 
-    public async Task<string?> GetLabelUrlAsync(string carrierOrderCode, CancellationToken cancellationToken)
-    {
-        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
-            return null;
-
-        try
+        if (s is "picking" or "ready_to_pick" or "storing" or "waiting_for_pick")
         {
-            var payload = new { order_codes = new[] { carrierOrderCode } };
-            using var req = CreateRequest(HttpMethod.Post, "/v2/a5/gen-token", payload);
-            using var res = await _http.SendAsync(req, cancellationToken);
-            var json = await res.Content.ReadAsStringAsync(cancellationToken);
-            if (!res.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("[GHN] gen-token HTTP {Status}: {Body}", res.StatusCode, json);
-                return null;
-            }
-
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("code", out var codeEl) && codeEl.GetInt32() != 200)
-                return null;
-
-            string? token = null;
-            if (root.TryGetProperty("data", out var data))
-            {
-                if (data.ValueKind == JsonValueKind.String)
-                    token = data.GetString();
-                else if (data.ValueKind == JsonValueKind.Object && data.TryGetProperty("token", out var t))
-                    token = t.GetString();
-            }
-
-            if (string.IsNullOrWhiteSpace(token))
-                return null;
-
-            var baseUrl = _settings.BaseUrl.TrimEnd('/');
-            return $"{baseUrl}/client/printA5?token={token}";
+            shipmentStatus = ShipmentStatuses.ReadyForPickup;
+            return true;
         }
-        catch (Exception ex)
+
+        if (s is "delivering" or "transporting" or "in_transit" or "picked")
         {
-            _logger.LogWarning(ex, "[GHN] gen-token exception");
-            return null;
+            shipmentStatus = ShipmentStatuses.InTransit;
+            return true;
         }
-    }
 
-    public async Task<string?> GetCarrierStatusAsync(string carrierOrderCode, CancellationToken cancellationToken)
-    {
-        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
-            return null;
-
-        try
-        {
-            var payload = new { order_code = carrierOrderCode };
-            using var req = CreateRequest(HttpMethod.Post, "/v2/shipping-order/detail", payload);
-            using var res = await _http.SendAsync(req, cancellationToken);
-            var json = await res.Content.ReadAsStringAsync(cancellationToken);
-            if (!res.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("[GHN] detail HTTP {Status}: {Body}", res.StatusCode, json);
-                return null;
-            }
-
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("code", out var codeEl) && codeEl.GetInt32() != 200)
-                return null;
-            if (root.TryGetProperty("data", out var data) && data.TryGetProperty("status", out var st))
-                return st.GetString();
-
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "[GHN] detail exception");
-            return null;
-        }
-    }
-
-    public async Task<bool> CancelShipmentAsync(string carrierOrderCode, CancellationToken cancellationToken)
-    {
-        if (!IsConfigured || string.IsNullOrWhiteSpace(carrierOrderCode))
-            return false;
-
-        try
-        {
-            var payload = new { order_codes = new[] { carrierOrderCode } };
-            using var req = CreateRequest(HttpMethod.Post, "/v2/switch-status/cancel", payload);
-            using var res = await _http.SendAsync(req, cancellationToken);
-            var json = await res.Content.ReadAsStringAsync(cancellationToken);
-            if (!res.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("[GHN] cancel HTTP {Status}: {Body}", res.StatusCode, json);
-                return false;
-            }
-
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            return !root.TryGetProperty("code", out var codeEl) || codeEl.GetInt32() == 200;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "[GHN] cancel exception");
-            return false;
-        }
+        return false;
     }
 
     private async Task<ShippingQuoteDto> BuildEstimatedQuoteAsync(
@@ -627,6 +485,7 @@ public class GhnShippingService : IShippingCarrierService
         if (data.TryGetProperty("leadtime", out var lt) && lt.ValueKind == JsonValueKind.Number)
         {
             var n = lt.GetInt32();
+            // GHN đôi khi trả unix timestamp — bỏ qua nếu quá lớn.
             if (n is > 0 and < 30)
                 return n;
         }
