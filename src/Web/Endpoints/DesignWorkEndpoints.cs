@@ -1,12 +1,15 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Commands;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries;
 using sp26se058_3dprintshop_be.Application.DesignTemplates.Queries.GetDesignTemplatesWithPagination;
+using sp26se058_3dprintshop_be.Application.DesignLogs.Queries;
 using sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 using sp26se058_3dprintshop_be.Application.DesignWorks.Queries;
+using sp26se058_3dprintshop_be.Web.Hubs;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -168,11 +171,26 @@ public class DesignWorkEndpoints : EndpointGroupBase
     //}
     public async Task<IResult> ReviewFileVersion(
         [FromServices] ISender sender,
+        [FromServices] IHubContext<DesignWorkChatHub> hubContext,
         [FromRoute] Guid versionHistoryId,
         [FromBody] ReviewFileVersionCommand command)
     {
         var finalCmd = command with { VersionHistoryId = versionHistoryId };
         var result = await sender.Send(finalCmd);
+
+        if (result is DesignLogDTO log)
+        {
+            await hubContext.Clients
+                .Group(DesignWorkChatHub.GetGroupName(log.DesignWorkId))
+                .SendAsync(DesignWorkChatHub.ReceiveDesignLogEvent, new
+                {
+                    type = "FILE_REVIEWED",
+                    designWorkId = log.DesignWorkId,
+                    versionHistoryId,
+                    reviewStatus = command.ReviewStatus,
+                });
+        }
+
         return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 data: result,
                 message: "Duyệt file thành công!",

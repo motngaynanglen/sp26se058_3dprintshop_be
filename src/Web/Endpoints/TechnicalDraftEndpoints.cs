@@ -120,9 +120,22 @@ public class TechnicalDraftEndpoints : EndpointGroupBase
             ));
     }
 
-    public async Task<IResult> Confirm([FromServices] ISender sender, [FromRoute] Guid id)
+    public async Task<IResult> Confirm(
+        [FromServices] ISender sender,
+        [FromServices] IHubContext<DesignWorkChatHub> hubContext,
+        [FromRoute] Guid id)
     {
         var result = await sender.Send(new ConfirmTechnicalDraftCommand(id));
+
+        await hubContext.Clients
+            .Group(DesignWorkChatHub.GetGroupName(result.DesignWorkId))
+            .SendAsync(DesignWorkChatHub.ReceiveDesignLogEvent, new
+            {
+                type = "TECHNICAL_DRAFT_CONFIRMED",
+                designWorkId = result.DesignWorkId,
+                technicalDraftId = result.Id,
+            });
+
         return TypedResults.Ok(BaseResponseModel<TechnicalDraftDTO>.OkResponseModel(
                 code: ResponseCodeConstants.UPDATED,
                 data: result,
