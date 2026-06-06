@@ -75,6 +75,33 @@ public class ConfirmTechnicalDraftCommandHandler : IRequestHandler<ConfirmTechni
         designWork.LastModified = CoreHelper.SystemTimeNow;
         designWork.LastModifiedBy = _user.Username;
 
+        // Hoàn thành đơn phí dịch vụ thiết kế gắn với DesignWork này: khách duyệt file 3D
+        // = dịch vụ thiết kế đã giao xong. (Đơn này không có giao hàng vật lý.)
+        var designServiceOrder = await _context.Orders
+            .Include(o => o.OrderItems)
+            .Where(o => o.OrderItems.Any(oi =>
+                oi.DesignWorkId == designWork.Id
+                && oi.SourceType == SourceTypes.DesignService))
+            .OrderByDescending(o => o.Created)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (designServiceOrder != null && designServiceOrder.OrderStatus == OrderStatuses.Processing)
+        {
+            designServiceOrder.OrderStatus = OrderStatuses.Completed;
+            designServiceOrder.CompletedAt = CoreHelper.SystemTimeNow;
+            designServiceOrder.LastModified = CoreHelper.SystemTimeNow;
+            designServiceOrder.LastModifiedBy = _user.Username;
+
+            foreach (var oi in designServiceOrder.OrderItems
+                .Where(oi => oi.SourceType == SourceTypes.DesignService
+                    && oi.FulfillmentStatus != OrderItemStatuses.Cancelled))
+            {
+                oi.FulfillmentStatus = OrderItemStatuses.Finished;
+                oi.LastModified = CoreHelper.SystemTimeNow;
+                oi.LastModifiedBy = _user.Username;
+            }
+        }
+
         _context.DesignLogs.Add(new DesignLog
         {
             Id = Guid.NewGuid(),
