@@ -153,7 +153,7 @@ public class CreateTechnicalDraftCommandHandler : IRequestHandler<CreateTechnica
             Content = version.DesignWork.Status == DesignWorkStatus.Completed
             ? $"[Sản xuất] Cập nhật thông số kỹ thuật mới cho phiên bản in."
             : $"Đã tạo bản nháp kỹ thuật và báo giá dự kiến.",
-            LogType = DesignLogType.VersionUpdate,
+            LogType = DesignLogType.System,
             Created = CoreHelper.SystemTimeNow
         };
 
