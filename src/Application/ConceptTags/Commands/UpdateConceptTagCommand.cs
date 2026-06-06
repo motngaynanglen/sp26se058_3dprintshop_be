@@ -6,18 +6,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 
-[Authorize(Roles = Roles.MANAGER)]
 public record UpdateConceptTagCommand : IRequest<Guid>
 {
     [JsonIgnore]
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
     [DefaultValue("Resin")]
     public string? Name { get; init; }
@@ -45,12 +41,12 @@ public class UpdateConceptTagCommandHandler : IRequestHandler<UpdateConceptTagCo
         var conceptTag = await _context.ConceptTags.FindAsync(new object[] { request.Id }, cancellationToken);
         if (conceptTag == null)
         {
-            throw new DataNotFoundException(nameof(ConceptTag), request.Id);
+            throw new Exception("Không tìm thấy Concept tag với Id " + request.Id);
         }
         var exists = _context.ConceptTags.Any(ct => ct.Name == request.Name && ct.Id != request.Id);
         if (exists)
         {
-            throw new DuplicateException("Đã tồn tại tag ý tưởng với tên " + request.Name + ".");
+            throw new Exception("Đã tồn tại Concept tag với tên " + request.Name + ".");
         }
 
         //UpdateAllChildTags(conceptTag, request.IsActive ?? conceptTag.IsActive);

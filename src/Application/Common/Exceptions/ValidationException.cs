@@ -2,10 +2,10 @@
 
 namespace sp26se058_3dprintshop_be.Application.Common.Exceptions;
 
-public class ValidationException : BaseValidationException
+public class ValidationException : Exception
 {
     public ValidationException()
-        : base("Dữ liệu đầu vào không hợp lệ.")
+        : base("One or more validation failures have occurred.")
     {
         Errors = new Dictionary<string, string[]>();
     }
@@ -17,5 +17,6 @@ public class ValidationException : BaseValidationException
             .GroupBy(e => e.PropertyName, e => e.ErrorMessage)
             .ToDictionary(failureGroup => failureGroup.Key, failureGroup => failureGroup.ToArray());
     }
-}
 
+    public IDictionary<string, string[]> Errors { get; }
+}

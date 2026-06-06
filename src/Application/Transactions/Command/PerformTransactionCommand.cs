@@ -1,281 +1,268 @@
-﻿using sp26se058_3dprintshop_be.Application.Common.Config;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
-using System.ComponentModel.DataAnnotations;
-using PayOS;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using System.ComponentModel;
-using sp26se058_3dprintshop_be.Domain.Constants.Types;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
-using sp26se058_3dprintshop_be.Domain.Utils;
-using sp26se058_3dprintshop_be.Domain.Entities;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using sp26se058_3dprintshop_be.Application.Common.Config;
+using sp26se058_3dprintshop_be.Application.Mainflow2;
+using sp26se058_3dprintshop_be.Application.Orders;
+using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
-namespace sp26se058_3dprintshop_be.Application.Transactions.Commands;
+namespace sp26se058_3dprintshop_be.Application.Transactions.Command;
 
-[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
 public record PerformTransactionCommand : IRequest<object>
 {
-    [Required]
-    public Guid OrderId { get; init; }
-    [Required]
+    public required Guid OrderId { get; init; }
+
     [DefaultValue(PaymentMethods.PAYOS)]
-    public string PaymentMethod { get; init; } = null!;
-    /// <summary>IP client — dùng cho VNPay (tự lấy từ HttpContext nếu để trống).</summary>
+    public required string PaymentMethod { get; init; }
+
     public string? ClientIp { get; init; }
+
+    /// <summary>FULL (mặc định — catalog) | DEPOSIT | BALANCE — DEPOSIT/BALANCE chỉ cho đơn custom MF2.</summary>
+    [DefaultValue(PaymentPhases.Full)]
+    public string PaymentPhase { get; init; } = PaymentPhases.Full;
 }
+
+public class PerformTransactionCommandValidator : AbstractValidator<PerformTransactionCommand>
+{
+    public PerformTransactionCommandValidator()
+    {
+        RuleFor(x => x.OrderId).NotEmpty();
+        RuleFor(x => x.PaymentMethod).NotEmpty();
+    }
+}
+
 public class PerformTransactionCommandHandler : IRequestHandler<PerformTransactionCommand, object>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IOrderWorkflowService _orderWorkflowService;
     private readonly IPaymentService _paymentService;
     private readonly IVnPayService _vnPayService;
     private readonly PayOsSettings _payOsSettings;
+    private readonly PaymentOptions _paymentOptions;
     private readonly IUser _user;
-    private readonly ICodeGeneratorService _codeGenerator;
+    private readonly ILogger<PerformTransactionCommandHandler> _logger;
 
-    public PerformTransactionCommandHandler(IApplicationDbContext context, IOrderWorkflowService orderWorkflowService, IPaymentService paymentService, IVnPayService vnPayService, IOptions<PayOsSettings> payOsSettings, IUser user, ICodeGeneratorService codeGenerator)
+    public PerformTransactionCommandHandler(
+        IApplicationDbContext context,
+        IPaymentService paymentService,
+        IVnPayService vnPayService,
+        IOptions<PayOsSettings> payOsSettings,
+        IOptions<PaymentOptions> paymentOptions,
+        IUser user,
+        ILogger<PerformTransactionCommandHandler> logger)
     {
         _context = context;
-        _orderWorkflowService = orderWorkflowService;
         _paymentService = paymentService;
         _vnPayService = vnPayService;
         _payOsSettings = payOsSettings.Value;
+        _paymentOptions = paymentOptions.Value;
         _user = user;
-        _codeGenerator = codeGenerator;
+        _logger = logger;
     }
 
     public async Task<object> Handle(PerformTransactionCommand request, CancellationToken cancellationToken)
     {
-        // 0. Kiểm tra quyền hạn 
-        if (request.PaymentMethod == PaymentMethods.Cash && _user.Role == Roles.CUSTOMER)
+        var order = await _context.Orders
+            .Include(o => o.Invoice)
+                .ThenInclude(i => i!.Transactions)
+            .Include(o => o.OrderItems)
+            .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken)
+            ?? throw new KeyNotFoundException("Không tìm thấy đơn hàng.");
+
+        var phase = NormalizePhase(request.PaymentPhase);
+        if (OrderPaymentHelper.IsDirectPrintOrder(order))
+            phase = PaymentPhases.Full;
+
+        var chargeAmount = await ResolveChargeAmountAsync(order, phase, cancellationToken);
+
+        ValidateOrderForTransaction(order, phase, chargeAmount);
+
+        if (phase == PaymentPhases.Balance
+            && !await Mainflow2DesignFlowHelper.CanPayBalanceAsync(_context, order, cancellationToken))
         {
-            throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
+            throw new InvalidOperationException(
+                "Kỹ thuật viên chưa gửi bảng thiết kế — chưa thể thanh toán phần còn lại.");
         }
 
-        // 1. Lấy thông tin Order kèm theo Invoice và các Transaction liên quan
-        var order = await GetOrderWithDetailsAsync(request.OrderId, cancellationToken);
-
-        ValidatePaymentPermission(order, request.PaymentMethod);
-
-        // 2. Kiểm tra điều kiện đơn hàng
-        ValidateOrderForTransaction(order);
-
-        // 3. Đảm bảo luôn có Invoice (Tạo object nếu chưa có)
-        EnsureOrderHasInvoice(order);
-
-        // 4. Kiểm tra và sử dụng lại giao dịch PENDING còn hiệu lực (nếu có)
         if (request.PaymentMethod == PaymentMethods.PAYOS)
         {
-            var existingPayment = TryGetValidPendingPayment(order.Invoice!); // Bước 3 bảo đảm Invoice không null
-            if (existingPayment != null) return existingPayment;
+            var existingPayment = TryGetValidPendingPayment(order.Invoice!, request.PaymentMethod, chargeAmount);
+            if (existingPayment != null)
+            {
+                LogPaymentRedirect(request.OrderId, request.PaymentMethod, existingPayment.PaymentLink, reused: true);
+                return existingPayment;
+            }
         }
-        if (request.PaymentMethod == PaymentMethods.Cash)
+        else if (request.PaymentMethod == PaymentMethods.VNPAY)
         {
-            await _orderWorkflowService.ActivateOrderWorkflowAsync(order, cancellationToken);
+            InvalidatePendingVnPayTransactions(order.Invoice!);
         }
-        // 5. Tạo Transaction mới dựa trên phương thức thanh toán
-        var result = await CreateTransactionByMethodAsync(order, request, cancellationToken);
 
-        // 6. Lưu thay đổi
-        try
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Lỗi khi lưu xuống DB
-            throw new UpdateFailureException($"Lỗi lưu dữ liệu giao dịch: {ex.Message}");
-        }
+        var result = await CreatePaymentAsync(order, request.PaymentMethod, request.ClientIp, chargeAmount, phase, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        LogPaymentRedirect(request.OrderId, request.PaymentMethod, ExtractPaymentLink(result), reused: false);
         return result;
     }
 
-    #region Private Helper Methods
-    private async Task<Order> GetOrderWithDetailsAsync(Guid orderId, CancellationToken ct)
-    {
-        var order = await _context.Orders
-            .Include(o => o.OrderItems)
-            .Include(o => o.Customer)
-            .Include(o => o.Shipments)
-            .Include(o => o.Invoice)
-                .ThenInclude(i => i!.Transactions)
-            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+    private static string NormalizePhase(string? raw) =>
+        (raw ?? PaymentPhases.Full).Trim().ToUpperInvariant() switch
+        {
+            PaymentPhases.Deposit => PaymentPhases.Deposit,
+            PaymentPhases.Balance => PaymentPhases.Balance,
+            _ => PaymentPhases.Full
+        };
 
-        if (order == null) throw new DataNotFoundException(nameof(Order), orderId);
-        return order;
+    private async Task<decimal> ResolveChargeAmountAsync(Order order, string phase, CancellationToken ct)
+    {
+        var invoice = order.Invoice!;
+        var isCustom = OrderPaymentHelper.HasCustomProductionItems(order);
+
+        return phase switch
+        {
+            PaymentPhases.Deposit when isCustom =>
+                await OrderPaymentHelper.ResolveCustomDepositAmountAsync(
+                    _context, order, invoice, _paymentOptions.CustomOrderDepositPercent, ct),
+            PaymentPhases.Balance when isCustom =>
+                OrderPaymentHelper.GetRemainingBalance(invoice),
+            _ => invoice.TotalAmount
+        };
     }
 
-    private void ValidatePaymentPermission(Order order, string paymentMethod)
+    private void ValidateOrderForTransaction(Order order, string phase, decimal chargeAmount)
     {
-        var role = _user.Role ?? Roles.GUEST;
-        var userId = _user.Id.ToGuid();
-        var isStaffOrManager = role == Roles.STAFF || role == Roles.MANAGER;
+        var invoice = order.Invoice ?? throw new InvalidOperationException("Đơn hàng chưa có hóa đơn.");
+        var isCustom = OrderPaymentHelper.HasCustomProductionItems(order);
+        var paid = OrderPaymentHelper.GetPaidAmount(invoice);
 
-        if (role == Roles.CUSTOMER)
+        if (OrderPaymentHelper.IsInvoicePaid(invoice))
+            throw new InvalidOperationException("Đơn hàng đã được thanh toán. Không thể tạo giao dịch mới.");
+
+        if (chargeAmount <= 0)
+            throw new InvalidOperationException("Số tiền thanh toán phải lớn hơn 0.");
+
+        if (phase is PaymentPhases.Deposit or PaymentPhases.Balance)
         {
-            if (order.Customer?.AccountId != userId)
-            {
-                throw new ForbiddenAccessException("Bạn không có quyền thanh toán đơn hàng của người khác.");
-            }
+            if (OrderPaymentHelper.IsDirectPrintOrder(order))
+                throw new InvalidOperationException("Đơn in sẵn/in lại chỉ thanh toán một lần (paymentPhase=FULL).");
 
-            if (paymentMethod == PaymentMethods.Cash)
-            {
-                throw new ForbiddenAccessException("Khách hàng không được tự xác nhận thanh toán tiền mặt.");
-            }
+            if (!isCustom)
+                throw new InvalidOperationException("Thanh toán cọc/phần còn lại chỉ áp dụng cho đơn in custom.");
+
+            if (phase == PaymentPhases.Deposit && paid > 0)
+                throw new InvalidOperationException("Đơn hàng đã có khoản thanh toán — dùng BALANCE để trả phần còn lại.");
+
+            if (phase == PaymentPhases.Balance && !OrderPaymentHelper.IsInvoicePartiallyPaid(invoice))
+                throw new InvalidOperationException("Cần đặt cọc trước khi thanh toán phần còn lại.");
+        }
+        else if (isCustom && !OrderPaymentHelper.IsDirectPrintOrder(order))
+        {
+            throw new InvalidOperationException(
+                "Đơn in custom yêu cầu đặt cọc trước (paymentPhase=DEPOSIT). Phần còn lại thanh toán khi nhận hàng.");
         }
 
-        if (paymentMethod == PaymentMethods.Cash && !isStaffOrManager)
+        if (phase == PaymentPhases.Full && order.OrderStatus != OrderStatuses.Pending)
+            throw new InvalidOperationException($"Đơn hàng đang ở trạng thái {order.OrderStatus}, không thể thanh toán thêm.");
+
+        if (phase == PaymentPhases.Balance
+            && order.OrderStatus is not (OrderStatuses.Pending or OrderStatuses.Processing))
+            throw new InvalidOperationException($"Đơn hàng đang ở trạng thái {order.OrderStatus}, không thể thanh toán phần còn lại.");
+    }
+
+    private static void InvalidatePendingVnPayTransactions(Invoice invoice)
+    {
+        foreach (var tx in invoice.Transactions.Where(t =>
+                     t.TransactionStatus == "PENDING" && t.PaymentMethod == PaymentMethods.VNPAY))
         {
-            throw new ForbiddenAccessException("Chỉ nhân viên hoặc quản lý mới được xác nhận thanh toán tiền mặt.");
+            tx.TransactionStatus = "FAILED";
+            tx.Note = (tx.Note ?? "") + " [VNPay] Thay bằng link thanh toán mới.";
         }
     }
 
-    private bool ValidateOrderForTransaction(Order order)
+    private PaymentResponse? TryGetValidPendingPayment(Invoice invoice, string paymentMethod, decimal expectedAmount)
     {
-        bool isExpired = order.OrderStatus == OrderStatuses.Pending
-            && (order.Invoice?.DueDate.HasValue == true
-                ? CoreHelper.SystemTimeNow.UtcDateTime > order.Invoice.DueDate.Value
-                : CoreHelper.SystemTimeNow > order.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes));
-
-        if (isExpired)
-        {
-            throw new BusinessException(
-                "Đơn hàng đã quá hạn thanh toán. Vui lòng tạo đơn hàng mới để tiếp tục.",
-                ResponseCodeConstants.VAL_INVALID_STATE);
-        }
-
-        bool isNotPending = order.OrderStatus != OrderStatuses.Pending;
-        bool isPaid = order.Invoice != null && order.Invoice.PaymentStatus == InvoiceStatuses.Paid;
-
-        if (isNotPending || isPaid)
-        {
-            // Chuyển sang VAL_002: Vì đơn hàng tồn tại nhưng trạng thái không cho phép tạo giao dịch mới
-            throw new BusinessException(
-                "Đơn hàng đã được thanh toán hoặc không còn ở trạng thái chờ xử lý.",
-                ResponseCodeConstants.VAL_INVALID_STATE
-            );
-        }
-        return true;
-    }
-
-    private bool EnsureOrderHasInvoice(Order order)
-    {
-        if (order.Invoice == null)
-        {
-            var shippingFee = order.Shipments?.FirstOrDefault()?.ShippingFee ?? 0;
-            order.Invoice = new Invoice
-            {
-                Id = Guid.NewGuid(),
-                OrderId = order.Id,
-                InvoiceCode = _codeGenerator.GenerateInvoiceCode(),
-                SubTotal = order.TotalPrice,
-                ShippingFee = shippingFee,
-                TotalAmount = order.TotalPrice + shippingFee,
-                PaymentStatus = InvoiceStatuses.Unpaid,
-                DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
-                Created = CoreHelper.SystemTimeNow,
-                CreatedBy = _user.Username,
-                LastModified = CoreHelper.SystemTimeNow,
-                LastModifiedBy = _user.Username,
-            };
-        }
-        return true;
-    }
-
-    private PaymentResponse? TryGetValidPendingPayment(Invoice invoice)
-    {
-        var pendingTransaction = invoice.Transactions
-            .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending
-                                    && t.PaymentMethod == PaymentMethods.PAYOS);
+        var pendingTransaction = invoice.Transactions.FirstOrDefault(t =>
+            t.TransactionStatus == "PENDING"
+            && t.PaymentMethod == paymentMethod
+            && t.Amount == expectedAmount);
 
         if (pendingTransaction == null) return null;
 
-        // Kiểm tra thời hạn 15 phút
-        bool isTimeOut = pendingTransaction.Invoice.DueDate.HasValue
-            ? CoreHelper.SystemTimeNow.UtcDateTime > pendingTransaction.Invoice.DueDate.Value
-            : CoreHelper.SystemTimeNow > pendingTransaction.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes);
-        if (isTimeOut)
+        if (pendingTransaction.Created.AddMinutes(15) <= CoreHelper.SystemTimeNow)
         {
-            pendingTransaction.TransactionStatus = TransactionStatuses.Failed;
+            pendingTransaction.TransactionStatus = "FAILED";
             pendingTransaction.Note = "Link cũ đã hết hạn";
             return null;
         }
 
-
-        bool isValid = !string.IsNullOrEmpty(pendingTransaction.InternalCode)
-                    && !string.IsNullOrEmpty(pendingTransaction.PaymentLink)
-                    && !string.IsNullOrEmpty(pendingTransaction.QrCode);
-        if (isValid)
+        if (!string.IsNullOrEmpty(pendingTransaction.InternalCode)
+            && !string.IsNullOrEmpty(pendingTransaction.PaymentLink))
         {
             return new PaymentResponse
             {
                 PaymentCode = pendingTransaction.InternalCode!.ToLong(),
                 PaymentLink = pendingTransaction.PaymentLink!,
-                QrCode = pendingTransaction.QrCode!
+                QrCode = pendingTransaction.QrCode ?? string.Empty,
             };
         }
 
-        // Trước mắt các trường hợp khác không hỗ trợ
-        // Cash không tồn tại khả năng PENDING.
         return null;
     }
 
-    private async Task<object> CreateTransactionByMethodAsync(Order order, PerformTransactionCommand request, CancellationToken ct)
+    private async Task<object> CreatePaymentAsync(
+        Order order,
+        string paymentMethod,
+        string? clientIp,
+        decimal chargeAmount,
+        string phase,
+        CancellationToken cancellationToken)
     {
-        var method = request.PaymentMethod;
-
-        // Hủy các giao dịch VNPay PENDING cũ trước khi tạo mới (tránh trùng)
-        if (method == PaymentMethods.VNPAY || method == PaymentMethods.PAYOS)
-        {
-            var pendingVnPayTxns = order.Invoice!.Transactions
-                .Where(t => t.TransactionStatus == TransactionStatuses.Pending
-                             && t.PaymentMethod == PaymentMethods.VNPAY)
-                .ToList();
-            foreach (var old in pendingVnPayTxns)
-            {
-                old.TransactionStatus = TransactionStatuses.Failed;
-                old.Note = (old.Note ?? "") + " [Auto] Hủy do tạo giao dịch mới.";
-                old.LastModified = CoreHelper.SystemTimeNow;
-            }
-        }
+        var method = paymentMethod.Trim().ToUpperInvariant();
+        var now = CoreHelper.SystemTimeNow;
+        var username = _user.Username ?? "customer";
+        var phaseNote = phase == PaymentPhases.Full ? "toàn bộ" : phase == PaymentPhases.Deposit ? "đặt cọc" : "phần còn lại";
 
         var transaction = new Transaction
         {
             Id = Guid.NewGuid(),
-            Invoice = order.Invoice!,
             InvoiceId = order.Invoice!.Id,
-            Amount = order.Invoice!.TotalAmount,
+            Invoice = order.Invoice,
+            Amount = chargeAmount,
             PaymentMethod = method,
-            InternalCode = string.Empty,
-            TransactionStatus = TransactionStatuses.Pending,
-            Created = CoreHelper.SystemTimeNow,
-            CreatedBy = _user.Username,
-            LastModified = CoreHelper.SystemTimeNow,
-            LastModifiedBy = _user.Username
+            InternalCode = "PENDING",
+            TransactionStatus = "PENDING",
+            Note = $"[{phase}] Thanh toán {phaseNote} cho đơn {order.Code}",
+            Created = now,
+            CreatedBy = username,
+            LastModified = now,
+            LastModifiedBy = username
         };
 
         if (method == PaymentMethods.PAYOS)
         {
-            // Xử lý tạo Link thanh toán online
-            var paymentResponse = await _paymentService.CreatePaymentLink(order, _payOsSettings.ReturnUrl, _payOsSettings.CancelUrl);
-            if (paymentResponse == null)
+            if (!_payOsSettings.IsConfigured)
             {
-                // Chuyển sang EXT_501: Lỗi cổng thanh toán bên thứ 3
-                throw new BusinessException(
-                    "Không thể kết nối với cổng thanh toán PayOS. Vui lòng thử lại sau.",
-                    ResponseCodeConstants.PAYOS_ERROR
-                );
+                throw new InvalidOperationException(
+                    "Cổng PayOS chưa được cấu hình (thiếu ClientId / ApiKey / ChecksumKey trong appsettings). " +
+                    "Vui lòng chọn thanh toán COD để test local, hoặc điền PayOS vào appsettings.Development.json.");
             }
 
+            var returnUrl = string.IsNullOrWhiteSpace(_payOsSettings.ReturnUrl)
+                ? "http://localhost:3000/order-confirmation"
+                : _payOsSettings.ReturnUrl;
+            var cancelUrl = string.IsNullOrWhiteSpace(_payOsSettings.CancelUrl)
+                ? "http://localhost:3000/checkout"
+                : _payOsSettings.CancelUrl;
+
+            var paymentResponse = await _paymentService.CreatePaymentLink(order, returnUrl, cancelUrl, chargeAmount);
             transaction.InternalCode = paymentResponse.PaymentCode.ToString();
-            transaction.TransactionStatus = TransactionStatuses.Pending;
+            transaction.TransactionStatus = "PENDING";
             transaction.PaymentLink = paymentResponse.PaymentLink;
             transaction.QrCode = paymentResponse.QrCode;
-            transaction.Note = $"Tạo link thanh toán PayOS cho đơn hàng {order.Code}";
-            order.Invoice.DueDate = paymentResponse.ExpiredAt.UtcDateTime;
+            transaction.Note = $"[{phase}] Tạo link PayOS — {chargeAmount:N0} VND cho đơn {order.Code}";
 
             _context.Transactions.Add(transaction);
             return paymentResponse;
@@ -283,36 +270,80 @@ public class PerformTransactionCommandHandler : IRequestHandler<PerformTransacti
 
         if (method == PaymentMethods.VNPAY)
         {
-            var ip = string.IsNullOrWhiteSpace(request.ClientIp) ? "127.0.0.1" : request.ClientIp;
-            var paymentResponse = _vnPayService.CreatePaymentUrl(order, ip);
+            var ip = string.IsNullOrWhiteSpace(clientIp) ? "127.0.0.1" : clientIp;
+            var paymentResponse = _vnPayService.CreatePaymentUrl(order, ip, chargeAmount)
+                ?? throw new InvalidOperationException("Lỗi kết nối cổng thanh toán VNPay Sandbox");
+
             transaction.InternalCode = paymentResponse.PaymentCode.ToString();
-            transaction.TransactionStatus = TransactionStatuses.Pending;
+            transaction.TransactionStatus = "PENDING";
             transaction.PaymentLink = paymentResponse.PaymentLink;
             transaction.QrCode = string.Empty;
-            transaction.Note = $"Tạo link thanh toán VNPay cho đơn hàng {order.Code}";
+            transaction.Note = $"[{phase}] Tạo link VNPay — {chargeAmount:N0} VND cho đơn {order.Code}";
+
             _context.Transactions.Add(transaction);
             return paymentResponse;
         }
 
         if (method == PaymentMethods.Cash)
         {
-            // Xử lý thanh toán tiền mặt trực tiếp
+            if (phase == PaymentPhases.Deposit)
+                throw new InvalidOperationException("Tiền cọc đơn custom cần thanh toán online (VNPay/PayOS).");
+
+            if (phase == PaymentPhases.Full)
+            {
+                transaction.InternalCode = $"CASH-{order.Code}-{DateTime.UtcNow.Ticks}";
+                transaction.TransactionStatus = "PENDING";
+                transaction.Note = $"Thanh toán COD khi nhận hàng — đơn {order.Code}";
+                _context.Transactions.Add(transaction);
+                OrderPaymentHelper.StartProductionAfterPayment(order, now);
+                await OrderMaterialInventoryHelper.DeductMaterialAfterPaymentAsync(
+                    _context,
+                    order,
+                    _user.Username ?? "system",
+                    now,
+                    cancellationToken);
+                return new { Message = "Đặt hàng COD thành công — thanh toán khi nhận hàng", OrderCode = order.Code };
+            }
+
             transaction.InternalCode = $"CASH-{order.Code}-{DateTime.UtcNow.Ticks}";
-            transaction.TransactionStatus = TransactionStatuses.Success; // Trực tiếp thanh toán xong
-            transaction.Note = $"Thanh toán trực tiếp bằng tiền mặt cho đơn hàng {order.Code}";
-
-            // Cập nhật luôn trạng thái Invoice vì đã nhận tiền mặt
-            order.Invoice.PaymentStatus = InvoiceStatuses.Paid;
-
+            transaction.TransactionStatus = "SUCCESS";
+            transaction.PaidAt = now;
+            transaction.Note = $"COD — thu phần còn lại khi giao hàng, đơn {order.Code}";
             _context.Transactions.Add(transaction);
-            return new { Message = "Thanh toán tiền mặt thành công", OrderCode = order.Code };
+            OrderPaymentHelper.ApplySuccessfulPayment(order.Invoice, order, now);
+            await OrderMaterialInventoryHelper.DeductMaterialAfterPaymentAsync(
+                _context,
+                order,
+                _user.Username ?? "system",
+                now,
+                cancellationToken);
+
+            return new { Message = "Ghi nhận thanh toán phần còn lại (COD) thành công", OrderCode = order.Code };
         }
 
-        throw new BusinessException(
-            $"Phương thức thanh toán '{method}' hiện chưa được hệ thống hỗ trợ.",
-            ResponseCodeConstants.NOT_SUPPORTED
-        );
+        throw new InvalidOperationException($"Phương thức thanh toán không hỗ trợ: {paymentMethod}");
     }
-    #endregion
-}
 
+    private void LogPaymentRedirect(Guid orderId, string paymentMethod, string? paymentUrl, bool reused)
+    {
+        if (string.IsNullOrWhiteSpace(paymentUrl))
+            return;
+
+        _logger.LogInformation(
+            "[Payment] Trước khi chuyển cổng thanh toán — OrderId={OrderId} Method={Method} ReusedLink={Reused} PaymentUrl={PaymentUrl}",
+            orderId,
+            paymentMethod,
+            reused,
+            paymentUrl);
+    }
+
+    private static string? ExtractPaymentLink(object result)
+    {
+        if (result is PaymentResponse pr)
+            return pr.PaymentLink;
+
+        var type = result.GetType();
+        return type.GetProperty("PaymentLink")?.GetValue(result)?.ToString()
+               ?? type.GetProperty("paymentLink")?.GetValue(result)?.ToString();
+    }
+}

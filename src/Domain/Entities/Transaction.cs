@@ -11,7 +11,7 @@ public class Transaction : BaseAuditableEntity
     public required string InternalCode { get; set; } // Đây là mã tham chiếu của hệ thống tạo và gắn lên, hỗ trợ để đối chiếu với giao dịch
     public string? ExternalTransactionId { get; set; } // Mã giao dịch từ cổng thanh toán (ví dụ: mã tham chiếu MoMo)
     public string? Note { get; set; }
-    public required string TransactionStatus { get; set; } = "PENDING"; // Pending, Success, Failed, Canceled
+    public required string TransactionStatus { get; set; } = "PENDING"; // Pending, Success, Failed
     public string? PaymentLink { get; set; }
     public string? QrCode { get; set; }
     public DateTimeOffset? PaidAt { get; set; }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models;
+using sp26se058_3dprintshop_be.Application.Common.Validation;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
@@ -24,7 +25,8 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     public LoginCommandValidator()
     {
         RuleFor(v => v.Username)
-            .NotEmpty().WithMessage("Tên đăng nhập không được để trống.");
+            .NotEmpty().WithMessage("Tên đăng nhập không được để trống.")
+            .ValidUsernameFormat();
 
         RuleFor(v => v.Password)
             .NotEmpty().WithMessage("Mật khẩu không được để trống.");

@@ -86,6 +86,7 @@ jobs:
               -e DevAccount__Password="${{ secrets.DEV_ADMIN_PASSWORD }}" \
               -e DevAccount__Fullname="Dev Administrator" \
               -e AI__GenerateUrl="https://nestable-lucille-nonruinously.ngrok-free.dev/generate" \
+              -e OpenRouter__ApiKey="${{ secrets.OPENROUTER_API_KEY }}" \
               -e BackblazeB2__KeyId="${{ secrets.BACKBLAZEB2_KEYID }}" \
               -e BackblazeB2__ApplicationKey="${{ secrets.BACKBLAZEB2_APPLICATIONKEY }}" \
               -e BackblazeB2__BucketName="${{ secrets.BACKBLAZEB2_BUCKETNAME }}" \

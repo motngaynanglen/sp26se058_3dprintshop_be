@@ -1,64 +1,58 @@
-using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using PayOS;
 using PayOS.Models.V2.PaymentRequests;
 using PayOS.Models.Webhooks;
-using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Config;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
-namespace sp26se058_3dprintshop_be.Infrastructure.Service;
 
+namespace sp26se058_3dprintshop_be.Infrastructure.Service;
 public class PayOsService : IPaymentService
 {
     private readonly PayOSClient _payOsClient;
     private readonly PayOsCodeGenerator _codeGenerator;
-    private readonly ILogger<PayOsService> _logger;
 
-    public PayOsService(
-        PayOSClient payOsClient,
-        PayOsCodeGenerator codeGenerator,
-        ILogger<PayOsService> logger)
+    public PayOsService(PayOSClient payOsClient, PayOsCodeGenerator codeGenerator)
     {
         _payOsClient = payOsClient;
         _codeGenerator = codeGenerator;
-        _logger = logger;
     }
-
-    public async Task<PaymentResponse> CreatePaymentLink(Order order, string returnUrl, string cancelUrl)
+    public async Task<PaymentResponse> CreatePaymentLink(Order order, string returnUrl, string cancelUrl, decimal? chargeAmount = null)
     {
         long orderCode = _codeGenerator.GenerateCode();
-        DateTimeOffset expiryTime = DateTimeOffset.UtcNow.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes);
+        int expireInMinutes = 10;
+        DateTimeOffset expiryTime = DateTimeOffset.UtcNow.AddMinutes(expireInMinutes);
+        var amount = (int)(chargeAmount ?? order.TotalPrice);
 
-        var items = order.OrderItems.Select(x => new PaymentLinkItem
+        List<PaymentLinkItem> Items = order.OrderItems.Select(x => new PaymentLinkItem
         {
             Name = x.ItemName ?? "Sản phẩm.",
             Quantity = x.QuantityOrdered,
             Price = (int)x.UnitPrice
         }).ToList();
 
-        // Phí vận chuyển lưu ở Invoice — cộng vào link thanh toán như một dòng riêng
-        // để tổng Items khớp Amount.
-        var shippingFee = (int)(order.Invoice?.ShippingFee ?? 0);
-        if (shippingFee > 0)
-            items.Add(new PaymentLinkItem { Name = "Phí vận chuyển", Quantity = 1, Price = shippingFee });
-
         var paymentData = new CreatePaymentLinkRequest
         {
             OrderCode = orderCode,
-            Amount = (int)(order.Invoice?.TotalAmount ?? order.TotalPrice),
+            Amount = amount,
             Description = $"#{order.Code}",
-            Items = items,
+            Items = Items,
             CancelUrl = cancelUrl,
             ReturnUrl = returnUrl,
             ExpiredAt = (int)expiryTime.ToUnixTimeSeconds()
         };
 
+        // Gọi API PayOS
         CreatePaymentLinkResponse paymentResult = await _payOsClient.PaymentRequests.CreateAsync(paymentData);
 
+        // Trả về object đầy đủ như bạn muốn
         return new PaymentResponse
         {
             OrderId = order.Id.ToString(),
@@ -73,43 +67,31 @@ public class PayOsService : IPaymentService
     {
         try
         {
-            return await _payOsClient.Webhooks.VerifyAsync(webhook);
+            WebhookData verifiedData = await _payOsClient.Webhooks.VerifyAsync(webhook);
+            return verifiedData;
         }
         catch (Exception)
         {
-            // Invalid signature — treat as tampered payload.
-            throw new BusinessException("Chữ ký webhook không hợp lệ.");
+            // Nếu sai chữ ký, coi như dữ liệu không hợp lệ
+            throw new Exception("Chữ ký Webhook không hợp lệ!");
         }
     }
-
-    public async Task<PayOsPaymentLinkStatusResult> GetPaymentLinkStatus(long orderCode)
-    {
-        var paymentLink = await _payOsClient.PaymentRequests.GetAsync(orderCode);
-        var latestTransaction = paymentLink.Transactions?.LastOrDefault();
-
-        return new PayOsPaymentLinkStatusResult
-        {
-            OrderCode = paymentLink.OrderCode,
-            Amount = paymentLink.Amount,
-            AmountPaid = paymentLink.AmountPaid,
-            AmountRemaining = paymentLink.AmountRemaining,
-            Status = paymentLink.Status.ToString(),
-            PaymentLinkId = paymentLink.Id,
-            Reference = latestTransaction?.Reference,
-            TransactionDateTime = latestTransaction?.TransactionDateTime
-        };
-    }
-
     public async Task<bool> CancelPaymentLink(long orderCode, string? reason = null)
     {
         try
         {
-            await _payOsClient.PaymentRequests.CancelAsync(orderCode, reason);
+            // Gọi API của PayOS để hủy link thanh toán
+            // Lý do hủy là tùy chọn
+            var result = await _payOsClient.PaymentRequests.CancelAsync(orderCode, reason);
+
+            // Nếu không có exception ném ra, PayOS coi như đã xử lý yêu cầu hủy thành công
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not cancel PayOS payment link for order code {OrderCode}.", orderCode);
+            // Log lỗi nếu cần thiết (Ví dụ: Link đã hết hạn hoặc đã hủy rồi PayOS sẽ báo lỗi)
+            Console.WriteLine($"PayOS Cancel Error for OrderCode {orderCode}: {ex.Message}");
+            // return để logic ở Handler phía sau tiếp tục chạy.
             return false;
         }
     }

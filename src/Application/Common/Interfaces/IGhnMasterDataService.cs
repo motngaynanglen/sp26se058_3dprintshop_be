@@ -14,6 +14,6 @@ public interface IGhnMasterDataService
 
     Task<IReadOnlyList<GhnWardDto>> GetWardsAsync(int districtId, CancellationToken cancellationToken = default);
 
-    /// <summary>Kiem tra quan/huyen thuoc tinh (cache master data GHN).</summary>
+    /// <summary>Kiểm tra quận/huyện thuộc tỉnh (cache master data GHN).</summary>
     Task<bool> IsDistrictInProvinceAsync(int districtId, int provinceId, CancellationToken cancellationToken = default);
 }

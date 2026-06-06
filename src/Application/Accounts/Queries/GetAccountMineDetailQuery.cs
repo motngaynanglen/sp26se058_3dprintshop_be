@@ -9,8 +9,6 @@ using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-
-[Authorize(Roles = Roles.Authenticated)]
 public class GetAccountMineDetailQuery : IRequest<AccountDTO>
 {
     public class GetAccountMineDetailQueryHandler : IRequestHandler<GetAccountMineDetailQuery, AccountDTO>
@@ -30,7 +28,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDTO>
             var userId = _user.Id.ToGuid();
             if (userId == Guid.Empty)
             {
-                throw new UnauthorizedAccessException("Hãy đăng nhập.");
+                throw new Exception("Hãy đăng nhập.");
             }
             
             var query = _context.Accounts.AsNoTracking();
@@ -38,7 +36,7 @@ public class GetAccountMineDetailQuery : IRequest<AccountDTO>
             var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper tự tính toán field Role
                 .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
 
-            if (account == null) throw new DataNotFoundException(nameof(Account), userId);
+            if (account == null) throw new Exception("Tài khoản không tồn tại");
 
             return account;
         }

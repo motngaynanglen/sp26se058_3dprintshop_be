@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Mappings;
+using sp26se058_3dprintshop_be.Application.Feedbacks;
 using sp26se058_3dprintshop_be.Application.Common.Models;
-using sp26se058_3dprintshop_be.Domain.Constants;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 
 namespace sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
-[Authorize(Roles = Roles.CUSTOMER)]
 public class GetPendingFeedbacksQuery : PaginationRequest, IRequest<PaginatedList<PendingFeedbackDTO>>
 {
     public class GetPendingFeedbacksQueryHandler : IRequestHandler<GetPendingFeedbacksQuery, PaginatedList<PendingFeedbackDTO>>
@@ -26,19 +24,17 @@ public class GetPendingFeedbacksQuery : PaginationRequest, IRequest<PaginatedLis
 
         public async Task<PaginatedList<PendingFeedbackDTO>> Handle(GetPendingFeedbacksQuery request, CancellationToken ct)
         {
-            var userId = _user.Id.ToGuid();
-            var query = _context.OrderItems
-                .AsNoTracking()
-                .Where(oi => oi.Order.Customer.AccountId == userId
-                        // 1. Order tổng phải hoàn thành
-                        && oi.Order.OrderStatus == OrderStatuses.Completed
-                        // 2. Quan trọng: Item đó phải thực sự đã giao/hoàn tất (tùy status của bạn)
-                        // Nếu item vẫn PENDING thì chưa cho feedback
-                        // && oi.FulfillmentStatus == FulfillmentStatuses.Fulfilled 
+            var customerId = await FeedbackCustomerHelper.GetCurrentCustomerIdAsync(_context, _user, ct);
+            var deliveredOrderIds = _context.Shipments
+                .Where(s => s.ShipmentStatus == "DELIVERED")
+                .Select(s => s.OrderId);
 
-                        // 3. Item này chưa từng có feedback (Dùng !Any)
-                        && !_context.Feedbacks.Any(f => f.OrderItemId == oi.Id));
-            return await query
+            return await _context.OrderItems
+                .Where(oi => oi.Order.CustomerId == customerId
+                    && (oi.Order.OrderStatus == "COMPLETED"
+                        || oi.Order.CompletedAt != null
+                        || deliveredOrderIds.Contains(oi.OrderId))
+                    && !_context.Feedbacks.Any(f => f.OrderItemId == oi.Id))
                 .ProjectTo<PendingFeedbackDTO>(_mapper.ConfigurationProvider)
                 .PaginatedListAsync(request.PageNumber, request.PageSize);
         }

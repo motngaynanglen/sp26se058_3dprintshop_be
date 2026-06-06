@@ -9,4 +9,5 @@ namespace sp26se058_3dprintshop_be.Application.Common.Interfaces;
 public interface IBackblazeB2Service
 {
     Task<string> UploadGlbAsync(byte[] glbBase64, string folder = "models");
+    string GetPresignedDownloadUrl(string objectUrl, TimeSpan? expires = null);
 }

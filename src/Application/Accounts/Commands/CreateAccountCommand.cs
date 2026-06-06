@@ -5,8 +5,6 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
-using FluentValidation.Results;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
@@ -14,7 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.ADMIN)]
 public record CreateAccountCommand : IRequest<Guid>
 {
     [DefaultValue("daylausername")]
@@ -28,79 +26,47 @@ public record CreateAccountCommand : IRequest<Guid>
     [DefaultValue("0777777777")]
     public string? ContactPhone { get; init; }
     [DefaultValue("CUSTOMER")]
-    public string Role { get; init; } = Roles.CUSTOMER; // Default is Customer
+    public string Role { get; init; } = Roles.CUSTOMER; // Mặc định là Customer
 }
-//public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
-//{
-//    public CreateAccountCommandValidator(IApplicationDbContext context)
-//    {
-//        RuleFor(x => x.Username).CustomAsync(async (username, ctx, ct) => {
-//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Username == username, "Tài khoản", "Username", username, ct: ct);
-//            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
-//        });
-
-//        RuleFor(x => x.Email).CustomAsync(async (email, ctx, ct) => {
-//            var res = await context.Accounts.GetDuplicateResultAsync(x => x.Email == email, "Tài khoản", "Email", email, ct: ct);
-//            if (res.IsDuplicate) ctx.AddFailure(res.GetErrorMessage());
-//        });
-
-//        RuleFor(x => x.Role).Must(role => new[] { Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER }.Contains(role.ToUpper()))
-//            .WithMessage("Vai trò không tồn tại.");
-//    }
-//}
 public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
     private readonly IPasswordService _passwordService;
-    private readonly IUser _user;
 
-    public CreateAccountCommandHandler(IApplicationDbContext context, IPasswordService passwordService, IUser user)
+    public CreateAccountCommandHandler(IApplicationDbContext context, IPasswordService passwordService)
     {
         _context = context;
         _passwordService = passwordService;
-        _user = user;
     }
     public async Task<Guid> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
     {
-        var failures = new List<ValidationFailure>();
-        var usernameClean = request.Username.Trim().ToLower();
-        var emailClean = request.Email.Trim().ToLower();
+        // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
+        var isExisted = await _context.Accounts.AnyAsync(a =>
+            a.Username.ToLower() == request.Username.ToLower() || a.Email.ToLower() == request.Email.ToLower(), cancellationToken);
 
-        var userDup = await _context.Accounts.GetDuplicateResultAsync(
-        x => x.Username == request.Username, nameof(Account), nameof(request.Username), request.Username, ct: cancellationToken);
-        if (userDup.IsDuplicate) failures.AddFailure(nameof(request.Username), userDup.GetErrorMessage());
-
-        var emailDup = await _context.Accounts.GetDuplicateResultAsync(
-        x => x.Email == request.Email, nameof(Account), nameof(request.Email), request.Email, ct: cancellationToken);
-        if (emailDup.IsDuplicate) failures.AddFailure(nameof(request.Email), emailDup.GetErrorMessage());
-
-        if (request.Role.ToUpper() is not (Roles.MANAGER or Roles.STAFF or Roles.CUSTOMER))
+        if (isExisted)
         {
-            failures.AddFailure(nameof(request.Role), "Vai trò không tồn tại trong hệ thống.");
+            // Ném lỗi 400 hoặc xử lý qua ValidationBehaviour
+            throw new Exception("Tên đăng nhập hoặc Email đã tồn tại trong hệ thống.");
         }
 
-        if (_user.Role == Roles.MANAGER && request.Role.ToUpper() != Roles.STAFF)
-        {
-            failures.AddFailure(nameof(request.Role), "Quản lý chỉ được tạo tài khoản nhân viên.");
-        }
-        if (failures.Any()) throw new ValidationException(failures);
-        // 2. Hash password with BCrypt.
+        // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new BusinessException("Không thể mã hóa mật khẩu.");
+            throw new Exception("Lỗi tạo pass");
         }
         var newAccount = new Account
         {
             Username = request.Username.ToLower(),
-            PasswordHash = passwordHash, 
+            PasswordHash = passwordHash, // Lưu ý: Nên Hash password ở đây
             Fullname = request.Fullname,
             Email = request.Email.ToLower(),
             ContactPhone = request.ContactPhone,
             IsActive = true
         };
 
-        // Initialize relationship based on role.
+        // Khởi tạo quan hệ dựa trên Role
         switch (request.Role.ToUpper())
         {
             case Roles.MANAGER:
@@ -109,18 +75,18 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
                 break;
             case Roles.STAFF:
                 var staff = new Staff { Account = newAccount };
-                _context.Staffs.Add(staff);
+                _context.Staffs.Add(staff); // Chỗ này dùng đúng tên DbSet của bạn
                 break;
             case Roles.CUSTOMER:
                 var customer = new Customer { Account = newAccount };
                 _context.Customers.Add(customer);
                 break;
+            default:
+                throw new Exception("Vài trò không tồn tại trong hệ thống.");
         }
-      
+
         _context.Accounts.Add(newAccount);
         await _context.SaveChangesAsync(cancellationToken);
         return newAccount.Id;
     }
 }
-
-

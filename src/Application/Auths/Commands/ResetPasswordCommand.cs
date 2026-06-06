@@ -41,12 +41,12 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
         if (account == null || account.ResetTokenExpires < DateTimeOffset.UtcNow)
         {
-            throw new BusinessException("Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
+            throw new Exception("Token không hợp lệ hoặc đã hết hạn.");
         }
         var passwordHash = _passwordService.HashPassword(request.NewPassword);
         if (string.IsNullOrEmpty(passwordHash))
         {
-            throw new BusinessException("Không thể mã hóa mật khẩu.");
+            throw new Exception("Lỗi tạo pass");
         }
         account.PasswordHash = passwordHash;
 

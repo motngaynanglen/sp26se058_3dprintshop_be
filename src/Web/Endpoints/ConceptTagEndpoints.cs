@@ -12,7 +12,7 @@ public class ConceptTagEndpoints : EndpointGroupBase
     public override void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/concept-tag")
-                       .WithTags("Concept Tag")
+                       .WithTags("ConceptTag")
                        .WithOpenApi();
 
         group.MapGet("/all", GetAll)
@@ -30,73 +30,71 @@ public class ConceptTagEndpoints : EndpointGroupBase
     public async Task<IResult> GetAll(
         [FromServices] ISender sender)
     {
-
         var result = await sender.Send(new GetConceptTagsListQuery());
 
         return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.ListResponseModel(
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
                 data: result,
-                successMessage: "Lấy danh sách concept tag thành công.",
-                emptyMessage: "Không tìm thấy concept tag nào."));
-
-
+                message: "Lấy danh sách concept tag thành công",
+                code: ResponseCodeConstants.SUCCESS));
     }
     public async Task<IResult> GetQuery([FromServices] ISender sender, [FromBody] GetConceptTagsByNameQuery command)
     {
-
         var result = await sender.Send(command);
 
         return TypedResults.Ok(
-            BaseResponseModel<IEnumerable<ConceptTagDTO>>.ListResponseModel(
+            BaseResponseModel<IEnumerable<ConceptTagDTO>>.OkResponseModel(
                 data: result.Items,
                 additionalData: new { paging = result.Metadata },
-                successMessage: "Lấy danh sách concept tag thành công.",
-                emptyMessage: "Không tìm thấy concept tag nào."));
-
+                message: "Lấy danh sách concept tag thành công",
+                code: ResponseCodeConstants.SUCCESS));
     }
     public async Task<IResult> Update(
         [FromServices] ISender sender,
         [FromRoute] Guid id,
         [FromBody] UpdateConceptTagCommand command)
     {
-
         var finalCommand = command with { Id = id };
 
         var result = await sender.Send(finalCommand);
 
         return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
             data: result,
-            message: "Cập nhật tag ý tưởng thành công!",
+            message: "Cập nhật Concept tag thành công!",
             code: ResponseCodeConstants.SUCCESS));
-
     }
     public async Task<IResult> Delete(
         [FromServices] ISender sender,
         [FromRoute] Guid id)
     {
-
         var finalCommand = new DeleteConceptTagCommand { Id = id };
 
         var result = await sender.Send(finalCommand);
 
         return TypedResults.Ok(BaseResponseModel<bool>.OkResponseModel(
             data: result,
-            message: "Xóa tag ý tưởng thành công!",
+            message: "Xóa Concept tag thành công!",
             code: ResponseCodeConstants.SUCCESS));
-
     }
     public async Task<IResult> Add(
         [FromServices] ISender sender,
         [FromBody] CreateConceptTagCommand command)
     {
+        try
+        {
 
+            var result = await sender.Send(command);
 
-        var result = await sender.Send(command);
-
-        return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
-            data: result,
-            message: "Tạo tag ý tưởng thành công!",
-            code: ResponseCodeConstants.SUCCESS));
-
+            return TypedResults.Ok(BaseResponseModel<Guid>.OkResponseModel(
+                data: result,
+                message: "Tạo Concept tag thành công!",
+                code: ResponseCodeConstants.SUCCESS));
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
+                statusCode: StatusCodes.Status404NotFound);
+        }
     }
 }

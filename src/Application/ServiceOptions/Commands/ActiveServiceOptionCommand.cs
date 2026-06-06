@@ -4,13 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ServiceOptions.Commands;
-[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
-
 public record ActiveServiceOptionCommand(Guid Id) : IRequest<object>;
 public class ActiveServiceOptionCommandHandler : IRequestHandler<ActiveServiceOptionCommand, object>
 {
@@ -26,21 +23,14 @@ public class ActiveServiceOptionCommandHandler : IRequestHandler<ActiveServiceOp
     public async Task<object> Handle(ActiveServiceOptionCommand request, CancellationToken ct)
     {
         var entity = await _context.ServiceOptions.FindAsync(new object[] { request.Id }, ct);
-        if (entity == null) throw new DataNotFoundException(nameof(ServiceOption),request.Id);
+        if (entity == null) throw new Exception("Không tìm thấy tùy chọn.");
 
         // Chỉ tắt hoạt động để không cho khách hàng mới chọn
         entity.IsActive = true;
         entity.LastModified = CoreHelper.SystemTimeNow;
         entity.LastModifiedBy = _user.Username;
 
-        try
-        {
-            await _context.SaveChangesAsync(ct);
-        }
-        catch (Exception ex)
-        {
-            throw new UpdateFailureException(nameof(ServiceOption), $"{ex.InnerException?.Message ?? ex.Message}");
-        }
+        await _context.SaveChangesAsync(ct);
         return true;
         //return new { Message = "Đã ngưng hoạt động tùy chọn này" };
     }

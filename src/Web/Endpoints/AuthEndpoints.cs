@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Login;
 using sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
@@ -33,52 +34,95 @@ public class AuthEndpoints : EndpointGroupBase
     }
     public async Task<IResult> SystemLogin([FromServices] ISender sender, [FromBody] SystemLoginCommand command)
     {
-
-        var result = await sender.Send(command);
-        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                data: result,
-                message: "Đăng nhập thành công!",
-                code: ResponseCodeConstants.SUCCESS
-            ));
-
-
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                    data: result,
+                    message: "Đăng nhập thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(
+                    null,
+                    message: ex.Message,
+                    code: ResponseCodeConstants.INVALID_CREDENTIALS),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
+        catch (ForbiddenAccessException ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(
+                    null,
+                    message: ex.Message,
+                    code: ResponseCodeConstants.FORBIDDEN),
+                statusCode: StatusCodes.Status403Forbidden);
+        }
     }
     public async Task<IResult> Login([FromServices] ISender sender, [FromBody] LoginCommand command)
     {
-
-        var result = await sender.Send(command);
-        return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
-                data: result,
-                message: "Đăng nhập thành công!",
-                code: ResponseCodeConstants.SUCCESS
-            ));
-
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<ResponseLoginModel>.OkResponseModel(
+                    data: result,
+                    message: "Đăng nhập thành công!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(
+                    null,
+                    message: ex.Message,
+                    code: ResponseCodeConstants.INVALID_CREDENTIALS),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
     }
     public async Task<IResult> ForgetPassword([FromServices] ISender sender, [FromBody] ForgetPasswordCommand command)
     {
-
-        var result = await sender.Send(command);
-        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: result,
-                message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
-                code: ResponseCodeConstants.SUCCESS
-            ));
-
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    data: result,
+                    message: "Gửi mã thành công. Xin kiểm tra hộp thư!",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Trả về 401 
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
     }
     public async Task<IResult> ResetPassword([FromServices] ISender sender, [FromBody] ResetPasswordCommand command)
     {
-
-        var result = await sender.Send(command);
-        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                data: result,
-                message: "Đặt lại mật khẩu thành công.",
-                code: ResponseCodeConstants.SUCCESS
-            ));
-
+        try
+        {
+            var result = await sender.Send(command);
+            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                    data: result,
+                    message: "Đặt lại mật khẩu thành công.",
+                    code: ResponseCodeConstants.SUCCESS
+                ));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Trả về 401 
+            return TypedResults.Json(
+                BaseResponseModel<object>.BadRequestResponseModel(null, code: ResponseCodeConstants.FAILED),
+                statusCode: StatusCodes.Status401Unauthorized);
+        }
     }
     public async Task<IResult> Register([FromServices] ISender sender, [FromBody] RegisterCommand command)
     {
-
         // Gửi command tới RegisterCommandHandler
         var result = await sender.Send(command);
 
@@ -94,8 +138,6 @@ public class AuthEndpoints : EndpointGroupBase
             data: false,
             message: "Đăng ký thất bại, vui lòng thử lại."
         ));
-
-
     }
 
 }

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Infrastructure.Identity;
@@ -13,6 +13,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+    //public DbSet<TodoList> TodoLists => Set<TodoList>();
+
+    //public DbSet<TodoItem> TodoItems => Set<TodoItem>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Manager> Managers => Set<Manager>();
     public DbSet<Staff> Staffs => Set<Staff>();
@@ -27,6 +30,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<DesignTag> DesignTags => Set<DesignTag>();
     public DbSet<Material> Materials => Set<Material>();
     public DbSet<MaterialPriceHistory> MaterialPriceHistories => Set<MaterialPriceHistory>();
+    public DbSet<MaterialInventoryTransaction> MaterialInventoryTransactions => Set<MaterialInventoryTransaction>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
     public DbSet<DesignWork> DesignWorks => Set<DesignWork>();
     public DbSet<DesignLog> DesignLogs => Set<DesignLog>();
@@ -34,14 +38,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<TechnicalDraft> TechnicalDrafts => Set<TechnicalDraft>();
     public DbSet<ShippingAddress> ShippingAddresses => Set<ShippingAddress>();
     public DbSet<Shipment> Shipments => Set<Shipment>();
-    public DbSet<ShipmentAddressChangeRequest> ShipmentAddressChangeRequests => Set<ShipmentAddressChangeRequest>();
     public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<FeedbackImage> FeedbackImages => Set<FeedbackImage>();
     public DbSet<ServiceOption> ServiceOptions => Set<ServiceOption>();
+    public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
+    public DbSet<PackageOption> PackageOptions => Set<PackageOption>();
     public DbSet<ServiceSelection> ServiceSelections => Set<ServiceSelection>();
-    public DbSet<ServiceSelectedOption> ServiceSelectedOptions => Set<ServiceSelectedOption>();
-
-    public void ClearChangeTracker() => ChangeTracker.Clear();
+    public DbSet<ServiceSelectionOption> ServiceSelectionOptions => Set<ServiceSelectionOption>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -66,9 +69,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 var indexBuilder = builder.Entity(entityType.ClrType)
                 .HasIndex(nameof(BaseAuditableEntity.Deleted));
 
-                if (Database.IsSqlServer())
+                if (Database.IsMySql())
                 {
-                    indexBuilder.HasFilter("[Deleted] IS NULL");
+                    indexBuilder.HasFilter("`Deleted` IS NULL");
                 }
             }
         }

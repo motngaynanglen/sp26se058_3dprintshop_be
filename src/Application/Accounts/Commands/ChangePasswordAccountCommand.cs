@@ -12,7 +12,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.Authenticated)]
+[Authorize(Roles = Roles.ADMIN)]
 public record ChangePasswordAccountCommand : IRequest<bool>
 {
     [DefaultValue("Matkhaucu123")]
@@ -36,24 +36,28 @@ public class ChangePasswordAccountCommandHandler : IRequestHandler<ChangePasswor
     }
     public async Task<bool> Handle(ChangePasswordAccountCommand request, CancellationToken cancellationToken)
     {
-        var userId = _user.Id.ToGuid();
+        var userId = _user.Id;
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new UnauthorizedAccessException("Tài khoản chưa được đăng nhập.");
+        }
         // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
-        var account = await _context.Accounts.FirstOrDefaultAsync(a =>  a.Id == userId, cancellationToken);
+        var account = await _context.Accounts.FirstOrDefaultAsync(a =>  a.Id.ToString().ToLower() == userId!.ToLower(), cancellationToken);
 
         if (account == null)
         {
-            throw new DataNotFoundException(nameof(Account), userId);
+            throw new Exception("Tài khoảng không tồn tại trong hệ thống.");
         }
         // 2. Kiểm tra mật khẩu cũ
         if (!_passwordService.VerifyPassword(request.OldPassword, account.PasswordHash))
         {
-            throw new BusinessException("Mật khẩu cũ không chính xác.");
+            throw new Exception("Mật khẩu cũ không chính xác.");
         }
         // 3. Lưu mật khẩu mới.
         var newPasswordHash = _passwordService.HashPassword(request.NewPassword);
         if (newPasswordHash == null)
         {
-            throw new BusinessException("Không thể mã hóa mật khẩu.");
+            throw new Exception("Lỗi tạo pass (đáng lẽ nó sẽ không xảy ra");
         }
         account.PasswordHash = newPasswordHash;
         await _context.SaveChangesAsync(cancellationToken);

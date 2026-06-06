@@ -12,5 +12,4 @@ public class BackblazeB2Settings
     public required string ApplicationKey { get; set; }
     public required string BucketName { get; set; }
     public required string ServiceUrl { get; set; }
-
 }

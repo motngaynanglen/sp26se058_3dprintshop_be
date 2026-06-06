@@ -6,9 +6,6 @@ using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Queries;
-
-[Authorize(Roles = Roles.CUSTOMER + ","+Roles.STAFF + "," + Roles.MANAGER)]
-
 public class GetShipmentByIdQuery : IRequest<ShipmentDTO>
 {
     public Guid Id { get; set; }
@@ -29,31 +26,37 @@ public class GetShipmentByIdQuery : IRequest<ShipmentDTO>
         {
             // 1. Truy vấn Shipment kèm các thông tin liên quan
             var entity = await _context.Shipments
-                .Include(x => x.ShippingAddress) 
+                .Include(x => x.ShippingAddress)
                 //.Include(x => x.ShippingMethod) //Tạm không dùng shipingmethod
                 .Include(x => x.Order)
-                    .ThenInclude(o=>o.Customer)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
             // 2. Kiểm tra tồn tại
             if (entity == null)
             {
-                throw new DataNotFoundException($"Không tìm thấy vận đơn với mã: {request.Id}");
+                throw new Exception($"Không tìm thấy vận đơn với Id: {request.Id}");
             }
 
             // 3. Bảo mật: Nếu là Customer, chỉ cho phép xem vận đơn của chính họ
             // Giả sử Manager và Staff có quyền xem mọi vận đơn
             
-            if (_user.Role == Roles.CUSTOMER)
+            var currentUserRole = _user.Role; // Hoặc logic check role của bạn
+            if (currentUserRole == Roles.CUSTOMER)
             {
                 var userId = _user.Id.ToGuid();
-                if (entity.Order.Customer.AccountId != userId) 
+                var customer = await _context.Customers.FirstOrDefaultAsync(x =>  userId == x.AccountId);
+                if (customer == null)
                 {
-                    throw new ForbiddenAccessException("Bạn không có quyền xem vận đơn này!");
+                    throw new Exception("Không tìm thấy tài khoản của bạn.");
+                }
+                if (entity.Order.CustomerId != userId) // Kiểm tra quyền sở hữu đơn hàng
+                {
+                    throw new Exception("Bạn không có quyền xem vận đơn này!");
                 }
             }
             
+
             // 4. Mapping sang DTO (Sử dụng cấu hình Mapping Profile đã tạo trước đó)
             return _mapper.Map<ShipmentDTO>(entity);
         }

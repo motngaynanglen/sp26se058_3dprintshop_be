@@ -6,18 +6,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Security;
-using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 
-[Authorize(Roles = Roles.MANAGER)]
 public record DeleteConceptTagCommand : IRequest<bool>
 {
     [JsonIgnore]
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid Id { get; init; }
     //public bool IsActive { get; init; } = false;
 }
@@ -36,7 +32,7 @@ public class DeleteConceptTagCommandHandler : IRequestHandler<DeleteConceptTagCo
         var conceptTag = await _context.ConceptTags.Include(c => c.DesignTags).FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
         if (conceptTag == null)
         {
-            throw new DataNotFoundException(nameof(ConceptTag), request.Id);
+            throw new Exception("Không tìm thấy Concept tag với Id " + request.Id);
         }
 
         DeleteAllChildTags(conceptTag);
@@ -52,7 +48,7 @@ public class DeleteConceptTagCommandHandler : IRequestHandler<DeleteConceptTagCo
         {
             foreach (var tag in conceptTag.DesignTags)
             {
-                if (tag.Deleted == null)
+                if (tag.Deleted != null)
                 {
                     tag.Deleted = CoreHelper.SystemTimeNow;
                     tag.DeletedBy = _user.Username;
