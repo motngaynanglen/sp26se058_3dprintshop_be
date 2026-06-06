@@ -11,12 +11,12 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 namespace sp26se058_3dprintshop_be.Application.DesignWorks.Commands;
 
 /// <summary>
-/// Staff reviews the technical print quality of a single DesignVersionHistory file.
-/// Works for BOTH Design Service (staff reviewing uploaded design files) and
-/// POD/Quick Print (staff reviewing customer-submitted STL/OBJ files).
-/// No ServiceSelection quota is involved — this is purely a technical quality gate.
+/// Duyệt một DesignVersionHistory file. Người duyệt phụ thuộc loại công việc:
+///  - PRINT_SERVICE (khách upload file để in): STAFF/MANAGER duyệt chất lượng in.
+///  - DESIGN_SERVICE / legacy (nhân viên làm thiết kế): KHÁCH HÀNG (chủ sở hữu) duyệt; MANAGER giám sát.
+/// Authorize mở cho cả 3 role; phân quyền chi tiết theo WorkType nằm trong handler.
 /// </summary>
-[Authorize(Roles = Roles.StaffOrManager)]
+[Authorize(Roles = Roles.CustomerStaffManager)]
 public record ReviewFileVersionCommand : IRequest<DesignLogDTO>
 {
     /// <summary>ID of the DesignVersionHistory to review.</summary>
@@ -99,6 +99,39 @@ public class ReviewFileVersionCommandHandler : IRequestHandler<ReviewFileVersion
                 ResponseCodeConstants.VAL_INVALID_STATE);
         }
 
+        // --- Phân quyền theo loại công việc ---
+        // PRINT_SERVICE: khách upload file để in → STAFF/MANAGER duyệt.
+        // DESIGN_SERVICE (hoặc legacy null): nhân viên làm thiết kế → KHÁCH HÀNG (chủ sở hữu) duyệt; MANAGER giám sát.
+        bool isPrintService = designWork.WorkType == DesignWorkTypes.PrintService;
+        bool isCustomer = _user.Role == Roles.CUSTOMER;
+
+        if (isPrintService)
+        {
+            if (_user.Role != Roles.STAFF && _user.Role != Roles.MANAGER)
+            {
+                throw new ForbiddenAccessException("Chỉ nhân viên được duyệt file đối với đơn in theo yêu cầu.");
+            }
+        }
+        else
+        {
+            if (isCustomer)
+            {
+                var reviewerId = _user.Id.ToGuid();
+                var reviewerCustomer = await _context.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.AccountId == reviewerId, cancellationToken);
+                if (reviewerCustomer == null || designWork.CustomerId != reviewerCustomer.Id)
+                {
+                    throw new ForbiddenAccessException("Bạn không có quyền duyệt thiết kế này.");
+                }
+            }
+            else if (_user.Role != Roles.MANAGER)
+            {
+                // STAFF không tự duyệt thiết kế trong dịch vụ thiết kế — việc này thuộc về khách hàng.
+                throw new ForbiddenAccessException("Nhân viên không duyệt thiết kế trong dịch vụ thiết kế — việc này thuộc về khách hàng.");
+            }
+        }
+
         // Idempotency guard: already reviewed with the same status → skip silently
         if (version.FileReviewStatus == request.ReviewStatus)
         {
@@ -111,7 +144,7 @@ public class ReviewFileVersionCommandHandler : IRequestHandler<ReviewFileVersion
         }
 
         var now = CoreHelper.SystemTimeNow;
-        var staffName = _user.Username ?? "Nhân viên";
+        var reviewerName = _user.Username ?? (isCustomer ? "Khách hàng" : "Nhân viên");
         bool isAccepted = request.ReviewStatus == FileReviewStatuses.Accepted;
 
         // --- Update FileReviewStatus on version ---
@@ -119,13 +152,17 @@ public class ReviewFileVersionCommandHandler : IRequestHandler<ReviewFileVersion
         version.FileReviewNote = request.ReviewNote;
         version.IsPrintable = isAccepted;   // Sync legacy boolean for backward compat
         version.LastModified = now;
-        version.LastModifiedBy = staffName;
+        version.LastModifiedBy = reviewerName;
 
-        // --- Create COMMUNICATION log visible to customer ---
+        // --- Create COMMUNICATION log visible to both sides --- (nội dung theo người duyệt)
         var fileName = ExtractFileName(version.FileUrl);
         string notificationContent = isAccepted
-            ? $"Nhân viên xác nhận file \"{fileName}\" đủ tiêu chuẩn in 3D."
-            : $"Nhân viên từ chối file \"{fileName}\". Lý do: {request.ReviewNote}. Vui lòng upload lại file đã chỉnh sửa.";
+            ? (isCustomer
+                ? $"Khách hàng đã duyệt thiết kế \"{fileName}\"."
+                : $"Nhân viên xác nhận file \"{fileName}\" đủ tiêu chuẩn in 3D.")
+            : (isCustomer
+                ? $"Khách hàng từ chối thiết kế \"{fileName}\". Lý do: {request.ReviewNote}. Nhân viên vui lòng chỉnh sửa và gửi lại."
+                : $"Nhân viên từ chối file \"{fileName}\". Lý do: {request.ReviewNote}. Vui lòng upload lại file đã chỉnh sửa.");
 
         var notificationLog = new DesignLog
         {
@@ -136,9 +173,9 @@ public class ReviewFileVersionCommandHandler : IRequestHandler<ReviewFileVersion
             LogType = DesignLogType.Communication,
             IsAI = false,
             Created = now,
-            CreatedBy = staffName,
+            CreatedBy = reviewerName,
             LastModified = now,
-            LastModifiedBy = staffName
+            LastModifiedBy = reviewerName
         };
 
         _context.DesignLogs.Add(notificationLog);
@@ -146,14 +183,14 @@ public class ReviewFileVersionCommandHandler : IRequestHandler<ReviewFileVersion
         // --- POD only: transition DesignWork to SKETCHING if ALL files are REJECTED ---
         if (designWork.WorkType == DesignWorkTypes.PrintService && !isAccepted)
         {
-            await CheckAndApplyAllRejectedTransitionAsync(designWork, now, staffName, cancellationToken);
+            await CheckAndApplyAllRejectedTransitionAsync(designWork, now, reviewerName, cancellationToken);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(
             "File version {VersionId} reviewed as {Status} by {Staff} for DesignWork {WorkId}.",
-            version.Id, request.ReviewStatus, staffName, designWork.Id);
+            version.Id, request.ReviewStatus, reviewerName, designWork.Id);
 
         return await BuildResponseAsync(notificationLog.Id, cancellationToken);
     }
