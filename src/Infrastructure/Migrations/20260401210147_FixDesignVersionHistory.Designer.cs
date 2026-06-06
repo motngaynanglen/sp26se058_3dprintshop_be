@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401210147_FixDesignVersionHistory")]
+    partial class FixDesignVersionHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,11 +94,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContactPhone")
-                        .IsUnique();
-
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -146,8 +145,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -190,8 +188,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("Customers");
                 });
@@ -244,8 +241,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignWorkId");
 
@@ -292,8 +288,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("ConceptTagId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignTemplateId");
 
@@ -352,8 +347,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("DesignTemplates");
                 });
@@ -429,9 +423,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<string>("PreviewImageUrl")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("PreviewModelUrl")
                         .HasColumnType("longtext");
 
@@ -453,8 +444,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignTemplateId");
 
@@ -517,8 +507,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignLogId");
 
@@ -544,9 +533,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("longtext");
 
-                    b.Property<DateTimeOffset?>("CustomerApprovedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("char(36)");
 
@@ -556,21 +542,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("InitialIdeaImageUrlsJson")
-                        .HasColumnType("longtext");
-
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset?>("LastQuotedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<decimal?>("LatestQuotedPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid?>("MainAssignedStaffId")
                         .HasColumnType("char(36)");
@@ -578,31 +554,19 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
-                    b.Property<int>("QuoteRevision")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RequirementBrief")
-                        .HasColumnType("longtext");
-
                     b.Property<Guid?>("ResultDraftId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("ServicePackageId")
+                    b.Property<Guid>("ServicePackageId")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid?>("ServiceSelectionId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("SourceDesignWorkId")
                         .HasColumnType("char(36)");
 
                     b.Property<string>("SourceType")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
-
-                    b.Property<DateTimeOffset?>("StaffAssignedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -616,14 +580,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("MainAssignedStaffId");
 
                     b.HasIndex("ServicePackageId");
-
-                    b.HasIndex("SourceDesignWorkId");
 
                     b.HasIndex("TemplateId");
 
@@ -681,8 +642,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignTemplateId");
 
@@ -762,8 +722,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignVariantId");
 
@@ -834,8 +793,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("InvoiceCode")
                         .IsUnique();
@@ -878,8 +836,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("Managers");
                 });
@@ -919,78 +876,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<decimal>("StockQuantityGrams")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)")
-                        .HasDefaultValue(0m);
-
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("Materials");
-                });
-
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialInventoryTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTimeOffset>("Created")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset?>("Deleted")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("DeletedBy")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTimeOffset>("LastModified")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("MaterialId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<decimal>("QuantityGrams")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<Guid?>("ReferenceId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("StaffId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
-
-                    b.HasIndex("ReferenceId");
-
-                    b.HasIndex("StaffId");
-
-                    b.HasIndex("MaterialId", "Created");
-
-                    b.ToTable("MaterialInventoryTransactions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialPriceHistory", b =>
@@ -1036,8 +926,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("MaterialId");
 
@@ -1105,8 +994,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("StaffId");
 
@@ -1180,8 +1068,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignVariantId");
 
@@ -1248,8 +1135,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("ServiceOptionId");
 
@@ -1309,8 +1195,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("ServiceOptions");
                 });
@@ -1367,8 +1252,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("ServicePackages");
                 });
@@ -1412,8 +1296,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignWorkId")
                         .IsUnique();
@@ -1464,8 +1347,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("ServiceOptionId");
 
@@ -1479,25 +1361,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
-
-                    b.Property<string>("Carrier")
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("CarrierLabelUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("CarrierMetaJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CarrierOrderCode")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("CarrierStatus")
-                        .HasMaxLength(80)
-                        .HasColumnType("varchar(80)");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
@@ -1540,7 +1403,10 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<decimal>("ShippingFee")
-                        .HasColumnType("decimal(65,30)");
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
 
                     b.Property<Guid?>("ShippingMethodId")
                         .HasColumnType("char(36)");
@@ -1551,14 +1417,13 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("OrderId");
 
                     b.HasIndex("ShippingAddressId");
 
-                    b.ToTable("Shipment", (string)null);
+                    b.ToTable("Shipments");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ShippingAddress", b =>
@@ -1597,12 +1462,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<int?>("GhnDistrictId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("GhnWardCode")
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("IsDefault")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
@@ -1638,10 +1497,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
-                    b.ToTable("ShippingAddress", (string)null);
+                    b.ToTable("ShippingAddresses");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Staff", b =>
@@ -1676,8 +1534,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.ToTable("Staffs");
                 });
@@ -1746,8 +1603,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("DesignVersionHistoryId");
 
@@ -1822,8 +1678,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Deleted")
-                        .HasFilter("`Deleted` IS NULL");
+                    b.HasIndex("Deleted");
 
                     b.HasIndex("ExternalTransactionId");
 
@@ -1939,12 +1794,8 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", "ServicePackage")
                         .WithMany()
                         .HasForeignKey("ServicePackageId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", null)
-                        .WithMany()
-                        .HasForeignKey("SourceDesignWorkId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignTemplate", "Template")
                         .WithMany()
@@ -2038,24 +1889,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
-                });
-
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialInventoryTransaction", b =>
-                {
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Material", "Material")
-                        .WithMany("InventoryTransactions")
-                        .HasForeignKey("MaterialId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Staff", "Staff")
-                        .WithMany()
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Material");
-
-                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.MaterialPriceHistory", b =>
@@ -2181,7 +2014,7 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Order", "Order")
                         .WithMany()
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ShippingAddress", "ShippingAddress")
@@ -2310,8 +2143,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Material", b =>
                 {
-                    b.Navigation("InventoryTransactions");
-
                     b.Navigation("PriceHistories");
                 });
 

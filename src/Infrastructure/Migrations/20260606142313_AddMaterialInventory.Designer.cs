@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606142313_AddMaterialInventory")]
+    partial class AddMaterialInventory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -428,9 +431,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("PreviewImageUrl")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("PreviewModelUrl")
                         .HasColumnType("longtext");

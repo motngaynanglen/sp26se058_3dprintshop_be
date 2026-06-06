@@ -12,8 +12,8 @@ using sp26se058_3dprintshop_be.Infrastructure.Data;
 namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260414202011_Initial_Design_SystemV2")]
-    partial class Initial_Design_SystemV2
+    [Migration("20260401205949_AddServiceDatabase")]
+    partial class AddServiceDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -223,9 +223,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<bool>("IsAI")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
@@ -240,18 +237,13 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("Metadata")
                         .HasColumnType("longtext");
 
-                    b.Property<Guid?>("ParentLogId")
-                        .HasColumnType("char(36)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
 
                     b.HasIndex("Deleted");
 
-                    b.HasIndex("ParentLogId");
-
-                    b.HasIndex("DesignWorkId", "Created");
+                    b.HasIndex("DesignWorkId");
 
                     b.ToTable("DesignLogs");
                 });
@@ -489,9 +481,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("IsApproved")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<bool>("IsPreviewable")
                         .HasColumnType("tinyint(1)");
 
@@ -550,9 +539,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("longtext");
 
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
@@ -563,34 +549,29 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<Guid?>("ParentDesignWorkId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("RelationshipType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasDefaultValue("ORIGINAL");
+                        .HasColumnType("longtext");
 
                     b.Property<Guid?>("ResultDraftId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("RootDesignWorkId")
+                    b.Property<Guid>("ServicePackageId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid?>("StaffId")
+                    b.Property<Guid?>("ServiceSelectionId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
-                        .HasDefaultValue("SKETCHING");
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
@@ -600,11 +581,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.HasIndex("MainAssignedStaffId");
 
-                    b.HasIndex("ParentDesignWorkId");
+                    b.HasIndex("ServicePackageId");
 
-                    b.HasIndex("RootDesignWorkId");
-
-                    b.HasIndex("StaffId");
+                    b.HasIndex("TemplateId");
 
                     b.ToTable("DesignWorks");
                 });
@@ -651,9 +630,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("RepliedDate")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("StaffReply")
                         .HasMaxLength(2000)
@@ -1104,6 +1080,67 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.PackageOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("DefaultSelected")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset?>("Deleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("MaxQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("MinQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<decimal?>("PriceOverride")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ServiceOptionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ServicePackageId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Deleted");
+
+                    b.HasIndex("ServiceOptionId");
+
+                    b.HasIndex("ServicePackageId");
+
+                    b.ToTable("PackageOptions");
+                });
+
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceOption", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1145,6 +1182,11 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("OptionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
@@ -1155,15 +1197,20 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.ToTable("ServiceOptions");
                 });
 
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelectedOption", b =>
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<decimal>("AppliedPrice")
+                    b.Property<decimal>("BasePrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
@@ -1177,36 +1224,34 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("OptionNameSnapshot")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
-
-                    b.Property<Guid>("ServiceOptionId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ServiceSelectionId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("ServiceType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.HasIndex("Deleted");
 
-                    b.HasIndex("ServiceOptionId");
-
-                    b.HasIndex("ServiceSelectionId");
-
-                    b.ToTable("ServiceSelectedOptions");
+                    b.ToTable("ServicePackages");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", b =>
@@ -1239,19 +1284,73 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Note")
+                    b.Property<string>("SelectionType")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<Guid?>("ServicePackageId")
+                        .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Deleted");
 
-                    b.HasIndex("DesignWorkId");
+                    b.HasIndex("DesignWorkId")
+                        .IsUnique();
+
+                    b.HasIndex("ServicePackageId");
 
                     b.ToTable("ServiceSelections");
+                });
+
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelectionOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("AppliedPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset?>("Deleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset>("LastModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<Guid>("ServiceOptionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ServiceSelectionId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Deleted");
+
+                    b.HasIndex("ServiceOptionId");
+
+                    b.HasIndex("ServiceSelectionId");
+
+                    b.ToTable("ServiceSelectionOptions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Shipment", b =>
@@ -1259,9 +1358,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
-
-                    b.Property<string>("CarrierName")
-                        .HasColumnType("longtext");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("datetime(6)");
@@ -1308,6 +1404,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("ShippingMethodId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("TrackingNumber")
                         .HasMaxLength(100)
@@ -1469,9 +1568,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Property<int>("InfillDensity")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsConfirmed")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<DateTimeOffset>("LastModified")
                         .HasColumnType("datetime(6)");
 
@@ -1501,9 +1597,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
                     b.Property<string>("TechnicalNote")
                         .HasColumnType("longtext");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(65,30)");
 
                     b.HasKey("Id");
 
@@ -1614,16 +1707,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignLog", "ParentLog")
-                        .WithMany("Replies")
-                        .HasForeignKey("ParentLogId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Account");
 
                     b.Navigation("DesignWork");
-
-                    b.Navigation("ParentLog");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignTag", b =>
@@ -1694,28 +1780,31 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Customer", "Customer")
                         .WithMany("DesignWorks")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Staff", "MainAssignedStaff")
-                        .WithMany()
-                        .HasForeignKey("MainAssignedStaffId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", "ParentDesignWork")
-                        .WithMany("ChildDesignWorks")
-                        .HasForeignKey("ParentDesignWorkId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Staff", null)
                         .WithMany("AssignedDesignWorks")
-                        .HasForeignKey("StaffId");
+                        .HasForeignKey("MainAssignedStaffId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", "ServicePackage")
+                        .WithMany()
+                        .HasForeignKey("ServicePackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId");
 
                     b.Navigation("Customer");
 
                     b.Navigation("MainAssignedStaff");
 
-                    b.Navigation("ParentDesignWork");
+                    b.Navigation("ServicePackage");
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Feedback", b =>
@@ -1862,16 +1951,52 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Navigation("TechnicalDraft");
                 });
 
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelectedOption", b =>
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.PackageOption", b =>
                 {
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServiceOption", "ServiceOption")
-                        .WithMany("ServiceSelectedOptions")
+                        .WithMany("PackageOptions")
+                        .HasForeignKey("ServiceOptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", "ServicePackage")
+                        .WithMany("PackageOptions")
+                        .HasForeignKey("ServicePackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceOption");
+
+                    b.Navigation("ServicePackage");
+                });
+
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", b =>
+                {
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", "DesignWork")
+                        .WithOne("ServiceSelection")
+                        .HasForeignKey("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", "DesignWorkId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", "ServicePackage")
+                        .WithMany()
+                        .HasForeignKey("ServicePackageId");
+
+                    b.Navigation("DesignWork");
+
+                    b.Navigation("ServicePackage");
+                });
+
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelectionOption", b =>
+                {
+                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServiceOption", "ServiceOption")
+                        .WithMany()
                         .HasForeignKey("ServiceOptionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", "ServiceSelection")
-                        .WithMany("ServiceSelectedOptions")
+                        .WithMany("SelectedOptions")
                         .HasForeignKey("ServiceSelectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1881,21 +2006,10 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Navigation("ServiceSelection");
                 });
 
-            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", b =>
-                {
-                    b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", "DesignWork")
-                        .WithMany("ServiceSelections")
-                        .HasForeignKey("DesignWorkId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DesignWork");
-                });
-
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Shipment", b =>
                 {
                     b.HasOne("sp26se058_3dprintshop_be.Domain.Entities.Order", "Order")
-                        .WithMany("Shipments")
+                        .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1988,8 +2102,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignLog", b =>
                 {
-                    b.Navigation("Replies");
-
                     b.Navigation("VersionHistories");
                 });
 
@@ -2009,11 +2121,9 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.DesignWork", b =>
                 {
-                    b.Navigation("ChildDesignWorks");
-
                     b.Navigation("DesignLogs");
 
-                    b.Navigation("ServiceSelections");
+                    b.Navigation("ServiceSelection");
 
                     b.Navigation("VersionHistories");
                 });
@@ -2038,8 +2148,6 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
                     b.Navigation("Invoice");
 
                     b.Navigation("OrderItems");
-
-                    b.Navigation("Shipments");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.OrderItem", b =>
@@ -2049,12 +2157,17 @@ namespace sp26se058_3dprintshop_be.Infrastructure.Migrations
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceOption", b =>
                 {
-                    b.Navigation("ServiceSelectedOptions");
+                    b.Navigation("PackageOptions");
+                });
+
+            modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServicePackage", b =>
+                {
+                    b.Navigation("PackageOptions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.ServiceSelection", b =>
                 {
-                    b.Navigation("ServiceSelectedOptions");
+                    b.Navigation("SelectedOptions");
                 });
 
             modelBuilder.Entity("sp26se058_3dprintshop_be.Domain.Entities.Staff", b =>
