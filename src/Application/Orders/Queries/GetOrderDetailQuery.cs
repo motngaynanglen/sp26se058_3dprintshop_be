@@ -33,6 +33,9 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
             .Include(o => o.Invoice).ThenInclude(i => i!.Transactions)
             .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignVariant).ThenInclude(dv => dv!.DesignTemplate)
             .Include(o => o.OrderItems).ThenInclude(oi => oi.DesignVariant).ThenInclude(dv => dv!.Material)
+            // Đơn in theo yêu cầu (PRINT_SERVICE) không có DesignVariant — lấy vật liệu/cân nặng/ảnh từ TechnicalDraft.
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.TechnicalDraft).ThenInclude(td => td!.Material)
+            .Include(o => o.OrderItems).ThenInclude(oi => oi.TechnicalDraft).ThenInclude(td => td!.DesignVersionHistory).ThenInclude(v => v!.DesignWork)
             .Include(o => o.OrderItems).ThenInclude(oi => oi.Feedbacks)
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
@@ -116,6 +119,15 @@ public class GetOrderDetailQueryHandler : IRequestHandler<GetOrderDetailQuery, O
         {
             var itemEntity = entity.OrderItems.FirstOrDefault(oi => oi.Id == itemDto.Id);
             if (itemEntity == null) continue;
+
+            // Đơn in theo yêu cầu (PRINT_SERVICE): DesignVariant null nên mapper để trống
+            // vật liệu/cân nặng/ảnh — bổ sung từ TechnicalDraft đã chốt.
+            if (itemEntity.TechnicalDraft != null)
+            {
+                itemDto.EstimatedWeightPerUnit ??= itemEntity.TechnicalDraft.EstimatedWeightPerUnit;
+                itemDto.MaterialName ??= itemEntity.TechnicalDraft.Material?.Name;
+                itemDto.ThumbnailUrl ??= itemEntity.TechnicalDraft.DesignVersionHistory?.DesignWork?.BaseImageUrl;
+            }
 
             // Feedback
             var fb = itemEntity.Feedbacks?.FirstOrDefault(f => !f.IsHidden);
