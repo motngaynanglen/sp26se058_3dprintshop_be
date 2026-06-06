@@ -22,9 +22,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public string GenerateToken(UserIdentity user)
     {
-        var secretKey = RequireJwtSetting("Secret");
-        var issuer = RequireJwtSetting("Issuer");
-        var audience = RequireJwtSetting("Audience");
+        // 1. Lấy thông số từ appsettings.json
+        var secretKey = _configuration["JwtSettings:Secret"];
+        var issuer = _configuration["JwtSettings:Issuer"];
+        var audience = _configuration["JwtSettings:Audience"];
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -44,26 +45,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(12),
+            expires: DateTime.Now.AddHours(12), // Token có hạn 12 tiếng... chắc đủ
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private string RequireJwtSetting(string key)
-    {
-        var value = _configuration[$"JwtSettings:{key}"]?.Trim();
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new InvalidOperationException($"JwtSettings:{key} is required.");
-        }
-
-        if (key == "Secret" && Encoding.UTF8.GetByteCount(value) < 32)
-        {
-            throw new InvalidOperationException("JwtSettings:Secret must be at least 32 bytes for HS256.");
-        }
-
-        return value;
     }
 }

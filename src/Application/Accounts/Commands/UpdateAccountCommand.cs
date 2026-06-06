@@ -13,13 +13,13 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.ADMIN)]
 public record UpdateAccountCommand : IRequest<Guid>
 {
-    [JsonIgnore] // Hidden from JSON body and Swagger
+    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
     [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
-    // Data to update
+    // Dữ liệu cần update
     [DefaultValue("newFullname")]
     public string? Fullname { get; init; }
     [DefaultValue("newemail123@gmail.com")]
@@ -45,24 +45,19 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
     public async Task<Guid> Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
     {
         var entity = await _context.Accounts
-              .Include(x => x.Staff)
               .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-        if (entity == null) throw new DataNotFoundException(nameof(Account), request.Id);
-        if (_user.Role == Roles.MANAGER && entity.Staff == null)
-        {
-            throw new ForbiddenAccessException("Quản lý chỉ được cập nhật tài khoản nhân viên.");
-        }
+        if (entity == null) throw new Exception("Không tìm thấy tài khoản");
         if (!string.IsNullOrEmpty(request.Email) &&
         !string.Equals(entity.Email, request.Email, StringComparison.OrdinalIgnoreCase))
         {
-            // Check whether another account is using this email.
+            // Kiểm tra xem có AI KHÁC (Id != request.Id) đang dùng Email này không
             var isEmailUsed = await _context.Accounts.AnyAsync(a =>
                 a.Id != request.Id && a.Email == request.Email, cancellationToken);
 
             if (isEmailUsed)
             {
-                throw new DuplicateException("Email này đã được sử dụng bởi một tài khoản khác.");
+                throw new Exception("Email này đã được sử dụng bởi một tài khoản khác.");
             }
 
             entity.Email = request.Email;
@@ -71,15 +66,14 @@ public class UpdateAccountCommandHandler : IRequestHandler<UpdateAccountCommand,
         if (!string.IsNullOrEmpty(request.Fullname)) entity.Fullname = request.Fullname;
         if (!string.IsNullOrEmpty(request.ContactPhone)) entity.ContactPhone = request.ContactPhone;
         if (request.IsActive.HasValue) entity.IsActive = request.IsActive.Value;
-        // Hash password with BCrypt.
+        // Băm mật khẩu bằng BCrypt
         if (!string.IsNullOrEmpty(request.Password))
         {
             var passwordHash = _passwordService.HashPassword(request.Password);
             if (string.IsNullOrEmpty(passwordHash))
             {
-                throw new BusinessException("Không thể mã hóa mật khẩu.");
+                throw new Exception("Lỗi tạo pass");
             }
-            entity.PasswordHash = passwordHash;
         }
         entity.LastModified = DateTimeOffset.UtcNow;
         entity.LastModifiedBy = _user.Username;
@@ -97,4 +91,3 @@ public class UpdateAccountCommandValidator : AbstractValidator<UpdateAccountComm
             .WithMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
     }
 }
-

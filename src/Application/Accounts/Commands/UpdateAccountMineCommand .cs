@@ -5,12 +5,10 @@ using System.Linq;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json.Serialization;
-using sp26se058_3dprintshop_be.Domain.Constants;
 
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.Authenticated)]
 public record UpdateAccountMineCommand : IRequest<Guid>
 {
     // Dữ liệu cần update
@@ -35,12 +33,12 @@ public class UpdateAccountMineCommandHandler : IRequestHandler<UpdateAccountMine
             var currentUserId = _user.Id.ToGuid();
         if (currentUserId == Guid.Empty)
         {
-            throw new UnauthorizedAccessException("Hãy đăng nhập.");
+            throw new Exception("Hãy đăng nhập.");
         }
         var entity = await _context.Accounts
               .FirstOrDefaultAsync(x => x.Id == currentUserId, cancellationToken);
 
-        if (entity == null) throw new DataNotFoundException(nameof(Account), currentUserId);
+        if (entity == null) throw new Exception("Không tìm thấy tài khoản");
 
         if (!string.IsNullOrEmpty(request.Fullname)) entity.Fullname = request.Fullname;
         if (!string.IsNullOrEmpty(request.ContactPhone)) entity.ContactPhone = request.ContactPhone;

@@ -12,10 +12,10 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Commands;
 
-[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
+[Authorize(Roles = Roles.ADMIN)]
 public record DeleteAccountCommand : IRequest<bool>
 {
-    [JsonIgnore] // Hidden from JSON body and Swagger
+    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
     public Guid Id { get; init; }
 }
 public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand, bool>
@@ -32,18 +32,12 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
     {
         var userId = _user.Id.ToGuid();
   
-        // 1. Check whether the account exists.
-        var account = await _context.Accounts
-            .Include(x => x.Staff)
-            .FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
+        // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
+        var account = await _context.Accounts.FirstOrDefaultAsync(a => a.Id == request.Id, cancellationToken);
 
         if (account == null)
         {
-            throw new DataNotFoundException(nameof(Account), request.Id);
-        }
-        if (_user.Role == Roles.MANAGER && account.Staff == null)
-        {
-            throw new ForbiddenAccessException("Quản lý chỉ được xóa mềm tài khoản nhân viên.");
+            throw new Exception("Tài khoản không tồn tại trong hệ thống.");
         }
         if (!account.IsActive)
         {
@@ -54,10 +48,9 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         }
         else
         {
-            throw new BusinessException("Tài khoản đang hoạt động. Hãy vô hiệu hóa tài khoản trước.");
+            throw new Exception("Tài khoản đang hoạt động! Hãy hủy quyền trước.");
         }
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }
-
