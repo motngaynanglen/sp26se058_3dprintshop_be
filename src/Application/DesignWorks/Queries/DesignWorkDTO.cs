@@ -35,6 +35,12 @@ public class DesignWorkDTO
     public Guid? MainAssignedStaffId { get; set; }
     public string? StaffName { get; set; }
 
+    /// <summary>
+    /// Giá của TechnicalDraft đã được khách duyệt (IsConfirmed) gần nhất — "Mức giá gần nhất".
+    /// null = chưa có báo giá nào được duyệt. Được điền ở handler (không qua AutoMapper).
+    /// </summary>
+    public decimal? LatestConfirmedQuotePrice { get; set; }
+
     public DateTimeOffset Created { get; set; }
     private class Mapping : Profile
     {
@@ -42,7 +48,8 @@ public class DesignWorkDTO
         {
             CreateMap<DesignWork, DesignWorkDTO>()
                 .ForMember(d => d.CustomerName, opt => opt.MapFrom(s => s.Customer.Account.Fullname)) // Giả định path tới tên
-                .ForMember(d => d.StaffName, opt => opt.MapFrom(s => s.MainAssignedStaff != null ? s.MainAssignedStaff.Account.Fullname : "Chưa phân công"));
+                .ForMember(d => d.StaffName, opt => opt.MapFrom(s => s.MainAssignedStaff != null ? s.MainAssignedStaff.Account.Fullname : "Chưa phân công"))
+                .ForMember(d => d.LatestConfirmedQuotePrice, opt => opt.Ignore());
         }
     }
 }
