@@ -13,6 +13,7 @@ public class DashboardActionItemDTO
     public string Label { get; init; } = null!;
     public int Count { get; init; }
     public string Severity { get; init; } = "INFO";
+    public string? Href { get; init; }
 }
 
 public class DashboardRevenueDTO
