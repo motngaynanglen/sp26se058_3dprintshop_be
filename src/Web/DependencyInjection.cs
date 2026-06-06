@@ -1,18 +1,18 @@
-﻿using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using Azure.Identity;
+using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Infrastructure.Data;
 using sp26se058_3dprintshop_be.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using NSwag;
 using NSwag.Generation.Processors.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using sp26se058_3dprintshop_be.Web.Hubs;
-using System.Security.Claims;
-using sp26se058_3dprintshop_be.Domain.Constants;
-
+using PayOS;
+using sp26se058_3dprintshop_be.Application.Common.Config;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -36,26 +36,12 @@ public static class DependencyInjection
 
         // Customise default API behaviour
         services.Configure<ApiBehaviorOptions>(options =>
-        {
-            //options.SuppressModelStateInvalidFilter = true;
-            options.InvalidModelStateResponseFactory = context =>
-            {
-                var error = context.ModelState.Values
-                    .SelectMany(x => x.Errors)
-                    .Select(x => x.ErrorMessage)
-                    .FirstOrDefault();
-                Console.WriteLine($"[Factory Log]: Model Binding Error - {error}");
-                // Ném lỗi này ra để Middleware Exception bắt được
-                throw new BadHttpRequestException($"Lỗi định dạng: {error}");
-            };
-        });
+            options.SuppressModelStateInvalidFilter = true);
 
         services.AddEndpointsApiExplorer();
         // --- CẤU HÌNH AUTHENTICATION THỰC TẾ ---
         var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = RequireJwtSetting(jwtSettings, "Secret");
-        var issuer = RequireJwtSetting(jwtSettings, "Issuer");
-        var audience = RequireJwtSetting(jwtSettings, "Audience");
+        var secretKey = jwtSettings["Secret"];
 
         services.AddAuthentication(options =>
         {
@@ -70,52 +56,37 @@ public static class DependencyInjection
                 ValidateAudience = true,
                 ValidateLifetime = true, // Kiểm tra xem Token còn hạn không
                 ValidateIssuerSigningKey = true, // Kiểm tra chữ ký bảo mật
-                ValidIssuer = issuer,
-                ValidAudience = audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                NameClaimType = ClaimTypes.Name,
-                RoleClaimType = ClaimTypes.Role,
-                ClockSkew = TimeSpan.FromMinutes(2),
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!)),
 
                 // Định nghĩa lại các loại Claim để [Authorize] và User.Identity.Name hoạt động
             };
-
             options.Events = new JwtBearerEvents
             {
                 OnMessageReceived = context =>
                 {
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;
-
-                    if (!string.IsNullOrWhiteSpace(accessToken) &&
-                        path.StartsWithSegments(DesignWorkChatHub.Route))
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        path.StartsWithSegments("/hubs"))
                     {
                         context.Token = accessToken;
                     }
-
                     return Task.CompletedTask;
                 }
             };
         });
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy("Authenticated", policy =>
-                policy.RequireRole(Roles.MANAGER, Roles.STAFF, Roles.CUSTOMER));
-            options.AddPolicy("SystemAdmin", policy =>
-                policy.RequireRole(Roles.ADMIN));
-            options.AddPolicy("Internal", policy =>
-                policy.RequireRole(Roles.MANAGER, Roles.STAFF));
-            options.AddPolicy("StaffOrManager", policy =>
-                policy.RequireRole(Roles.STAFF, Roles.MANAGER));
-            options.AddPolicy("CustomerStaffManager", policy =>
-                policy.RequireRole(Roles.CUSTOMER, Roles.STAFF, Roles.MANAGER));
-        }); // Kích hoạt phân quyền
+        services.AddAuthorization(); // Kích hoạt phân quyền
+
         services.AddSignalR();
+        services.RemoveAll<IMainflow2RealtimeNotifier>();
+        services.AddScoped<IMainflow2RealtimeNotifier, Mainflow2RealtimeNotifier>();
 
         services.AddOpenApiDocument((configure, sp) =>
         {
             configure.Title = "3D_printshop_API";
-            configure.SchemaSettings.SchemaProcessors.Add(new ConstantSchemaProcessor());
+
             // Add JWT
             configure.AddSecurity("JWT", Enumerable.Empty<string>(), new OpenApiSecurityScheme
             {
@@ -126,27 +97,36 @@ public static class DependencyInjection
             });
 
             configure.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
-            configure.OperationProcessors.Add(new ConstantOperationProcessor());
-
         });
 
-        
+        //// --- CẤU HÌNH PAYOS --- cấu hình ở infrastructure
+        //var payOsSection = configuration.GetSection("PayOS");
+
+        //// Đăng ký PayOSClient với Singleton
+        //services.AddSingleton(new PayOSClient(
+        //    payOsSection["ClientId"] ?? throw new InvalidOperationException("PayOS ClientId is missing"),
+        //    payOsSection["ApiKey"] ?? throw new InvalidOperationException("PayOS ApiKey is missing"),
+        //    payOsSection["ChecksumKey"] ?? throw new InvalidOperationException("PayOS ChecksumKey is missing")
+        //));
+        //services.AddScoped<PayOsCodeGenerator>();
+        //// --- HẾT CẤU HÌNH PAYOS ---
+
+        //// --- CẤU HÌNH EMAIL ---
+        //services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        //// --- HẾT CẤU HÌNH EMAIL ---
         return services;
     }
 
-    private static string RequireJwtSetting(IConfigurationSection jwtSettings, string key)
+    public static IServiceCollection AddKeyVaultIfConfigured(this IServiceCollection services, ConfigurationManager configuration)
     {
-        var value = jwtSettings[key]?.Trim();
-        if (string.IsNullOrWhiteSpace(value))
+        var keyVaultUri = configuration["AZURE_KEY_VAULT_ENDPOINT"];
+        if (!string.IsNullOrWhiteSpace(keyVaultUri))
         {
-            throw new InvalidOperationException($"JwtSettings:{key} is required.");
+            configuration.AddAzureKeyVault(
+                new Uri(keyVaultUri),
+                new DefaultAzureCredential());
         }
 
-        if (key == "Secret" && Encoding.UTF8.GetByteCount(value) < 32)
-        {
-            throw new InvalidOperationException("JwtSettings:Secret must be at least 32 bytes for HS256.");
-        }
-
-        return value;
+        return services;
     }
 }

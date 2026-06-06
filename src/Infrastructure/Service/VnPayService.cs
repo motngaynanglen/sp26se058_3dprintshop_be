@@ -24,16 +24,14 @@ public class VnPayService : IVnPayService
         _logger = logger;
     }
 
-    public PaymentResponse CreatePaymentUrl(Order order, string clientIp)
+    public PaymentResponse CreatePaymentUrl(Order order, string clientIp, decimal? chargeAmount = null)
     {
         if (!_settings.IsConfigured)
             throw new InvalidOperationException(
                 "VNPay Sandbox chưa được cấu hình. Điền TmnCode và HashSecret trong appsettings (mục VNPay).");
 
         var txnRef = _codeGenerator.GenerateCode().ToString();
-        // Số tiền phải trả gồm cả phí ship (lưu ở Invoice).
-        var payable = order.Invoice?.TotalAmount ?? order.TotalPrice;
-        var amount = (long)Math.Round(payable * 100m, 0, MidpointRounding.AwayFromZero);
+        var amount = (long)Math.Round((chargeAmount ?? order.TotalPrice) * 100m, 0, MidpointRounding.AwayFromZero);
         if (amount <= 0)
             throw new InvalidOperationException("Số tiền thanh toán VNPay phải lớn hơn 0.");
 

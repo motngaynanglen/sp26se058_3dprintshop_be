@@ -36,18 +36,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasForeignKey(oi => oi.OrderId)
             .OnDelete(DeleteBehavior.Cascade); // Xóa Order thì xóa luôn OrderItems
 
-        // Cấu hình quan hệ 1-N với Shipments
-        builder.HasMany(o => o.Shipments)
-            .WithOne(s => s.Order)
-            .HasForeignKey(s => s.OrderId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         // Cấu hình quan hệ 1-1 với Invoice
         // Lưu ý: Invoice thường giữ Foreign Key trỏ về Order
         builder.HasOne(o => o.Invoice)
             .WithOne(i => i.Order)
             .HasForeignKey<Invoice>(i => i.OrderId);
-
-
     }
 }

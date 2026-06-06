@@ -23,7 +23,7 @@ public class Order : BaseAuditableEntity
     public virtual Customer Customer { get; set; } = null!;
     public virtual Staff? Staff { get; set; }
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
-    public virtual ICollection<Shipment> Shipments{ get; set; } = new List<Shipment>();
+
     public virtual Invoice? Invoice { get; set; }
 
 }

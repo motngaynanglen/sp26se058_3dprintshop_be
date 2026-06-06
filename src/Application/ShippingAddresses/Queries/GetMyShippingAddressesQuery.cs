@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
-[Authorize(Roles = Roles.CUSTOMER)]
 public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
 {
 
@@ -27,8 +25,10 @@ public class GetMyShippingAddressesQuery : IRequest<List<ShippingAddressDTO>>
         public async Task<List<ShippingAddressDTO>> Handle(GetMyShippingAddressesQuery request, CancellationToken cancellationToken)
         {
             var userId = _user.Id.ToGuid();
-            return await _context.ShippingAddresses.Include(s=>s.Customer)
+            return await _context.ShippingAddresses
                 .Where(s => s.Customer.AccountId == userId)
+                .OrderByDescending(s => s.IsDefault)
+                .ThenByDescending(s => s.Created)
                 .ProjectTo<ShippingAddressDTO>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }
