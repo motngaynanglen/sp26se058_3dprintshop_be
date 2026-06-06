@@ -69,6 +69,7 @@ jobs:
               -e Cors__AllowedOrigins__0="http://localhost:3000" \
               -e Cors__AllowedOrigins__1="https://capstone-backup-fe.vercel.app" \
               -e Cors__AllowedOrigins__2="https://3dprintshop.store" \
+              -e Cors__AllowedOrigins__3="http://103.200.20.229:5000" \
               -e JwtSettings__Secret="${{ secrets.JWT_SECRET }}" \
               -e JwtSettings__Issuer="3DPrintShop_Backend" \
               -e JwtSettings__Audience="3DPrintShop_Clients" \
