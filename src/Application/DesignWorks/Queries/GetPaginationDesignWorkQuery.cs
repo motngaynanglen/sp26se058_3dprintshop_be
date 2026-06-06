@@ -105,9 +105,36 @@ public class GetPaginationDesignWorkQuery : PaginationRequest, IRequest<Paginate
                     : query.OrderBy(e => EF.Property<object>(e, request.SortBy));
             }
 
-            return await query
+            var result = await query
                 .ProjectTo<DesignWorkDTO>(_mapper.ConfigurationProvider)
                 .PaginatedListAsync(request.PageNumber, request.PageSize);
+
+            // "Mức giá gần nhất" = giá của TechnicalDraft đã duyệt (IsConfirmed) mới nhất của mỗi DesignWork.
+            var workIds = result.Items.Select(x => x.Id).ToList();
+            if (workIds.Count > 0)
+            {
+                var confirmedQuotes = await _context.TechnicalDrafts
+                    .AsNoTracking()
+                    .Where(t => t.IsConfirmed
+                        && t.Deleted == null
+                        && workIds.Contains(t.DesignVersionHistory.DesignWorkId))
+                    .OrderByDescending(t => t.Created)
+                    .Select(t => new
+                    {
+                        DesignWorkId = t.DesignVersionHistory.DesignWorkId,
+                        Price = t.UnitPrice * (1 + t.MarkupPercentage / 100m),
+                    })
+                    .ToListAsync(cancellationToken);
+
+                foreach (var dto in result.Items)
+                {
+                    // FirstOrDefault sau khi đã OrderByDescending(Created) = bản duyệt gần nhất.
+                    var quote = confirmedQuotes.FirstOrDefault(c => c.DesignWorkId == dto.Id);
+                    if (quote != null) dto.LatestConfirmedQuotePrice = quote.Price;
+                }
+            }
+
+            return result;
         }
 
     }
