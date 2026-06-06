@@ -1,13 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
-using sp26se058_3dprintshop_be.Domain.Utils;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Materials.Commands;
 
-[Authorize(Roles = Roles.MANAGER)]
 public record DeleteMaterialCommand : IRequest<bool>
 {
-    [DefaultValue("00000000-0000-0000-0000-000000000001")]
+    [JsonIgnore] // Ẩn khỏi JSON Body và Swagger
+    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     public Guid Id { get; init; }
 }
 
@@ -18,47 +23,34 @@ public class DeleteMaterialCommandHandler : IRequestHandler<DeleteMaterialComman
 
     public DeleteMaterialCommandHandler(IApplicationDbContext context, IUser user)
     {
-        _context = context;
+        _context = context; 
         _user = user;
     }
 
     public async Task<bool> Handle(DeleteMaterialCommand request, CancellationToken cancellationToken)
     {
+        var userId = _user.Id;
         var material = await _context.Materials
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
         if (material == null)
         {
-            throw new DataNotFoundException(nameof(Material), request.Id);
+            throw new Exception("Material not found");
         }
+        material.IsActive = !material.IsActive;
 
-        var isUsedByPublishedVariant = await _context.DesignVariants.AnyAsync(x =>
-            x.MaterialId == request.Id &&
-            x.CatalogStatus == CatalogStatuses.Published &&
-            x.IsActive,
-            cancellationToken);
-
-        if (isUsedByPublishedVariant)
+        if (material.IsActive)
         {
-            throw new BusinessException("Không thể xóa vật liệu đang được dùng bởi biến thể sản phẩm đang mở bán. Hãy ngưng bán biến thể hoặc tạm ngưng vật liệu trước.");
+            material.Deleted = null;
+            material.DeletedBy = null;
         }
 
-        var isUsedByTechnicalDraft = await _context.TechnicalDrafts.AnyAsync(x =>
-            x.MaterialId == request.Id,
-            cancellationToken);
-
-        if (isUsedByTechnicalDraft)
-        {
-            throw new BusinessException("Không thể xóa vật liệu đã được dùng trong bản nháp kỹ thuật. Hãy tạm ngưng hoạt động vật liệu thay vì xóa.");
-        }
-
-        material.IsActive = false;
-        material.Deleted = CoreHelper.SystemTimeNow;
-        material.DeletedBy = _user.Username;
-        material.LastModified = CoreHelper.SystemTimeNow;
-        material.LastModifiedBy = _user.Username;
+        material.LastModified = DateTimeOffset.UtcNow;
+        material.LastModifiedBy = userId;
 
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }
+
+
