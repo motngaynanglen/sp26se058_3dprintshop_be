@@ -1,7 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Reflection.PortableExecutable;
+using System.Security.Principal;
+using System.Text;
+using System.Threading.Tasks;
+using Org.BouncyCastle.Asn1.Ocsp;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Orders;
-using sp26se058_3dprintshop_be.Application.Shipping;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Application.Orders.Queries;
+using sp26se058_3dprintshop_be.Application.Shipments;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -10,390 +20,273 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
 
-/// <summary>
-/// [Customer] Tạo đơn hàng — thống nhất 3 luồng:
-/// • IN_STOCK / PRE_ORDER → <c>DesignVariantId</c>
-/// • CUSTOM_FILE_PRINT_MF2 / CUSTOM_QUOTE_MF2 / AI_GENERATED → <c>DesignWorkId</c>
-/// </summary>
-public record CheckoutCommand : IRequest<CheckoutResult>
+[Authorize(Roles = Roles.CUSTOMER)]
+public record CheckoutItemRequest
 {
-    public required Guid ShippingAddressId { get; init; }
 
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
+    public Guid? DesignVariantId { get; init; }
+    //public Guid? DesignWorkId { get; init; }
+    public int Quantity { get; init; }
+}
+public record CheckoutCommand : IRequest<object>
+{
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
+    public Guid ShippingAddressId { get; init; }
+    //public Guid ShippingMethodId { get; init; }
+    //[DefaultValue("ONLINE")]
+    //public string? PaymentMethod { get; init; } // MoMo, BankTransfer
+    [DefaultValue(SourceTypes.InStock + " hoặc " + SourceTypes.PreOrder)]
+    public string SourceType { get; init; } = null!;
+    public string? Note { get; init; }
     [DefaultValue(0)]
     public decimal ShippingFee { get; init; } = 0;
-
-    /// <summary>GHN / GHTK / MANUAL — ghi nhận lựa chọn khách; vận đơn GHN/GHTK do staff tạo sau.</summary>
-    [DefaultValue(ShippingCarriers.Manual)]
+    [DefaultValue("MANUAL")]
     public string? ShippingCarrier { get; init; }
-
-    public string? Note { get; init; }
-
-    public required List<CheckoutItemDto> Items { get; init; } = new();
+    public List<CheckoutItemRequest> Items { get; init; } = new();
 }
-
-public record CheckoutItemDto
-{
-    /// <summary>SourceType: IN_STOCK, PRE_ORDER, CUSTOM_FILE_PRINT_MF2, CUSTOM_QUOTE_MF2, AI_GENERATED.</summary>
-    public required string SourceType { get; init; }
-
-    /// <summary>Bắt buộc với IN_STOCK / PRE_ORDER.</summary>
-    public Guid? DesignVariantId { get; init; }
-
-    /// <summary>Bắt buộc với CUSTOM_FILE_PRINT_MF2 / CUSTOM_QUOTE_MF2 / AI_GENERATED.</summary>
-    public Guid? DesignWorkId { get; init; }
-
-    [DefaultValue(1)]
-    public int Quantity { get; init; } = 1;
-}
-
-public record CheckoutResult(Guid OrderId, string Code, decimal TotalPrice);
-
 public class CheckoutCommandValidator : AbstractValidator<CheckoutCommand>
 {
     public CheckoutCommandValidator()
     {
-        RuleFor(x => x.ShippingAddressId).NotEmpty();
-        RuleFor(x => x.Items).NotEmpty().WithMessage("Đơn hàng phải có ít nhất 1 sản phẩm.");
+        RuleFor(x => x.ShippingAddressId)
+            .NotEmpty().WithMessage("Địa chỉ giao hàng không được để trống.");
+
+        RuleFor(x => x.SourceType)
+            .Must(x => x == SourceTypes.InStock || x == SourceTypes.PreOrder)
+            .WithMessage("Loại nguồn hàng không hợp lệ, chỉ có thể là hàng có sẵn hoặc hàng đặt trước.");
+
+        RuleFor(x => x.Items)
+            .NotEmpty().WithMessage("Đơn hàng phải có ít nhất một sản phẩm.");
+
         RuleForEach(x => x.Items).ChildRules(item =>
         {
-            item.RuleFor(i => i.Quantity).GreaterThan(0);
-            item.RuleFor(i => i.SourceType).NotEmpty();
+            item.RuleFor(i => i.DesignVariantId).NotEmpty().WithMessage("Sản phẩm không hợp lệ.");
+            item.RuleFor(i => i.Quantity).GreaterThan(0).WithMessage("Số lượng phải lớn hơn 0.");
         });
     }
 }
-
-public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutResult>
+public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, object>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IGhnAddressResolver _ghnResolver;
+    private readonly IMapper _mapper;
     private readonly IUser _user;
+    private readonly IOrderPendingService _orderPendingService;
+    private readonly ICodeGeneratorService _codeGenerator;
 
-    public CheckoutCommandHandler(
-        IApplicationDbContext context,
-        IGhnAddressResolver ghnResolver,
-        IUser user)
+    public CheckoutCommandHandler(IApplicationDbContext context, IMapper mapper, IUser user, IOrderPendingService orderPendingService, ICodeGeneratorService codeGenerator)
     {
         _context = context;
-        _ghnResolver = ghnResolver;
+        _mapper = mapper;
         _user = user;
+        _orderPendingService = orderPendingService;
+        _codeGenerator = codeGenerator;
     }
-
-    public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
+    public async Task<object> Handle(CheckoutCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_user.Id))
-            throw new UnauthorizedAccessException("Cần đăng nhập.");
-
-        var accountId = _user.Id.ToGuid();
-        var customer = await _context.Customers
-            .Include(c => c.Account)
-            .FirstOrDefaultAsync(c => c.AccountId == accountId, cancellationToken)
-            ?? throw new UnauthorizedAccessException("Chỉ khách hàng mới tạo được đơn hàng.");
-
-        var shippingAddress = await _context.ShippingAddresses
-            .FirstOrDefaultAsync(s => s.Id == request.ShippingAddressId, cancellationToken)
-            ?? throw new InvalidOperationException("Địa chỉ giao hàng không tồn tại.");
-        if (shippingAddress.CustomerId != customer.Id)
-            throw new UnauthorizedAccessException("Địa chỉ giao hàng không thuộc về bạn.");
-
-        var carrier = string.IsNullOrWhiteSpace(request.ShippingCarrier)
-            ? ShippingCarriers.Manual
-            : request.ShippingCarrier.Trim().ToUpperInvariant();
-
-        await GhnAddressResolveHelper.EnsureGhnCodesAsync(shippingAddress, _ghnResolver, cancellationToken);
-
-        if (carrier == ShippingCarriers.Ghn
-            && (shippingAddress.GhnDistrictId is null or <= 0
-                || string.IsNullOrWhiteSpace(shippingAddress.GhnWardCode)))
+        var failures = new List<ValidationFailure>();
+        var userId = _user.Id.ToGuid();
+        var customer = await _context.Customers.FirstOrDefaultAsync(x => x.AccountId == userId);
+        if (customer == null)
         {
-            throw new InvalidOperationException(
-                "Không map được mã GHN từ địa chỉ — vui lòng chọn lại Tỉnh → Quận → Phường GHN khi checkout.");
+            throw new ForbiddenAccessException("Chỉ có tài khoản khách hàng mới có quyền thực hiện tạo đơn hàng.");
+        }
+        await _orderPendingService.EnsureCustomerHasNoPendingOrderAsync(customer.Id, cancellationToken);
+
+        var address = await _context.ShippingAddresses
+            .FirstOrDefaultAsync(a => a.Id == request.ShippingAddressId && a.CustomerId == customer.Id, cancellationToken);
+        if (address == null)
+        {
+            failures.AddFailure(nameof(request.ShippingAddressId), "Địa chỉ giao hàng không tồn tại hoặc không thuộc quyền sở hữu của bạn.");
         }
 
-        var now = CoreHelper.SystemTimeNow;
-        var username = _user.Username ?? customer.Account.Username;
+        var stockReservations = new List<StockReservation>();
+        var order = await CreateOrderAsync(customer.Id, request, failures, stockReservations, cancellationToken);
 
-        var order = new Order
-        {
-            Id = Guid.NewGuid(),
-            Code = GenerateOrderCode(),
-            CustomerId = customer.Id,
-            OrderStatus = OrderStatuses.Pending,
-            TotalPrice = 0,
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
-        };
-
-        decimal subTotal = 0;
-
-        foreach (var input in request.Items)
-        {
-            var sourceType = NormalizeSourceType(input.SourceType);
-
-            if (sourceType == SourceTypes.InStock || sourceType == SourceTypes.PreOrder || sourceType == SourceTypes.Order)
-            {
-                var items = await BuildVariantOrderItemsAsync(order, input, sourceType, username, now, cancellationToken);
-                foreach (var item in items)
-                {
-                    subTotal += item.TotalPrice;
-                    order.OrderItems.Add(item);
-                }
-            }
-            else if (SourceTypes.IsCustomPrintFlow(sourceType)
-                     || sourceType == SourceTypes.CustomQuoteMainflow2)
-            {
-                var item = await BuildDesignWorkOrderItemAsync(order, input, sourceType, customer.Id, username, now, cancellationToken);
-                subTotal += item.TotalPrice;
-                order.OrderItems.Add(item);
-            }
-            else
-            {
-                throw new InvalidOperationException($"SourceType không hỗ trợ: {input.SourceType}");
-            }
-        }
-
-        order.TotalPrice = subTotal + request.ShippingFee;
-
-        var invoice = new Invoice
-        {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            InvoiceCode = $"INV-{now:yyyyMMdd}-{order.Code}",
-            SubTotal = subTotal,
-            ShippingFee = request.ShippingFee,
-            TaxAmount = 0,
-            TotalAmount = order.TotalPrice,
-            PaymentStatus = InvoiceStatuses.Unpaid,
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
-        };
-        order.Invoice = invoice;
+        failures.ThrowIfAny();
 
         var shipment = new Shipment
         {
             Id = Guid.NewGuid(),
+            Order = order,
             OrderId = order.Id,
-            ShippingAddressId = shippingAddress.Id,
             ShippingFee = request.ShippingFee,
-            Carrier = carrier,
+            Carrier = request.ShippingCarrier ?? "MANUAL",
             ShipmentStatus = ShipmentStatuses.Preparing,
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
         };
+        ShipmentAddressSnapshot.Apply(shipment, address!);
+
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            Order = order,
+            OrderId = order.Id,
+            InvoiceCode = _codeGenerator.GenerateInvoiceCode(request.SourceType),
+            SubTotal = order.TotalPrice,
+            ShippingFee = request.ShippingFee,
+            TotalAmount = order.TotalPrice + request.ShippingFee,
+            PaymentStatus = InvoiceStatuses.Unpaid,
+            DueDate = CoreHelper.SystemTimeNow.UtcDateTime.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes),
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
+        };
+
+        await using var dbTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+        foreach (var reservation in stockReservations
+            .GroupBy(x => x.DesignVariantId)
+            .Select(x => new StockReservation(
+                x.Key,
+                x.Sum(item => item.Quantity),
+                x.First().VariantName)))
+        {
+            var affectedRows = await _context.DesignVariants
+                .Where(v => v.Id == reservation.DesignVariantId
+                    && v.StockQuantity >= reservation.Quantity)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(v => v.StockQuantity, v => v.StockQuantity - reservation.Quantity)
+                    .SetProperty(v => v.LastModified, CoreHelper.SystemTimeNow)
+                    .SetProperty(v => v.LastModifiedBy, _user.Username), cancellationToken);
+
+            if (affectedRows == 0)
+            {
+                throw new BusinessException(
+                    $"Sản phẩm '{reservation.VariantName}' không còn đủ tồn kho. Vui lòng kiểm tra lại giỏ hàng.",
+                    ResponseCodeConstants.VAL_BUSINESS_RESTRICTION);
+            }
+        }
 
         _context.Orders.Add(order);
-        _context.Invoices.Add(invoice);
         _context.Shipments.Add(shipment);
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return new CheckoutResult(order.Id, order.Code, order.TotalPrice);
-    }
-
-    private async Task<List<OrderItem>> BuildVariantOrderItemsAsync(
-        Order order,
-        CheckoutItemDto input,
-        string sourceType,
-        string username,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
-    {
-        if (input.DesignVariantId == null || input.DesignVariantId == Guid.Empty)
-            throw new InvalidOperationException("DesignVariantId là bắt buộc cho IN_STOCK / PRE_ORDER.");
-
-        var variant = await _context.DesignVariants
-            .Include(v => v.DesignTemplate)
-            .FirstOrDefaultAsync(v => v.Id == input.DesignVariantId, cancellationToken)
-            ?? throw new InvalidOperationException("Không tìm thấy sản phẩm.");
-
-        if (!variant.IsActive)
-            throw new InvalidOperationException($"Sản phẩm {variant.Name} đã ngừng kinh doanh.");
-
-        var baseName = $"{variant.DesignTemplate.Name} - {variant.Name}";
-        var items = new List<OrderItem>();
-        var wantsInStock = sourceType is SourceTypes.InStock or SourceTypes.Order;
-        var stockAvailable = Math.Max(0, variant.StockQuantity);
-        var requestedQty = input.Quantity;
-
-        if (wantsInStock && requestedQty > stockAvailable)
+        _context.Invoices.Add(invoice);
+        try
         {
-            if (!variant.IsAllowPreOrder)
-                throw new InvalidOperationException(
-                    $"Sản phẩm {variant.Name} không đủ tồn kho (còn {stockAvailable}).");
+            await _context.SaveChangesAsync(cancellationToken);
+            await dbTransaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException($"Lỗi lưu đơn hàng: {ex.InnerException?.Message}");
+        }
 
-            if (stockAvailable > 0)
+        return _mapper.Map<OrderDTO>(order);
+    }
+    private async Task<Order> CreateOrderAsync(
+        Guid customerId,
+        CheckoutCommand request,
+        List<ValidationFailure> failures,
+        List<StockReservation> stockReservations,
+        CancellationToken ct)
+    {
+        var reservedQuantities = new Dictionary<Guid, int>();
+        var order = new Order
+        {
+            Id = Guid.NewGuid(),
+            Code = _codeGenerator.GenerateOrderCode(request.SourceType),
+            CustomerId = customerId,
+            OrderStatus = OrderStatuses.Pending,
+            TotalPrice = 0,
+            Created = CoreHelper.SystemTimeNow,
+            CreatedBy = _user.Username,
+            LastModified = CoreHelper.SystemTimeNow,
+            LastModifiedBy = _user.Username,
+            OrderItems = new List<OrderItem>()
+        };
+
+        foreach (var itemReq in request.Items)
+        {
+
+            bool isDefaultBuy = request.SourceType == SourceTypes.InStock || request.SourceType == SourceTypes.PreOrder;
+            if (isDefaultBuy && itemReq.DesignVariantId.HasValue)
             {
-                items.Add(CreateVariantOrderItem(
-                    order, variant, baseName, stockAvailable, SourceTypes.InStock,
-                    OrderItemStatuses.Picking, username, now));
-                DeductStock(order, variant, stockAvailable, username, now);
+                // 1. Lấy thông tin biến thể sản phẩm kèm theo Lock (nếu cần)
+                var variant = await _context.DesignVariants
+                    .Include(x => x.DesignTemplate)
+                    .FirstOrDefaultAsync(x => x.Id == itemReq.DesignVariantId.Value, ct);
+
+                if (variant == null)
+                {
+                    failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm với mã {itemReq.DesignVariantId} không tồn tại.");
+                    continue;
+                }
+                if (variant.CatalogStatus != CatalogStatuses.Published || !variant.IsActive)
+                {
+                    failures.AddFailure(nameof(itemReq.DesignVariantId), $"Sản phẩm '{variant.Name}' hiện chưa được mở bán.");
+                    continue;
+                }
+
+                if (request.SourceType == SourceTypes.InStock)
+                {
+                    // LUỒNG HÀNG CÓ SẴN: Phải kiểm tra và trừ kho
+                    var alreadyReserved = reservedQuantities.GetValueOrDefault(variant.Id);
+                    var availableQuantity = variant.StockQuantity - alreadyReserved;
+                    if (availableQuantity < itemReq.Quantity)
+                    {
+                        failures.AddFailure(nameof(itemReq.Quantity), $"Sản phẩm '{variant.Name}' hiện chỉ còn {availableQuantity} món, không đủ để bán sẵn.");
+                        continue;
+                    }
+
+                    reservedQuantities[variant.Id] = alreadyReserved + itemReq.Quantity;
+                    stockReservations.Add(new StockReservation(variant.Id, itemReq.Quantity, variant.Name));
+
+                    // Ghi log giao dịch kho
+                    var inventoryLog = new InventoryTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        DesignVariantId = variant.Id,
+                        ReferenceId = order.Id,
+                        Quantity = -itemReq.Quantity,
+                        Type = InventoryTransactionTypes.OrderOut,
+                        Note = $"Xuất kho bán sẵn cho đơn hàng: {order.Code}",
+                        Created = CoreHelper.SystemTimeNow,
+                        CreatedBy = _user.Username,
+                        LastModified = CoreHelper.SystemTimeNow,
+                        LastModifiedBy = _user.Username
+                    };
+                    _context.InventoryTransactions.Add(inventoryLog);
+                }
+                else if (request.SourceType == SourceTypes.PreOrder)
+                {
+                    // LUỒNG PRE-ORDER: Kiểm tra xem biến thể này có cho phép đặt trước không
+                    if (!variant.IsAllowPreOrder)
+                    {
+                        failures.AddFailure(nameof(request.SourceType), $"Sản phẩm '{variant.Name}' không hỗ trợ đặt hàng trước.");
+                        continue;
+                    }
+
+                    // KHÔNG trừ StockQuantity, KHÔNG tạo InventoryTransaction
+                    // Chỉ đơn giản là ghi nhận yêu cầu vào đơn hàng
+                }
+                // 3. Tạo OrderItem chung cho cả 2 luồng
+                var orderItem = new OrderItem
+                {
+                    SourceType = request.SourceType,
+                    DesignVariantId = variant.Id,
+                    QuantityOrdered = itemReq.Quantity,
+                    ItemName = variant.Name ?? "Sản phẩm",
+                    UnitPrice = variant.Price,
+                    TotalPrice = variant.Price * itemReq.Quantity,
+                    FulfillmentStatus = OrderItemStatuses.Pending,
+                    Order = order,
+                    Created = CoreHelper.SystemTimeNow,
+                    CreatedBy = _user.Username
+                };
+                order.OrderItems.Add(orderItem);
+                order.TotalPrice += orderItem.TotalPrice;
             }
 
-            var preOrderQty = requestedQty - stockAvailable;
-            items.Add(CreateVariantOrderItem(
-                order, variant, $"{baseName} (cần in thêm)", preOrderQty, SourceTypes.PreOrder,
-                OrderItemStatuses.Pending, username, now));
         }
-        else if (wantsInStock)
-        {
-            items.Add(CreateVariantOrderItem(
-                order, variant, baseName, requestedQty, SourceTypes.InStock,
-                OrderItemStatuses.Picking, username, now));
-            DeductStock(order, variant, requestedQty, username, now);
-        }
-        else
-        {
-            items.Add(CreateVariantOrderItem(
-                order, variant, $"{baseName} (cần in thêm)", requestedQty, SourceTypes.PreOrder,
-                OrderItemStatuses.Pending, username, now));
-        }
-
-        return items;
+        return order;
     }
 
-    private static OrderItem CreateVariantOrderItem(
-        Order order,
-        Domain.Entities.DesignVariant variant,
-        string itemName,
-        int quantity,
-        string sourceType,
-        string fulfillmentStatus,
-        string username,
-        DateTimeOffset now)
-    {
-        var unitPrice = variant.Price;
-        return new OrderItem
-        {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            Order = order,
-            SourceType = sourceType,
-            DesignVariantId = variant.Id,
-            ItemName = itemName,
-            QuantityOrdered = quantity,
-            UnitPrice = unitPrice,
-            TotalPrice = unitPrice * quantity,
-            FulfillmentStatus = fulfillmentStatus,
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
-        };
-    }
+    private sealed record StockReservation(Guid DesignVariantId, int Quantity, string VariantName);
 
-    private void DeductStock(
-        Order order,
-        Domain.Entities.DesignVariant variant,
-        int quantity,
-        string username,
-        DateTimeOffset now)
-    {
-        variant.StockQuantity -= quantity;
-        variant.LastModified = now;
-        variant.LastModifiedBy = username;
-
-        _context.InventoryTransactions.Add(new InventoryTransaction
-        {
-            Id = Guid.NewGuid(),
-            DesignVariantId = variant.Id,
-            Type = InventoryTransactionTypes.OrderOut,
-            Quantity = -quantity,
-            ReferenceId = order.Id,
-            Note = $"Xuất kho cho đơn {order.Code}",
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
-        });
-    }
-
-    private async Task<OrderItem> BuildDesignWorkOrderItemAsync(
-        Order order,
-        CheckoutItemDto input,
-        string sourceType,
-        Guid customerId,
-        string username,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
-    {
-        if (input.DesignWorkId == null || input.DesignWorkId == Guid.Empty)
-            throw new InvalidOperationException($"DesignWorkId là bắt buộc cho {sourceType}.");
-
-        var dw = await _context.DesignWorks
-            .FirstOrDefaultAsync(d => d.Id == input.DesignWorkId, cancellationToken)
-            ?? throw new InvalidOperationException("Không tìm thấy DesignWork.");
-
-        if (dw.CustomerId != customerId)
-            throw new UnauthorizedAccessException("DesignWork không thuộc về bạn.");
-
-        if (dw.SourceType != sourceType)
-            throw new InvalidOperationException($"DesignWork không thuộc loại {sourceType}.");
-
-        if (sourceType is SourceTypes.CustomFilePrintMainflow2
-            or SourceTypes.CustomQuoteMainflow2)
-        {
-            if (dw.Status != Mainflow2DesignWorkStatuses.Approved)
-                throw new InvalidOperationException("Bạn cần duyệt báo giá trước khi đặt đơn.");
-        }
-        else if (OrderPaymentHelper.IsDirectPrintSourceType(sourceType)
-                 && dw.Status != Mainflow2DesignWorkStatuses.Approved
-                 && dw.LatestQuotedPrice is null or <= 0)
-        {
-            throw new InvalidOperationException("Đơn in chưa có báo giá — vui lòng duyệt báo giá trước.");
-        }
-
-        if (dw.LatestQuotedPrice is null or 0)
-            throw new InvalidOperationException("DesignWork chưa có báo giá hợp lệ.");
-
-        var unitPrice = dw.LatestQuotedPrice.Value;
-        var totalPrice = unitPrice * input.Quantity;
-
-        var existing = await _context.OrderItems
-            .AnyAsync(oi => oi.DesignWorkId == dw.Id
-                            && oi.Order.OrderStatus != OrderStatuses.Cancelled, cancellationToken);
-        if (existing)
-            throw new InvalidOperationException("DesignWork này đã có đơn hàng đang xử lý.");
-
-        return new OrderItem
-        {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            Order = order,
-            SourceType = sourceType,
-            DesignWorkId = dw.Id,
-            ItemName = string.IsNullOrWhiteSpace(dw.Name) ? "Sản phẩm thiết kế theo yêu cầu" : dw.Name,
-            QuantityOrdered = input.Quantity,
-            UnitPrice = unitPrice,
-            TotalPrice = totalPrice,
-            FulfillmentStatus = OrderItemStatuses.Pending,
-            Created = now,
-            CreatedBy = username,
-            LastModified = now,
-            LastModifiedBy = username
-        };
-    }
-
-    private static string NormalizeSourceType(string raw) => raw?.Trim().ToUpperInvariant() switch
-    {
-        "IN_STOCK" or "INSTOCK" or "ORDER" => SourceTypes.InStock,
-        "PRE_ORDER" or "PREORDER" => SourceTypes.PreOrder,
-        "CUSTOM_FILE_PRINT_MF2" or "CUSTOM_FILE_PRINT" => SourceTypes.CustomFilePrintMainflow2,
-        "CUSTOM_QUOTE_MF2" or "CUSTOM_QUOTE" => SourceTypes.CustomQuoteMainflow2,
-        "AI_GENERATED" or "AI" => SourceTypes.AiGenerated,
-        "PRINT_FROM_DESIGN_MF2" or "PRINT_FROM_DESIGN" => SourceTypes.PrintFromDesignMainflow2,
-        "REPRINT_MF2" or "REPRINT" => SourceTypes.ReprintMainflow2,
-        _ => raw ?? string.Empty
-    };
-
-    private static string GenerateOrderCode()
-    {
-        var now = CoreHelper.SystemTimeNow;
-        var rand = Random.Shared.Next(1000, 9999);
-        return $"ORD{now:yyMMddHHmmss}{rand}";
-    }
 }
+
+

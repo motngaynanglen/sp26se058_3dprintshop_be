@@ -4,7 +4,7 @@ public record GhnAddressResolveInput(string? Ward, string? District, string? Cit
 
 public record GhnAddressResolveResult(int DistrictId, string WardCode);
 
-/// <summary>Map tên Phường/Quận/Tỉnh → mã GHN từ master data.</summary>
+/// <summary>Map ten Phuong/Quan/Tinh -> ma GHN tu master data.</summary>
 public interface IGhnAddressResolver
 {
     Task<GhnAddressResolveResult?> TryResolveAsync(

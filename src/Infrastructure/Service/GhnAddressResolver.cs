@@ -45,7 +45,7 @@ public class GhnAddressResolver : IGhnAddressResolver
             var province = FindBestMatch(provinceQuery, provinces, p => p.ProvinceName, districtName ?? cityName);
             if (province == null)
             {
-                _logger.LogDebug("[GHN resolve] Không khớp tỉnh: {City}/{Province}", cityName, provinceName);
+                _logger.LogDebug("[GHN resolve] Khong khop tinh: {City}/{Province}", cityName, provinceName);
                 return null;
             }
 
@@ -62,7 +62,6 @@ public class GhnAddressResolver : IGhnAddressResolver
                 }
             }
 
-            // Fallback: quét phường trong toàn tỉnh (xử lý district/city lưu sai field).
             var scanned = await ScanWardInProvinceAsync(wardName, districts, cancellationToken);
             if (scanned.HasValue)
             {
@@ -71,13 +70,13 @@ public class GhnAddressResolver : IGhnAddressResolver
             }
 
             _logger.LogDebug(
-                "[GHN resolve] Không khớp {Ward}/{District}/{City} tại {Province}",
+                "[GHN resolve] Khong khop {Ward}/{District}/{City} tai {Province}",
                 wardName, districtQuery, cityName, province.ProvinceName);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[GHN resolve] Lỗi khi map địa chỉ");
+            _logger.LogWarning(ex, "[GHN resolve] Loi khi map dia chi");
             return null;
         }
     }
@@ -110,7 +109,6 @@ public class GhnAddressResolver : IGhnAddressResolver
         else if (cityLooksLikeDistrict)
             districtQuery = city;
 
-        // Ghép từ addressLine kiểu "..., Phường X, Thành phố Y, Tỉnh Z" khi district trống.
         if (string.IsNullOrWhiteSpace(districtQuery) && !string.IsNullOrWhiteSpace(district)
             && !districtLooksLikeProvince)
             districtQuery = district;
@@ -127,8 +125,8 @@ public class GhnAddressResolver : IGhnAddressResolver
         if (n is "ho chi minh" or "ha noi" or "da nang" or "can tho" or "hai phong")
             return true;
 
-        return Regex.IsMatch(value, @"(tỉnh|thành phố|tp\.?\s)", RegexOptions.IgnoreCase)
-               && !Regex.IsMatch(value, @"(quận|huyện|phường|xã)", RegexOptions.IgnoreCase);
+        return Regex.IsMatch(value, @"(tinh|thanh pho|tp\.?\s)", RegexOptions.IgnoreCase)
+               && !Regex.IsMatch(value, @"(quan|huyen|phuong|xa)", RegexOptions.IgnoreCase);
     }
 
     private static bool LooksLikeDistrict(string? value)
@@ -136,7 +134,7 @@ public class GhnAddressResolver : IGhnAddressResolver
         if (string.IsNullOrWhiteSpace(value) || IsCountryOnly(value))
             return false;
 
-        return Regex.IsMatch(value, @"(quận|huyện|thành phố|thị xã|tp\.?\s)", RegexOptions.IgnoreCase)
+        return Regex.IsMatch(value, @"(quan|huyen|thanh pho|thi xa|tp\.?\s)", RegexOptions.IgnoreCase)
                || Normalize(value) is "thu duc" or "quan 1" or "quan 2" or "quan 3" or "quan 9";
     }
 
@@ -180,7 +178,7 @@ public class GhnAddressResolver : IGhnAddressResolver
         string wardCode)
     {
         _logger.LogInformation(
-            "[GHN resolve] {Ward}/{District}/{City} → district_id={DistrictId}, ward_code={WardCode}",
+            "[GHN resolve] {Ward}/{District}/{City} -> district_id={DistrictId}, ward_code={WardCode}",
             wardName, districtName, cityName, districtId, wardCode);
         return new GhnAddressResolveResult(districtId, wardCode);
     }
@@ -233,7 +231,7 @@ public class GhnAddressResolver : IGhnAddressResolver
 
         if (hintHasThanhPho && ContainsThanhPho(candidateRaw))
             bonus += 5;
-        if (!hintHasThanhPho && candidateRaw.Contains("Quận", StringComparison.OrdinalIgnoreCase)
+        if (!hintHasThanhPho && candidateRaw.Contains("Quan", StringComparison.OrdinalIgnoreCase)
             && hintNorm.Contains("quan", StringComparison.Ordinal))
             bonus += 3;
         if (candidateNorm == hintNorm)
@@ -243,8 +241,8 @@ public class GhnAddressResolver : IGhnAddressResolver
     }
 
     private static bool ContainsThanhPho(string value) =>
-        value.Contains("Thành phố", StringComparison.OrdinalIgnoreCase)
-        || value.Contains("Thành Phố", StringComparison.OrdinalIgnoreCase);
+        value.Contains("Thanh pho", StringComparison.OrdinalIgnoreCase)
+        || value.Contains("Thanh Pho", StringComparison.OrdinalIgnoreCase);
 
     private static int ScoreMatch(string query, string candidate)
     {

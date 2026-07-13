@@ -15,13 +15,11 @@ public class ShippingAddress : BaseAuditableEntity
     public string District { get; set; } = null!;
     public string City { get; set; } = null!;
     public string Province { get; set; } = null!;
+    public bool IsDefault { get; set; } = false;
 
-    /// <summary>Mã quận/huyện GHN (district_id) — dùng tính phí & tạo vận đơn.</summary>
+    // GHN address codes
     public int? GhnDistrictId { get; set; }
-
-    /// <summary>Mã phường/xã GHN (ward_code).</summary>
     public string? GhnWardCode { get; set; }
 
-    public bool IsDefault { get; set; } = false;
     public required virtual Customer Customer { get; set; } = null!;
 }

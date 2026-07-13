@@ -1,8 +1,9 @@
-﻿using sp26se058_3dprintshop_be.Application.Common.Constants;
-using sp26se058_3dprintshop_be.Application.Common.Exceptions;
-using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+﻿using sp26se058_3dprintshop_be.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
+using System;
 
 namespace sp26se058_3dprintshop_be.Web.Infrastructure;
 
@@ -15,123 +16,150 @@ public class CustomExceptionHandler : IExceptionHandler
         // Register known exception types and handlers.
         _exceptionHandlers = new()
             {
-                { typeof(ValidationException), HandleValidationException },
-                { typeof(NotFoundException), HandleNotFoundException },
+                { typeof(BaseValidationException), HandleBaseValidationException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
-                { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
-                { typeof(BadHttpRequestException), HandleBadHttpRequestException }, // Xử lý lỗi Binding/Guid sai
+                { typeof(BadHttpRequestException), HandleBadHttpRequestException },
+                { typeof(BusinessException), HandleBusinessException },
             };
     }
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var current = exception;
-        while (current != null)
+        Console.WriteLine($"[API Error]: {exception.GetType().Name} - {exception.Message}");
+        if (exception is BusinessException businessEx)
         {
-            if (_exceptionHandlers.TryGetValue(current.GetType(), out var handler))
-            {
-                await handler.Invoke(httpContext, current);
-                return true;
-            }
-
-            current = current.InnerException;
+            await HandleBusinessException(httpContext, businessEx);
+            return true;
         }
+        if (exception is BadHttpRequestException || exception.GetType().Name.Contains("BadHttpRequestException"))
+        {
+            await HandleBadHttpRequestException(httpContext, exception);
+            return true; 
+        }
+        var handlerEntry = _exceptionHandlers.FirstOrDefault(h => h.Key.IsAssignableFrom(exception.GetType()));
 
-        await HandleUnexpectedException(httpContext, exception);
+        if (handlerEntry.Value != null)
+        {
+            await handlerEntry.Value.Invoke(httpContext, exception);
+            return true;
+        }
+ 
+
+        await HandleUnknownException(httpContext, exception);
         return true;
     }
-
-    private async Task HandleValidationException(HttpContext httpContext, Exception ex)
+    private async Task HandleBusinessException(HttpContext httpContext, Exception ex)
     {
-        var exception = (ValidationException)ex;
+        var businessEx = (BusinessException)ex;
+        int statusCode = businessEx switch
+        {
+            DataNotFoundException => StatusCodes.Status404NotFound,
+            ForbiddenAccessException => StatusCodes.Status403Forbidden,
+            _ => StatusCodes.Status400BadRequest
+        };
 
-        httpContext.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        httpContext.Response.StatusCode = statusCode;
 
-        var message = string.Join(" ", exception.Errors.SelectMany(kvp => kvp.Value));
+        await httpContext.Response.WriteAsJsonAsync(new BaseResponseModel(
+            statusCode: statusCode,
+            data: businessEx.Details,
+            message: businessEx.Message,
+            code: businessEx.Code ?? ResponseCodeConstants.FAILED
+        ));
 
-        await httpContext.Response.WriteAsJsonAsync(new BaseResponseModel<object>(
-            StatusCodes.Status422UnprocessableEntity,
-            ResponseCodeConstants.INVALID_INPUT,
-            null,
-            new { errors = exception.Errors },
-            message));
+    }
+    private async Task HandleUnknownException(HttpContext httpContext, Exception ex)
+    {
+        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status500InternalServerError,
+                data: ex.Message,
+                message: "Đã xảy ra lỗi hệ thống không mong muốn, hoặc lỗi chưa được phân loại.",
+                code: ResponseCodeConstants.FAILED
+            )
+        );
+    }
+
+    private async Task HandleBaseValidationException(HttpContext httpContext, Exception ex)
+    {
+        var exception = (BaseValidationException)ex;
+
+        int statusCode = exception is DuplicateException
+            ? StatusCodes.Status409Conflict
+            : StatusCodes.Status422UnprocessableEntity;
+
+        httpContext.Response.StatusCode = statusCode;
+
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel<IDictionary<string, string[]>>(
+                statusCode: statusCode,
+                data: exception.Errors,
+                message: exception.Message,
+                code: exception is DuplicateException
+                    ? ResponseCodeConstants.DUPLICATE_ERROR
+                    : ResponseCodeConstants.VAL_INVALID_INPUT
+                )
+            );
     }
     private async Task HandleBadHttpRequestException(HttpContext httpContext, Exception ex)
     {
-        // Đây là nơi xử lý lỗi "Failed to bind parameter" (Guid sai format)
+        // xử lý lỗi "Failed to bind parameter" ( sai format)
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = StatusCodes.Status400BadRequest,
-            Title = "Yêu cầu không hợp lệ",
-            Detail = "Định dạng dữ liệu gửi lên không đúng.",
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1"
-        });
-    }
-    private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
-    {
-        var exception = (NotFoundException)ex;
 
-        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails()
-        {
-            Status = StatusCodes.Status404NotFound,
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-            Title = "The specified resource was not found.",
-            Detail = exception.Message
-        });
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status400BadRequest,
+                data: ex.Message,
+                message: "Định dạng dữ liệu gửi lên (JSON/Primitive Type) không hợp lệ.",
+                code: ResponseCodeConstants.VAL_GENERAL
+                )
+            );
     }
 
     private async Task HandleUnauthorizedAccessException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = StatusCodes.Status401Unauthorized,
-            Title = "Unauthorized",
-            Type = "https://tools.ietf.org/html/rfc7235#section-3.1"
-        });
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status401Unauthorized,
+                data: null,
+                message: ex.Message ?? "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
+                code: ResponseCodeConstants.UNAUTHORIZED
+                )
+            );
     }
+    /*private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
+    {
+        var exception = (NotFoundException)ex;
 
-    private async Task HandleForbiddenAccessException(HttpContext httpContext, Exception ex)
+        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+
+
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status404NotFound,
+                data: exception.Message,
+                message: "Không tìm thấy mục tiêu.",
+                code: ResponseCodeConstants.NOT_FOUND
+                )
+            );
+    }*/
+
+    /*private async Task HandleForbiddenAccessException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
 
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
-        {
-            Status = StatusCodes.Status403Forbidden,
-            Title = "Forbidden",
-            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
-        });
-    }
-
-    private async Task HandleUnexpectedException(HttpContext httpContext, Exception ex)
-    {
-        var root = ex;
-        while (root.InnerException != null)
-        {
-            root = root.InnerException;
-        }
-
-        var isDatabaseUnavailable = root.GetType().FullName?.Contains("MySql", StringComparison.OrdinalIgnoreCase) == true
-            || ex.Message.Contains("transient failure", StringComparison.OrdinalIgnoreCase);
-
-        httpContext.Response.StatusCode = isDatabaseUnavailable
-            ? StatusCodes.Status503ServiceUnavailable
-            : StatusCodes.Status500InternalServerError;
-
-        var message = isDatabaseUnavailable
-            ? "Không thể kết nối cơ sở dữ liệu. Vui lòng thử lại sau."
-            : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.";
-
-        await httpContext.Response.WriteAsJsonAsync(new BaseResponseModel<object>(
-            httpContext.Response.StatusCode,
-            ResponseCodeConstants.INTERNAL_SERVER_ERROR,
-            null,
-            null,
-            message));
-    }
+        await httpContext.Response.WriteAsJsonAsync(
+            new BaseResponseModel(
+                statusCode: StatusCodes.Status403Forbidden,
+                data: ex.Message,
+                message: "Không có phép sử dụng.",
+                code: ResponseCodeConstants.FORBIDDEN
+                )
+            );
+    }*/
 }

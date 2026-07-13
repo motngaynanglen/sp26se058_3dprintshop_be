@@ -13,6 +13,8 @@ public class DesignTemplate : BaseAuditableEntity
     public string? Description { get; set; }
     public required string FileUrl { get; set; }
     public string? ThumbnailUrl { get; set; }
+    // CatalogStatus đã xóa — chỉ DesignVariant mới có.
+    // IsActive giữ lại cho template (soft toggle hiển thị).
     public bool IsActive { get; set; } = true;
     //Navigations
     public virtual ICollection<DesignVariant> Variants { get; set; } = new List<DesignVariant>();

@@ -17,12 +17,11 @@ public interface IApplicationDbContext
     DbSet<Invoice> Invoices { get; }
     DbSet<Transaction> Transactions { get; }
     DbSet<DesignTemplate> DesignTemplates { get; }
-    DbSet<Domain.Entities.DesignVariant> DesignVariants { get; }
+    DbSet<DesignVariant> DesignVariants { get; }
     DbSet<ConceptTag> ConceptTags { get; }
     DbSet<DesignTag> DesignTags { get; }
     DbSet<Material> Materials { get; }
     DbSet<MaterialPriceHistory> MaterialPriceHistories { get; }
-    DbSet<MaterialInventoryTransaction> MaterialInventoryTransactions { get; }
     DbSet<InventoryTransaction> InventoryTransactions { get; }
     DbSet<DesignWork> DesignWorks { get; }
     DbSet<DesignLog> DesignLogs { get; }
@@ -30,16 +29,16 @@ public interface IApplicationDbContext
     DbSet<TechnicalDraft> TechnicalDrafts { get; }
     DbSet<ShippingAddress> ShippingAddresses { get; }
     DbSet<Shipment> Shipments { get; }
+    DbSet<ShipmentAddressChangeRequest> ShipmentAddressChangeRequests { get; }
     DbSet<Feedback> Feedbacks { get; }
     DbSet<FeedbackImage> FeedbackImages { get; }
     DbSet<ServiceOption> ServiceOptions { get; }
-    DbSet<ServicePackage> ServicePackages { get; }
-    DbSet<PackageOption> PackageOptions { get; }
     DbSet<ServiceSelection> ServiceSelections { get; }
-    DbSet<ServiceSelectionOption> ServiceSelectionOptions { get; }
+    DbSet<ServiceSelectedOption> ServiceSelectedOptions { get; }
 
-    //DatabaseFacade Database { get; }
+    DatabaseFacade Database { get; }
 
     void HardRemove<TEntity>(TEntity entity) where TEntity : class;
+    void ClearChangeTracker();
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -11,7 +11,7 @@ using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
-[Authorize(Roles = Roles.ADMIN)]
+[Authorize(Roles = Roles.SystemAdmin + "," + Roles.MANAGER)]
 public class GetAccountDetailQuery : IRequest<AccountDTO>
 {
     public Guid Id { get; init; }
@@ -21,11 +21,13 @@ public class GetAccountDetailQuery : IRequest<AccountDTO>
     {
         private readonly IApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IUser _user;
 
-        public GetAccountDetailQueryHandler(IApplicationDbContext context, IMapper mapper)
+        public GetAccountDetailQueryHandler(IApplicationDbContext context, IMapper mapper, IUser user)
         {
             _context = context;
             _mapper = mapper;
+            _user = user;
         }
         public async Task<AccountDTO> Handle(GetAccountDetailQuery request, CancellationToken cancellationToken)
         {
@@ -34,13 +36,20 @@ public class GetAccountDetailQuery : IRequest<AccountDTO>
             {
                 query = query.IgnoreQueryFilters();
             }
+
+            if (_user.Role == Roles.MANAGER)
+            {
+                query = query.Where(x => x.Staff != null);
+            }
                
-            var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider) //Mapper tự tính toán field Role
+            var account = await query.ProjectTo<AccountDTO>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
-            if (account == null) throw new Exception("Không tìm thấy tài khoản.");
+            if (account == null) throw new DataNotFoundException(nameof(Account), request.Id);
 
             return account;
         }
     }
 }
+
+

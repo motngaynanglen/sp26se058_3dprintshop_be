@@ -24,6 +24,7 @@ public class GetConceptTagsListQuery : IRequest<List<ConceptTagDTO>>
         {
             return await _context.ConceptTags
                 .AsNoTracking()
+                .Where(x => x.IsActive)
                 .OrderBy(x => x.Name)
                 .ProjectTo<ConceptTagDTO>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);

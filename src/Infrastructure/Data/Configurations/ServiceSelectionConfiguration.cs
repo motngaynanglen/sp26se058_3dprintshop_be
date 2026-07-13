@@ -12,14 +12,20 @@ public class ServiceSelectionConfiguration : IEntityTypeConfiguration<ServiceSel
 {
     public void Configure(EntityTypeBuilder<ServiceSelection> builder)
     {
-        // One-to-One giữa DesignWork và Selection
+        // One-to-many giữa DesignWork và Selection
         builder.HasOne(x => x.DesignWork)
-            .WithOne(x => x.ServiceSelection)
-            .HasForeignKey<ServiceSelection>(x => x.DesignWorkId)
+            .WithMany(x => x.ServiceSelections)
+            .HasForeignKey(x => x.DesignWorkId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.ServicePackage)
-            .WithMany()
-            .HasForeignKey(x => x.ServicePackageId);
+        builder.Property(x => x.AdjustmentRoundLimit)
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.UsedAdjustmentRoundCount)
+            .HasDefaultValue(0)
+            .IsConcurrencyToken();
+
+        builder.HasIndex(x => new { x.DesignWorkId, x.IsLocked, x.Created });
+        
     }
 }

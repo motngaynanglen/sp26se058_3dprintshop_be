@@ -67,8 +67,8 @@ jobs:
               -e AllowedHosts="*" \
               -e ConnectionStrings__DefaultConnection="${{ secrets.DB_CONNECTION_STRING }}" \
               -e Cors__AllowedOrigins__0="http://localhost:3000" \
-              -e Cors__AllowedOrigins__1="https://3dprintshop.store" \
-              -e Cors__AllowedOrigins__2="http://103.200.20.229:5000" \
+              -e Cors__AllowedOrigins__1="https://capstone-backup-fe.vercel.app" \
+              -e Cors__AllowedOrigins__2="https://3dprintshop.store" \
               -e JwtSettings__Secret="${{ secrets.JWT_SECRET }}" \
               -e JwtSettings__Issuer="3DPrintShop_Backend" \
               -e JwtSettings__Audience="3DPrintShop_Clients" \
@@ -86,7 +86,6 @@ jobs:
               -e DevAccount__Password="${{ secrets.DEV_ADMIN_PASSWORD }}" \
               -e DevAccount__Fullname="Dev Administrator" \
               -e AI__GenerateUrl="https://nestable-lucille-nonruinously.ngrok-free.dev/generate" \
-              -e OpenRouter__ApiKey="${{ secrets.OPENROUTER_API_KEY }}" \
               -e BackblazeB2__KeyId="${{ secrets.BACKBLAZEB2_KEYID }}" \
               -e BackblazeB2__ApplicationKey="${{ secrets.BACKBLAZEB2_APPLICATIONKEY }}" \
               -e BackblazeB2__BucketName="${{ secrets.BACKBLAZEB2_BUCKETNAME }}" \
@@ -94,9 +93,9 @@ jobs:
               -e VNPay__TmnCode="${{ secrets.VNPAY_TMN_CODE }}" \
               -e VNPay__HashSecret="${{ secrets.VNPAY_HASH_SECRET }}" \
               -e VNPay__PaymentUrl="https://sandbox.vnpayment.vn/paymentv2/vpcpay.html" \
-              -e VNPay__ReturnUrl="https://api.3dprintshop.store/api/transaction/vnpay-return" \
-              -e VNPay__IpnUrl="https://api.3dprintshop.store/api/transaction/vnpay-ipn" \
-              -e VNPay__ApiBaseUrl="https://api.3dprintshop.store" \
+              -e VNPay__ReturnUrl="https://api-stable.3dprintshop.store/api/transaction/vnpay-return" \
+              -e VNPay__IpnUrl="https://api-stable.3dprintshop.store/api/transaction/vnpay-ipn" \
+              -e VNPay__ApiBaseUrl="https://api-stable.3dprintshop.store" \
               -e VNPay__FrontendReturnUrl="https://3dprintshop.store" \
               -e GHN__Token="${{ secrets.GHN_TOKEN }}" \
               -e GHN__ShopId="${{ secrets.GHN_SHOP_ID }}" \

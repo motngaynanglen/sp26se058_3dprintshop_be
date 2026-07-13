@@ -1,41 +1,63 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
-using sp26se058_3dprintshop_be.Application.Common.Security;
+using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Feedbacks.Commands;
-
-[Authorize(Roles = $"{Roles.MANAGER},{Roles.ADMIN}")]
-public record ReplyFeedbackCommand : IRequest<Guid>
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+public record ReplyFeedbackCommand : IRequest<FeedbackDTO>
 {
-    [DefaultValue("00000000-0000-0000-0000-000000000000")]
     [JsonIgnore]
     public Guid Id { get; set; }
     [DefaultValue("Cảm ơn đã ủng hộ!")]
     public string StaffReply { get; set; } = null!;
 }
-public class ReplyFeedbackCommandHandler : IRequestHandler<ReplyFeedbackCommand,Guid>
+public class ReplyFeedbackCommandHandler : IRequestHandler<ReplyFeedbackCommand, FeedbackDTO>
 {
     private readonly IApplicationDbContext _context;
     private readonly IUser _user;
-
-    public ReplyFeedbackCommandHandler(IApplicationDbContext context, IUser user)
+    private readonly IMapper _mapper;
+    public ReplyFeedbackCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
         _user = user;
+        _mapper = mapper;
     }
-
-    public async Task<Guid> Handle(ReplyFeedbackCommand request, CancellationToken ct)
+    public class ReplyFeedbackCommandValidator : AbstractValidator<ReplyFeedbackCommand>
     {
-        var entity = await _context.Feedbacks.FindAsync(new object[] { request.Id }, ct);
-
-        if (entity == null) throw new NotFoundException(nameof(Feedback), request.Id.ToString());
+        public ReplyFeedbackCommandValidator()
+        {
+            RuleFor(v => v.StaffReply)
+                .NotEmpty().WithMessage("Nội dung phản hồi không được để trống.")
+                .MaximumLength(1000).WithMessage("Nội dung phản hồi không quá 1000 ký tự.");
+        }
+    }
+    public async Task<FeedbackDTO> Handle(ReplyFeedbackCommand request, CancellationToken ct)
+    {
+        var entity = await _context.Feedbacks
+            .FirstOrDefaultAsync(f => f.Id == request.Id, ct)
+            ?? throw new DataNotFoundException(nameof(Feedback), request.Id);
 
         entity.StaffReply = request.StaffReply;
-        // Có thể thêm ngày phản hồi nếu sau này cần: entity.RepliedDate = DateTime.Now;
+        entity.LastModified = CoreHelper.SystemTimeNow;
+        entity.LastModifiedBy = _user.Username;
+        entity.RepliedDate = CoreHelper.SystemTimeNow;
 
-        await _context.SaveChangesAsync(ct);
-        return entity.Id;
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(Feedback), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
+        return _mapper.Map<FeedbackDTO>(entity);
     }
 }

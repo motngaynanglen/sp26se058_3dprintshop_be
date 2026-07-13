@@ -7,20 +7,20 @@ using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Shipments.Commands;
 
-/// <summary>[Staff/Manager] Tạo vận đơn GHN hoặc GHTK cho đơn hàng đã sẵn sàng giao.</summary>
+/// <summary>[Staff/Manager] Tao van don GHN cho don hang da san sang giao.</summary>
 public record CreateCarrierShipmentCommand : IRequest<CreateCarrierShipmentResult>
 {
     public Guid OrderId { get; init; }
 
-    /// <summary>GHN hoặc GHTK — <see cref="ShippingCarriers"/>.</summary>
+    /// <summary>GHN — <see cref="ShippingCarriers"/>.</summary>
     public required string Carrier { get; init; }
 
     public int? WeightGrams { get; init; }
 
-    /// <summary>Bổ sung mã quận GHN khi địa chỉ đơn thiếu.</summary>
+    /// <summary>Bo sung ma quan GHN khi dia chi don thieu.</summary>
     public int? GhnDistrictId { get; init; }
 
-    /// <summary>Bổ sung mã phường GHN khi địa chỉ đơn thiếu.</summary>
+    /// <summary>Bo sung ma phuong GHN khi dia chi don thieu.</summary>
     public string? GhnWardCode { get; init; }
 }
 
@@ -39,7 +39,7 @@ public class CreateCarrierShipmentCommandValidator : AbstractValidator<CreateCar
         RuleFor(x => x.Carrier)
             .NotEmpty()
             .Must(c => ShippingCarriers.ThirdParty.Contains(c))
-            .WithMessage("Carrier phải là GHN hoặc GHTK.");
+            .WithMessage("Carrier phai la GHN hoac GHTK.");
         When(x => x.WeightGrams.HasValue, () =>
             RuleFor(x => x.WeightGrams!.Value).GreaterThan(0));
     }
@@ -70,38 +70,38 @@ public class CreateCarrierShipmentCommandHandler
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_user.Id))
-            throw new UnauthorizedAccessException("Cần đăng nhập.");
+            throw new UnauthorizedAccessException("Can dang nhap.");
 
         var role = _user.Role ?? Roles.GUEST;
         if (role != Roles.STAFF && role != Roles.MANAGER && role != Roles.ADMIN)
-            throw new UnauthorizedAccessException("Chỉ nhân viên/quản lý tạo được vận đơn GHN/GHTK.");
+            throw new UnauthorizedAccessException("Chi nhan vien/quan ly tao duoc van don GHN.");
 
         var carrierCode = request.Carrier.Trim().ToUpperInvariant();
         var service = _carriers.GetService(carrierCode)
-            ?? throw new InvalidOperationException($"Không hỗ trợ đơn vị vận chuyển: {request.Carrier}");
+            ?? throw new InvalidOperationException($"Khong ho tro don vi van chuyen: {request.Carrier}");
 
         var order = await _context.Orders
             .Include(o => o.OrderItems)
             .Include(o => o.Invoice)
             .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken)
-            ?? throw new KeyNotFoundException("Không tìm thấy đơn hàng.");
+            ?? throw new KeyNotFoundException("Khong tim thay don hang.");
 
         if (order.OrderStatus == OrderStatuses.Cancelled)
-            throw new InvalidOperationException("Đơn hàng đã hủy.");
+            throw new InvalidOperationException("Don hang da huy.");
 
         if (order.OrderStatus != OrderStatuses.Processing
             && order.OrderStatus != OrderStatuses.Finished)
             throw new InvalidOperationException(
-                "Chỉ tạo vận đơn khi đơn ở trạng thái PROCESSING hoặc FINISHED.");
+                "Chi tao van don khi don o trang thai PROCESSING hoac FINISHED.");
 
         var shipment = await _context.Shipments
             .Include(s => s.ShippingAddress)
             .FirstOrDefaultAsync(s => s.OrderId == order.Id, cancellationToken)
-            ?? throw new InvalidOperationException("Đơn hàng chưa có shipment.");
+            ?? throw new InvalidOperationException("Don hang chua co shipment.");
 
         if (!string.IsNullOrWhiteSpace(shipment.CarrierOrderCode))
             throw new InvalidOperationException(
-                $"Đã có vận đơn {shipment.Carrier} — mã {shipment.CarrierOrderCode}.");
+                $"Da co van don {shipment.Carrier} — ma {shipment.CarrierOrderCode}.");
 
         var addr = shipment.ShippingAddress;
         if (request.GhnDistrictId is > 0 && !string.IsNullOrWhiteSpace(request.GhnWardCode))
@@ -116,15 +116,15 @@ public class CreateCarrierShipmentCommandHandler
             && (addr.GhnDistrictId is null or <= 0 || string.IsNullOrWhiteSpace(addr.GhnWardCode)))
         {
             throw new InvalidOperationException(
-                $"Không map được mã GHN từ địa chỉ «{addr.Ward}, {addr.District}, {addr.City}». "
-                + "Kiểm tra tên Phường/Quận/Tỉnh khớp danh mục GHN hoặc chọn lại trên form.");
+                $"Khong map duoc ma GHN tu dia chi «{addr.Ward}, {addr.District}, {addr.City}». "
+                + "Kiem tra ten Phuong/Quan/Tinh khop danh muc GHN hoac chon lai tren form.");
         }
 
         var weight = request.WeightGrams ?? 500;
         var isPaid = order.Invoice?.PaymentStatus == InvoiceStatuses.Paid;
 
         var items = order.OrderItems.Select(oi => new CarrierShipmentLineItem(
-            oi.ItemName ?? "Sản phẩm",
+            oi.ItemName ?? "San pham",
             oi.QuantityOrdered,
             Math.Max(0.2m, weight / 1000m / Math.Max(1, order.OrderItems.Count)))).ToList();
 
@@ -150,15 +150,20 @@ public class CreateCarrierShipmentCommandHandler
 
         var apiResult = await service.CreateShipmentAsync(createCtx, cancellationToken);
         if (!apiResult.Success)
-            throw new InvalidOperationException(apiResult.ErrorMessage ?? "Tạo vận đơn thất bại.");
+            throw new InvalidOperationException(apiResult.ErrorMessage ?? "Tao van don that bai.");
 
         var now = CoreHelper.SystemTimeNow;
         var username = _user.Username ?? "staff";
 
+        // Lay luon URL phieu in (printA5) cho vac don vua tao.
+        var labelUrl = apiResult.LabelUrl;
+        if (string.IsNullOrWhiteSpace(labelUrl) && !string.IsNullOrWhiteSpace(apiResult.CarrierOrderCode))
+            labelUrl = await service.GetLabelUrlAsync(apiResult.CarrierOrderCode, cancellationToken);
+
         shipment.Carrier = carrierCode;
         shipment.CarrierOrderCode = apiResult.CarrierOrderCode;
         shipment.CarrierStatus = apiResult.CarrierStatus;
-        shipment.CarrierLabelUrl = apiResult.LabelUrl;
+        shipment.CarrierLabelUrl = labelUrl;
         shipment.CarrierMetaJson = apiResult.RawJson;
         shipment.TrackingNumber = apiResult.TrackingNumber ?? shipment.TrackingNumber;
         shipment.ShipmentStatus = ShipmentStatuses.ReadyForPickup;

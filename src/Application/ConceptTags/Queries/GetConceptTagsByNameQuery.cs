@@ -17,6 +17,8 @@ public class GetConceptTagsByNameQuery : PaginationRequest, IRequest<PaginatedLi
     public string Search { get; set; } = string.Empty;
     [DefaultValue(false)]
     public bool? IsMainTag { get; init; }
+    [DefaultValue(true)]
+    public bool? IsActive { get; init; } = true;
     public class GetConceptTagsListQueryHandler : IRequestHandler<GetConceptTagsByNameQuery, PaginatedList<ConceptTagDTO>>
     {
         private readonly IApplicationDbContext _context;
@@ -42,6 +44,10 @@ public class GetConceptTagsByNameQuery : PaginationRequest, IRequest<PaginatedLi
             if (request.IsMainTag.HasValue)
             {
                 query = query.Where(x => x.IsMainTag == request.IsMainTag);
+            }
+            if (request.IsActive.HasValue)
+            {
+                query = query.Where(x => x.IsActive == request.IsActive);
             }
             return await query
                 .ProjectTo<ConceptTagDTO>(_mapper.ConfigurationProvider)

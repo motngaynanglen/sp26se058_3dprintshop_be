@@ -1,4 +1,4 @@
-using Amazon.S3;
+﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
@@ -10,11 +10,11 @@ public class BackblazeB2Service : IBackblazeB2Service
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
-    private readonly string _serviceUrl;
 
     public BackblazeB2Service(IOptions<BackblazeB2Options> options)
     {
         var config = options.Value;
+
         var s3Config = new AmazonS3Config
         {
             ServiceURL = config.ServiceUrl,
@@ -23,52 +23,26 @@ public class BackblazeB2Service : IBackblazeB2Service
 
         _s3Client = new AmazonS3Client(config.KeyId, config.ApplicationKey, s3Config);
         _bucketName = config.BucketName;
-        _serviceUrl = config.ServiceUrl.TrimEnd('/');
     }
 
-    public async Task<string> UploadGlbAsync(byte[] glbBytes, string folder = "models")
+    // Đổi tên tham số từ glbBase64 thành glbData để phản ánh đúng kiểu byte[]
+    public async Task<string> UploadGlbAsync(byte[] glbData, string folder = "models")
     {
-        var fileName = $"{folder.Trim('/')}/{Guid.NewGuid():N}.glb";
-        using var stream = new MemoryStream(glbBytes);
+        var fileName = $"{folder}/{Guid.NewGuid():N}.glb";
+
+        using var stream = new MemoryStream(glbData);
+
         var request = new PutObjectRequest
         {
             BucketName = _bucketName,
             Key = fileName,
             InputStream = stream,
-            ContentType = "model/gltf-binary"
+            ContentType = "model/gltf-binary" // Định nghĩa chuẩn cho file .glb
         };
 
         await _s3Client.PutObjectAsync(request);
-        return $"{_serviceUrl}/{_bucketName}/{fileName}";
-    }
 
-    public string GetPresignedDownloadUrl(string objectUrl, TimeSpan? expires = null)
-    {
-        if (string.IsNullOrWhiteSpace(objectUrl))
-            return objectUrl;
-
-        var key = ExtractObjectKey(objectUrl);
-        var request = new GetPreSignedUrlRequest
-        {
-            BucketName = _bucketName,
-            Key = key,
-            Verb = HttpVerb.GET,
-            Expires = DateTime.UtcNow.Add(expires ?? TimeSpan.FromHours(1))
-        };
-
-        return _s3Client.GetPreSignedURL(request);
-    }
-
-    private string ExtractObjectKey(string storedUrl)
-    {
-        if (!storedUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-            return storedUrl.TrimStart('/');
-
-        var uri = new Uri(storedUrl);
-        var segments = uri.AbsolutePath.TrimStart('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length >= 2 && string.Equals(segments[0], _bucketName, StringComparison.Ordinal))
-            return string.Join('/', segments.Skip(1));
-
-        return uri.AbsolutePath.TrimStart('/');
+        // Lưu ý: Thay us-east-005 bằng Region thực tế của Bucket bạn nếu có lỗi URL
+        return $"https://{_bucketName}.s3.us-east-005.backblazeb2.com/{fileName}";
     }
 }

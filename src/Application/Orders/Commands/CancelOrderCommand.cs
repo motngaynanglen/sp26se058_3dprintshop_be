@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using PayOS.Models.V1.Payouts;
+using sp26se058_3dprintshop_be.Application.Common.Constants;
+using sp26se058_3dprintshop_be.Application.Common.Security;
 using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -13,6 +15,7 @@ using sp26se058_3dprintshop_be.Domain.Entities;
 using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Orders.Commands;
+[Authorize(Roles = Roles.CUSTOMER + "," + Roles.STAFF + "," + Roles.MANAGER)]
 public record CancelOrderCommand : IRequest<bool>
 {
     [JsonIgnore]
@@ -35,31 +38,50 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
 
     public async Task<bool> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
     {
+        var userId = _user.Id.ToGuid();
+        var role = _user.Role ?? Roles.GUEST;
         // 1. Tìm đơn hàng kèm theo các OrderItems và InventoryTransactions liên quan
         var order = await _context.Orders
+            .Include(o => o.Customer)
             .Include(o => o.OrderItems)
             .Include(o => o.Invoice)
                 .ThenInclude(i => i!.Transactions)
             .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
 
-        if (order == null) throw new Exception("Không tìm thấy đơn hàng.");
+        if (order == null) throw new DataNotFoundException(nameof(Order), request.OrderId);
+
+        if (order.Invoice == null)
+            throw new DataNotFoundException("Không tìm thấy hóa đơn liên quan đến đơn hàng này.");
+
+        if (role == Roles.GUEST || role == Roles.ADMIN)
+            throw new ForbiddenAccessException($"{role} không có quyền thực hiện chức năng hủy đơn.");
+
+        if (role == Roles.CUSTOMER && order.Customer?.AccountId != userId)
+            throw new ForbiddenAccessException("Bạn không có quyền hủy đơn hàng của người khác.");
+
+        if (order.OrderStatus == OrderStatuses.Cancelled)
+            throw new BusinessException("Đơn hàng này đã được hủy trước đó.", ResponseCodeConstants.VAL_INVALID_STATE);
 
         // 2. Lấy Invoice để kiểm tra trạng thái thanh toán
         var invoice = order.Invoice;
-        // 3. LOGIC HỦY: Cho phép hủy nếu Invoice chưa thanh toán (UNPAID) 
-        // Hoặc trạng thái đơn hàng vẫn đang ở PENDING
-        bool isUnpaid = invoice == null || invoice.PaymentStatus == InvoiceStatuses.Unpaid;
+        // 3. LOGIC HỦY: Chỉ cho phép hủy nếu đơn vẫn đang chờ và hóa đơn chưa thanh toán.
+        // Hệ thống hiện không hỗ trợ hủy đơn sau khi thanh toán.
+        bool isUnpaid = invoice.PaymentStatus == InvoiceStatuses.Unpaid;
         bool isPending = order.OrderStatus == OrderStatuses.Pending;
 
-        if (invoice == null) throw new Exception("Có lỗi xảy ra khi tạo đơn hàng, không tìm thấy hóa đơn.");
+        if (!isPending || !isUnpaid)
+        {
+            throw new BusinessException("Chỉ có thể hủy đơn hàng khi đơn chưa thanh toán.", ResponseCodeConstants.VAL_INVALID_STATE);
+        }
+
         var payTransaction = invoice.Transactions
-                            .FirstOrDefault(t => t.TransactionStatus == "PENDING" && t.Created.AddMinutes(10) > CoreHelper.SystemTimeNow);
+                            .FirstOrDefault(t => t.TransactionStatus == TransactionStatuses.Pending
+                                            && t.Created.AddMinutes(OrderPaymentConstants.PendingPaymentLifetimeMinutes) > CoreHelper.SystemTimeNow);
         if (payTransaction != null && payTransaction.PaymentMethod == PaymentMethods.PAYOS)
         {
             try
             {
                 // Gọi API PayOS để hủy link thanh toán (Tránh khách quét mã sau khi hủy đơn)
-                // ExternalTransactionId ở đây thường là OrderCode bạn gửi sang PayOS (ví dụ: 123456)
                 await _paymentService.CancelPaymentLink(payTransaction.InternalCode.ToLong(), "Chủ động hủy đơn");
             }
             catch (Exception ex)
@@ -68,87 +90,115 @@ public class CancelOrderCommandHandler : IRequestHandler<CancelOrderCommand, boo
                 Console.WriteLine($"PayOS Cancel Error: {ex.Message}");
             }
         }
-        if (!isUnpaid && !isPending)
-        {
-            throw new Exception("Đơn hàng đã thanh toán hoặc đang trong quá trình xử lý, không thể hủy.");
-        }
-
-        // 4. Kiểm tra quyền (Chỉ chủ đơn hàng hoặc Admin/Staff mới được hủy)
-        // Lưu ý: Bách cần kiểm tra xem userId từ token có khớp với Customer của đơn hàng không
-        var userId = _user.Id.ToGuid();
-        var role = _user.Role ?? Roles.GUEST;
-        var account = await _context.Accounts
-                            .Include(a => a.Customer)
-                            .Include(a => a.Staff)
-                            .Include(a => a.Manager)
-                            .FirstOrDefaultAsync(x => x.Id == userId);
-        if (role == Roles.GUEST || role == Roles.ADMIN)
-        {
-            throw new Exception(role + " không thể dùng phương thức này.");
-        }
-        if (account == null) throw new Exception("Bạn phải đăng nhập để dùng phương thức này.");
-        if (role == Roles.CUSTOMER && account.Customer!.Id != order.CustomerId)
-        {
-            throw new Exception("Chỉ có chủ nhân của đơn hàng mới có thể hủy đơn.");
-        }
-
 
         // 5. Hoàn trả kho (Inventory Rollback)
+        var variantIdsToReturn = order.OrderItems
+            .Where(i => i.SourceType == SourceTypes.InStock && i.DesignVariantId.HasValue)
+            .Select(i => i.DesignVariantId!.Value)
+            .ToList();
+
+        var variants = new List<DesignVariant>();
+        if (variantIdsToReturn.Any())
+        {
+            variants = await _context.DesignVariants
+                .Where(v => variantIdsToReturn.Contains(v.Id))
+                .ToListAsync(cancellationToken);
+        }
+
         foreach (var item in order.OrderItems)
         {
-            // Hoàn kho đối với dòng hàng đã xuất kho (IN_STOCK / ORDER)
-            if ((item.SourceType == SourceTypes.InStock || item.SourceType == SourceTypes.Order)
-                && item.DesignVariantId.HasValue)
+            item.FulfillmentStatus = OrderItemStatuses.Cancelled;
+            item.LastModified = CoreHelper.SystemTimeNow;
+            item.LastModifiedBy = _user.Username;
+
+            switch (item.SourceType)
             {
-                var variant = await _context.DesignVariants
-                    .FirstOrDefaultAsync(v => v.Id == item.DesignVariantId, cancellationToken);
-
-                if (variant != null)
-                {
-                    // Cộng lại số lượng vào kho
-                    variant.StockQuantity += item.QuantityOrdered;
-
-                    // Ghi log nhập lại kho do hủy đơn
-                    _context.InventoryTransactions.Add(new InventoryTransaction
+                case SourceTypes.InStock:
+                    // 1. HOÀN KHO: ( tối ưu lại Logic cũ cho gọn)
+                    if (item.DesignVariantId.HasValue)
                     {
-                        Id = Guid.NewGuid(),
-                        DesignVariantId = variant.Id,
-                        ReferenceId = order.Id,
-                        Quantity = item.QuantityOrdered, // Số dương vì là nhập lại
-                        Type = InventoryTransactionTypes.OrderCancelReturn,
-                        Note = $"Hoàn kho do hủy đơn: {order.Code}. Lý do: {request.Reason}"
-                    });
-                }
+                        var variant = variants.FirstOrDefault(v => v.Id == item.DesignVariantId);
+                        if (variant != null)
+                        {
+                            variant.StockQuantity += item.QuantityOrdered;
+                            _context.InventoryTransactions.Add(new InventoryTransaction
+                            {
+                                Id = Guid.NewGuid(),
+                                DesignVariantId = variant.Id,
+                                ReferenceId = order.Id,
+                                Quantity = item.QuantityOrdered,
+                                Type = InventoryTransactionTypes.OrderCancelReturn,
+                                Note = $"Hoàn kho đơn {order.Code}. Lý do: {request.Reason}",
+                                Created = CoreHelper.SystemTimeNow,
+                                CreatedBy = _user.Username,
+                                LastModified = CoreHelper.SystemTimeNow,
+                                LastModifiedBy = _user.Username
+                            });
+                        }
+                    }
+                    break;
+
+                case SourceTypes.DesignService:
+                    // 2. HỦY DỊCH VỤ THIẾT KẾ:
+                    // Nếu có bản ghi DesignWork đi kèm, phải chuyển nó về Sketching
+                    if (item.DesignWorkId.HasValue)
+                    {
+                        var designWork = await _context.DesignWorks.FirstOrDefaultAsync(dw => dw.Id == item.DesignWorkId, cancellationToken);
+                        if (designWork != null && designWork.Status != DesignWorkStatus.Completed)
+                        {
+                            designWork.Status = DesignWorkStatus.Sketching;
+
+                            // Ghi Log để nhân viên thiết kế biết dự án này đã bị hủy
+                            _context.DesignLogs.Add(new DesignLog
+                            {
+                                Id = Guid.NewGuid(),
+                                DesignWorkId = designWork.Id,
+                                LogType = DesignLogType.StatusChange,
+                                Content = $"Hệ thống: Đơn hàng {order.Code} đã bị hủy. Dự án thiết kế dừng lại.",
+                                Created = CoreHelper.SystemTimeNow
+                            });
+                        }
+                    }
+                    break;
+
+                case SourceTypes.PrintService:
+                case SourceTypes.PreOrder:
+                    // 3. HỦY DỊCH VỤ IN / ĐẶT TRƯỚC:
+                    // Ở giai đoạn PENDING (chưa in), ta chỉ cần đổi trạng thái item.
+                    break;
             }
         }
 
         // 6. Cập nhật trạng thái Đơn hàng, Shipment và Invoice
-        order.OrderStatus = "CANCELLED";
+        order.OrderStatus = OrderStatuses.Cancelled;
         order.LastModified = CoreHelper.SystemTimeNow;
         order.LastModifiedBy = _user.Username;
         //order.Note = $"[Hủy đơn - {DateTime.Now:dd/MM/yyyy HH:mm}] Lý do: {request.Reason}. " + (order.Note ?? "");
+
+        // Cập nhật Invoice
+
+        invoice.PaymentStatus = InvoiceStatuses.Cancelled;
+        invoice.LastModified = CoreHelper.SystemTimeNow;
+        invoice.LastModifiedBy = _user.Username;
 
         // Cập nhật Shipment
         var shipment = await _context.Shipments
             .FirstOrDefaultAsync(s => s.OrderId == order.Id, cancellationToken);
         if (shipment != null)
         {
-            shipment.ShipmentStatus = "CANCELLED";
+            shipment.ShipmentStatus = ShipmentStatuses.Cancelled;
             shipment.LastModified = CoreHelper.SystemTimeNow;
             shipment.LastModifiedBy = _user.Username;
         }
 
-        // Cập nhật Invoice
-        if (invoice != null)
+        try
         {
-            invoice.PaymentStatus = "CANCELLED";
-            invoice.LastModified = CoreHelper.SystemTimeNow;
-            invoice.LastModifiedBy = _user.Username;
+            await _context.SaveChangesAsync(cancellationToken);
         }
-
-        // 6. Lưu thay đổi
-
-        await _context.SaveChangesAsync(cancellationToken);
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException($"Lỗi khi thực hiện hủy đơn hàng: {ex.InnerException?.Message ?? ex.Message}");
+        }
 
         return true;
     }

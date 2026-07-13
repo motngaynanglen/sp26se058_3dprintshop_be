@@ -12,8 +12,8 @@ public class DesignVariant : BaseAuditableEntity
     [StringLength(1000)]
     public string? Description { get; set; } 
     public decimal Price { get; set; } = decimal.Zero;
+    public string? ImageUrls { get; set; }
     public string? PreviewModelUrl { get; set; }
-    public string? PreviewImageUrl { get; set; }
     // Category
     public Guid DesignTemplateId { get; set; }
     public Guid MaterialId { get; set; }
@@ -28,6 +28,7 @@ public class DesignVariant : BaseAuditableEntity
     public decimal? EstimatedPrintTimePerUnit { get; set; } // Đơn vị theo phút
     public decimal MarkupPercentage { get; set; } = 0; //  Phần này là độ khó bản mẫu, mặc định 0 đi (có thể xóa sau này) 
     //
+    public string CatalogStatus { get; set; } = Constants.Statuses.CatalogStatuses.Draft;
     public bool IsActive { get; set; } = true;
 
     public virtual DesignTemplate DesignTemplate { get; set; } = null!;

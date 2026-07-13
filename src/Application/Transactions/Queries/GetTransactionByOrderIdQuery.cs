@@ -1,55 +1,53 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Domain.Constants;
 
 namespace sp26se058_3dprintshop_be.Application.Transactions.Queries;
-
-public record GetTransactionByOrderIdQuery : IRequest<TransactionDTO>
+public class GetTransactionByOrderIdQuery : IRequest<TransactionDTO>
 {
-    public Guid OrderId { get; init; }
-}
-
-public class GetTransactionByOrderIdQueryHandler : IRequestHandler<GetTransactionByOrderIdQuery, TransactionDTO>
-{
-    private readonly IApplicationDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly IUser _user;
-
-    public GetTransactionByOrderIdQueryHandler(
-        IApplicationDbContext context,
-        IMapper mapper,
-        IUser user)
+    [Required]
+    public Guid OrderId { get; set; }
+    public class GetTransactionByOrderIdQueryHandler : IRequestHandler<GetTransactionByOrderIdQuery, TransactionDTO>
     {
-        _context = context;
-        _mapper = mapper;
-        _user = user;
-    }
+        private readonly IApplicationDbContext _context;
+        private readonly IUser _user;
+        private readonly IMapper _mapper;
 
-    public async Task<TransactionDTO> Handle(GetTransactionByOrderIdQuery request, CancellationToken cancellationToken)
-    {
-        var query = _context.Transactions
-            .AsNoTracking()
-            .Include(t => t.Invoice)
-                .ThenInclude(i => i.Order)
-            .Where(t => t.Invoice.OrderId == request.OrderId);
-
-        if (_user.Role == Roles.CUSTOMER)
+        public GetTransactionByOrderIdQueryHandler(IApplicationDbContext context, IUser user, IMapper mapper)
         {
-            var accountId = _user.Id.ToGuid();
-            var customerId = await _context.Customers
-                .Where(c => c.AccountId == accountId)
-                .Select(c => c.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (customerId == Guid.Empty)
-                throw new UnauthorizedAccessException("Không xác định được khách hàng.");
-
-            query = query.Where(t => t.Invoice.Order.CustomerId == customerId);
+            _context = context;
+            _user = user;
+            _mapper = mapper;
         }
+        public async Task<TransactionDTO> Handle(GetTransactionByOrderIdQuery request, CancellationToken cancellationToken)
+        {
+            var userId = _user.Id.ToGuid();
 
-        var entity = await query
-            .OrderByDescending(t => t.Created)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new KeyNotFoundException($"Không tìm thấy giao dịch cho đơn {request.OrderId}.");
+            var query = _context.Transactions
+                .Include(t => t.Invoice).ThenInclude(i => i.Order)
+                .AsNoTracking()
+                .Where(t => t.Invoice.OrderId == request.OrderId);
 
-        return _mapper.Map<TransactionDTO>(entity);
+            if (_user.Role == Roles.CUSTOMER)
+            {
+                query = query.Where(t => t.Invoice.Order.Customer.AccountId == userId);
+            }
+            var entity = await query
+                .ProjectTo<TransactionDTO>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+
+            if (entity == null)
+            {
+                throw new DataNotFoundException(nameof(Transaction), request.OrderId);
+            }
+
+            return entity;
+
+
+        }
     }
 }

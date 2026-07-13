@@ -3,30 +3,52 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using sp26se058_3dprintshop_be.Application.Feedbacks.Queries;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Domain.Utils;
 
 namespace sp26se058_3dprintshop_be.Application.Feedbacks.Commands;
-public record SwitchFeedbackStatusCommand : IRequest<Guid>
+[Authorize(Roles = Roles.STAFF + "," + Roles.MANAGER)]
+public record SwitchFeedbackStatusCommand : IRequest<FeedbackDTO>
 {
-    [DefaultValue("00000000-0000-0000-0000-000000000000")]
-    public Guid Id { get; set; }
-    
+    [JsonInclude]
+    public Guid Id { get; init; }
+
 }
-public class SwitchFeedbackStatusCommandHandler : IRequestHandler<SwitchFeedbackStatusCommand, Guid>
+public class SwitchFeedbackStatusCommandHandler : IRequestHandler<SwitchFeedbackStatusCommand, FeedbackDTO>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IMapper _mapper;
+    private readonly IUser _user;
 
-    public SwitchFeedbackStatusCommandHandler(IApplicationDbContext context) => _context = context;
-
-    public async Task<Guid> Handle(SwitchFeedbackStatusCommand request, CancellationToken ct)
+    public SwitchFeedbackStatusCommandHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
-        var entity = await _context.Feedbacks.FirstOrDefaultAsync(f => f.Id == request.Id, ct);
-        if (entity == null) throw new Exception(nameof(Feedback) +" not found "+ request.Id.ToString());
+        _context = context;
+        _user = user;
+        _mapper = mapper;
+    }
+
+    public async Task<FeedbackDTO> Handle(SwitchFeedbackStatusCommand request, CancellationToken ct)
+    {
+        var entity = await _context.Feedbacks
+            .FirstOrDefaultAsync(f => f.Id == request.Id, ct)
+            ?? throw new DataNotFoundException(nameof(Feedback), request.Id);
 
         entity.IsHidden = !entity.IsHidden;
+        entity.LastModified = CoreHelper.SystemTimeNow;
+        entity.LastModifiedBy = _user.Username;
+        try
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            throw new UpdateFailureException(nameof(Feedback), ex.InnerException?.Message ?? ex.Message);
+        }
 
-        await _context.SaveChangesAsync(ct);
-        return entity.Id;
+        return _mapper.Map<FeedbackDTO>(entity);
     }
 }

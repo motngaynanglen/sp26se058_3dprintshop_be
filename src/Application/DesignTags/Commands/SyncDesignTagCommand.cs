@@ -6,19 +6,24 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.DesignTags.Commands;
 
 public class SyncDesignTagItem
 {
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid ConceptTagId { get; set; }
     [DefaultValue(false)]
     public bool IsMainTag { get; set; }
 }
 
+[Authorize(Roles = Roles.MANAGER)]
 public class SyncDesignTagCommand : IRequest<Guid>
 {
+    [DefaultValue("00000000-0000-0000-0000-000000000001")]
     public Guid DesignTemplateId { get; set; }
     public List<SyncDesignTagItem> Tags { get; set; } = new();
 }
@@ -41,7 +46,38 @@ public class SyncDesignTagCommandHandler
         // VALIDATION — chỉ 1 main tag
         // =========================
         if (request.Tags.Count(x => x.IsMainTag) > 1)
-            throw new Exception("Chỉ được phép có đúng 1 MainTag.");
+            throw new BusinessException("Chỉ được phép có đúng 1 tag chính.");
+
+        var duplicateConceptIds = request.Tags
+            .GroupBy(x => x.ConceptTagId)
+            .Where(x => x.Count() > 1)
+            .Select(x => x.Key)
+            .ToList();
+        if (duplicateConceptIds.Any())
+        {
+            throw new DuplicateException("Danh sách tag gửi lên có tag bị trùng.");
+        }
+
+        var templateExists = await _context.DesignTemplates
+            .AnyAsync(x => x.Id == request.DesignTemplateId, cancellationToken);
+        if (!templateExists)
+        {
+            throw new DataNotFoundException(nameof(DesignTemplate), request.DesignTemplateId);
+        }
+
+        var requestConceptIds = request.Tags
+            .Select(x => x.ConceptTagId)
+            .ToHashSet();
+
+        var validConceptIds = await _context.ConceptTags
+            .Where(x => requestConceptIds.Contains(x.Id) && x.IsActive)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+        var invalidConceptIds = requestConceptIds.Except(validConceptIds).ToList();
+        if (invalidConceptIds.Any())
+        {
+            throw new BusinessException("Một hoặc nhiều tag ý tưởng không tồn tại hoặc đã ngưng hoạt động.");
+        }
 
         // =========================
         // LẤY TAG CŨ
@@ -51,10 +87,6 @@ public class SyncDesignTagCommandHandler
             .ToListAsync(cancellationToken);
 
         var existingConceptIds = existingTags
-            .Select(x => x.ConceptTagId)
-            .ToHashSet();
-
-        var requestConceptIds = request.Tags
             .Select(x => x.ConceptTagId)
             .ToHashSet();
 

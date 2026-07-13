@@ -23,11 +23,36 @@ public class ServiceOptionConfiguration : IEntityTypeConfiguration<ServiceOption
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.GroupCode)
+            .HasMaxLength(50)
+            .HasDefaultValue("GENERAL")
+            .IsRequired();
+
+        builder.Property(x => x.GroupName)
+            .HasMaxLength(100)
+            .HasDefaultValue("Chung")
+            .IsRequired();
+
+        builder.Property(x => x.SelectionType)
+            .HasMaxLength(30)
+            .HasDefaultValue("ADDON")
+            .IsRequired();
+
         builder.Property(x => x.DefaultPrice)
             .HasPrecision(18, 2);
 
-        builder.Property(x => x.OptionType)
-            .HasMaxLength(20)
-            .IsRequired(); // ADDON | CONFIG
+        builder.Property(x => x.MinQuantity)
+            .HasDefaultValue(1);
+
+        builder.Property(x => x.SortOrder)
+            .HasDefaultValue(0);
+
+        builder.Property(x => x.AdjustmentRoundDelta)
+            .IsRequired(false);
+
+        
     }
 }

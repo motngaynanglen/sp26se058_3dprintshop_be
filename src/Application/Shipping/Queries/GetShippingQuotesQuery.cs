@@ -1,20 +1,21 @@
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
 using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Shipping.Queries;
 
-/// <summary>[Customer/All] Báo phí vận chuyển GHN/GHTK (hoặc phí ước tính khi chưa cấu hình API).</summary>
+/// <summary>[Customer/All] Bao phi van chuyen GHN (hoac phi uoc tinh khi chua cau hinh API).</summary>
 public record GetShippingQuotesQuery : IRequest<List<ShippingQuoteDto>>
 {
-    /// <summary>Địa chỉ đã lưu — hoặc bỏ trống nếu gửi mã GHN trực tiếp.</summary>
+    /// <summary>Dia chi da luu — hoac bo trong neu gui ma GHN truc tiep.</summary>
     public Guid? ShippingAddressId { get; init; }
 
     public int WeightGrams { get; init; } = 500;
 
     public decimal OrderValue { get; init; }
 
-    /// <summary>Thu hộ COD khi chưa thanh toán online.</summary>
+    /// <summary>Thu ho COD khi chua thanh toan online.</summary>
     public bool CollectOnDelivery { get; init; }
 
     public int? GhnToDistrictId { get; init; }
@@ -32,7 +33,7 @@ public class GetShippingQuotesQueryValidator : AbstractValidator<GetShippingQuot
             .Must(x =>
                 x.ShippingAddressId is { } id && id != Guid.Empty
                 || (x.GhnToDistrictId is > 0 && !string.IsNullOrWhiteSpace(x.GhnToWardCode)))
-            .WithMessage("Cần địa chỉ đã lưu hoặc mã quận/phường GHN.");
+            .WithMessage("Can dia chi da luu hoac ma quan/phuong GHN.");
     }
 }
 
@@ -65,7 +66,7 @@ public class GetShippingQuotesQueryHandler : IRequestHandler<GetShippingQuotesQu
             address = await _context.ShippingAddresses
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.Id == addrId, cancellationToken)
-                ?? throw new KeyNotFoundException("Không tìm thấy địa chỉ giao hàng.");
+                ?? throw new KeyNotFoundException("Khong tim thay dia chi giao hang.");
 
             if (!string.IsNullOrWhiteSpace(_user.Id))
             {
@@ -74,7 +75,7 @@ public class GetShippingQuotesQueryHandler : IRequestHandler<GetShippingQuotesQu
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.AccountId == accountId, cancellationToken);
                 if (customer != null && address.CustomerId != customer.Id)
-                    throw new UnauthorizedAccessException("Địa chỉ không thuộc về bạn.");
+                    throw new UnauthorizedAccessException("Dia chi khong thuoc ve ban.");
             }
         }
 
@@ -94,13 +95,13 @@ public class GetShippingQuotesQueryHandler : IRequestHandler<GetShippingQuotesQu
         }
 
         var ctx = new ShippingQuoteContext(
-            address?.ReceiverName ?? "Khách",
+            address?.ReceiverName ?? "Khach",
             address?.Phone ?? "",
             address?.AddressLine ?? "",
             address?.Ward ?? "",
             address?.District ?? "",
             address?.City ?? "",
-            address?.Province ?? "Việt Nam",
+            address?.Province ?? "Viet Nam",
             request.WeightGrams,
             request.OrderValue,
             request.CollectOnDelivery,
@@ -114,6 +115,19 @@ public class GetShippingQuotesQueryHandler : IRequestHandler<GetShippingQuotesQu
             if (quote != null)
                 quotes.Add(quote);
         }
+
+        // MANUAL (Giao hàng Nova3D): mượn cách tính của GHN làm phí tham chiếu,
+        // không tạo vận đơn thật cho hình thức này.
+        var reference = quotes.OrderBy(q => q.Fee).FirstOrDefault();
+        quotes.Add(new ShippingQuoteDto
+        {
+            Carrier = ShippingCarriers.Manual,
+            CarrierName = "Giao hàng Nova3D",
+            Fee = reference?.Fee ?? 30_000,
+            LeadDays = reference?.LeadDays ?? 3,
+            IsEstimated = true,
+            Message = "Phí tham chiếu theo cách tính GHN."
+        });
 
         return quotes.OrderBy(q => q.Fee).ToList();
     }

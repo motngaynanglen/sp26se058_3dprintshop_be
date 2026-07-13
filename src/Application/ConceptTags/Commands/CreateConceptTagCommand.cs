@@ -5,17 +5,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.ConceptTags.Commands;
 
+[Authorize(Roles = Roles.MANAGER)]
 public class CreateConceptTagCommand : IRequest<Guid>
 {
     [DefaultValue("Resin")]
     public string Name { get; init; } = null!;
     [DefaultValue("Sản phẩm được in từ Resin")]
     public string Description { get; init; } = null!;
-    public bool IsActive { get; init; } = false;
+    [DefaultValue(true)]
+    public bool IsActive { get; init; } = true;
+    [DefaultValue(false)]
     public bool IsMainTag { get; init; } = false;
 
 }
@@ -32,14 +37,13 @@ public class CreateConceptTagCommandHandler : IRequestHandler<CreateConceptTagCo
         var exists = _context.ConceptTags.Any(ct => ct.Name == request.Name);
         if (exists)
         { 
-            throw new Exception("Đã tồn tại Concept tag với tên "+request.Name+".");
+            throw new DuplicateException("Đã tồn tại tag ý tưởng với tên " + request.Name + ".");
         }
             var newConceptTag = new ConceptTag
         {
             Name = request.Name,
             Description = request.Description,
-            IsActive = request.IsActive,
-            IsMainTag = request.IsMainTag
+            IsActive = request.IsActive
         };
         _context.ConceptTags.Add(newConceptTag);
         await _context.SaveChangesAsync(cancellationToken);

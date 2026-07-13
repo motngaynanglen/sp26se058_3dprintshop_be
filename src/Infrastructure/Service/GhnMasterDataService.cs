@@ -78,7 +78,7 @@ public class GhnMasterDataService : IGhnMasterDataService
         CancellationToken cancellationToken)
     {
         if (!_settings.IsConfigured)
-            throw new InvalidOperationException("GHN chưa cấu hình Token/ShopId.");
+            throw new InvalidOperationException("GHN chua cau hinh Token/ShopId.");
 
         using var req = CreateRequest(HttpMethod.Post, path, body);
         using var res = await _http.SendAsync(req, cancellationToken);
@@ -86,7 +86,7 @@ public class GhnMasterDataService : IGhnMasterDataService
         if (!res.IsSuccessStatusCode)
         {
             _logger.LogWarning("[GHN] Master data {Path} HTTP {Status}: {Body}", path, res.StatusCode, json);
-            throw new InvalidOperationException("Không tải được danh mục địa chỉ GHN.");
+            throw new InvalidOperationException("Khong tai duoc danh muc dia chi GHN.");
         }
 
         using var doc = JsonDocument.Parse(json);
@@ -94,7 +94,7 @@ public class GhnMasterDataService : IGhnMasterDataService
         if (root.TryGetProperty("code", out var codeEl) && codeEl.GetInt32() != 200)
         {
             var msg = root.TryGetProperty("message", out var m) ? m.GetString() : json;
-            throw new InvalidOperationException(msg ?? "GHN master data lỗi.");
+            throw new InvalidOperationException(msg ?? "GHN master data loi.");
         }
 
         if (!root.TryGetProperty("data", out var data) || data.ValueKind != JsonValueKind.Array)

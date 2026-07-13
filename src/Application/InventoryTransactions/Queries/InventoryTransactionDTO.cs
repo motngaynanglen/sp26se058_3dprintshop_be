@@ -10,15 +10,12 @@ namespace sp26se058_3dprintshop_be.Application.InventoryTransactions.Queries;
 public class InventoryTransactionDTO
 {
     public Guid Id { get; init; }
-    public Guid DesignVariantId { get; init; }
-    public string? VariantName { get; init; }
+    public string? VariantName { get; init; } // Tên sản phẩm để hiển thị
     public int Quantity { get; init; }
     public string? Type { get; init; }
-    public string? TypeLabel { get; init; }
-    public string? TypeColor { get; init; }
-    public bool IsInbound { get; init; }
-    public string? StaffName { get; init; }
-    public Guid? ReferenceId { get; init; }
+    //public string? TypeLabel { get; init; } // Lấy từ Constant/Extension "Nhập mua", "Xuất bán"
+    //public string? TypeColor { get; init; } // #4CAF50...
+    public string? StaffName { get; init; } // Tên người thực hiện
     public string? Note { get; init; }
     public DateTimeOffset Created { get; init; }
     private class Mapping : Profile
@@ -27,19 +24,12 @@ public class InventoryTransactionDTO
         {
             CreateMap<InventoryTransaction, InventoryTransactionDTO>()
                     .ForMember(d => d.VariantName, opt => opt.MapFrom(s => s.DesignVariant.Name))
+                    // Kiểm tra null cho Staff và Account để lấy Fullname
                     .ForMember(d => d.StaffName, opt => opt.MapFrom(s =>
                         s.Staff != null && s.Staff.Account != null
                         ? s.Staff.Account.Fullname
-                        : "Hệ thống"))
-                    .ForMember(d => d.TypeLabel, opt => opt.MapFrom(s =>
-                        InventoryTransactionTypes.Resolve(s.Type) != null
-                            ? InventoryTransactionTypes.Resolve(s.Type)!.Label
-                            : s.Type))
-                    .ForMember(d => d.TypeColor, opt => opt.MapFrom(s =>
-                        InventoryTransactionTypes.Resolve(s.Type) != null
-                            ? InventoryTransactionTypes.Resolve(s.Type)!.Color
-                            : "#757575"))
-                    .ForMember(d => d.IsInbound, opt => opt.MapFrom(s => InventoryTransactionTypes.IsInbound(s.Quantity)));
+                        : "Hệ thống"));
+                   
         }
     }
 }

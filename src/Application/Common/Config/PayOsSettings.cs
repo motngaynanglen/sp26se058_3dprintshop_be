@@ -1,17 +1,18 @@
-namespace sp26se058_3dprintshop_be.Application.Common.Config;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-public class PayOsSettings
+namespace sp26se058_3dprintshop_be.Application.Common.Config
 {
-    public const string SectionName = "PayOS";
-
-    public string ClientId { get; set; } = string.Empty;
-    public string ApiKey { get; set; } = string.Empty;
-    public string ChecksumKey { get; set; } = string.Empty;
-    public string ReturnUrl { get; set; } = string.Empty;
-    public string CancelUrl { get; set; } = string.Empty;
-
-    public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(ClientId)
-        && !string.IsNullOrWhiteSpace(ApiKey)
-        && !string.IsNullOrWhiteSpace(ChecksumKey);
+    public class PayOsSettings
+    {
+        public const string SectionName = "PayOS"; // Tên của block trong appsettings.json
+        public required string ClientId { get; set; }
+        public required string ApiKey { get; set; }
+        public required string ChecksumKey { get; set; }
+        public required string ReturnUrl { get; set; }
+        public required string CancelUrl { get; set; }
+    }
 }

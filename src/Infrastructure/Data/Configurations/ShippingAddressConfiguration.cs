@@ -1,4 +1,4 @@
-using sp26se058_3dprintshop_be.Domain.Entities;
+﻿using sp26se058_3dprintshop_be.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,8 +8,6 @@ public class ShippingAddressConfiguration : IEntityTypeConfiguration<ShippingAdd
 {
     public void Configure(EntityTypeBuilder<ShippingAddress> builder)
     {
-        // Matches 20260322182151_AddShippingTable (table was created as singular; snapshot pluralized without a rename migration)
-        builder.ToTable("ShippingAddress");
 
         // 3. Cấu hình các thuộc tính chuỗi (varchar)
         builder.Property(s => s.ReceiverName)

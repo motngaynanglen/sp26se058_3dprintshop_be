@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Validation;
 using sp26se058_3dprintshop_be.Domain.Entities;
 
 namespace sp26se058_3dprintshop_be.Application.Auths.Commands.Register;
@@ -26,55 +25,13 @@ public record RegisterCommand : IRequest<bool>
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
-    private readonly IApplicationDbContext _context;
-
-    public RegisterCommandValidator(IApplicationDbContext context)
+    public RegisterCommandValidator()
     {
-        _context = context;
-
-        RuleFor(v => v.Username)
-            .NotEmpty()
-            .MinimumLength(3).WithMessage("Tên đăng nhập tối thiểu 3 ký tự.")
-            .ValidUsernameFormat()
-            .MustAsync(BeUniqueUsername).WithMessage("Tên đăng nhập đã tồn tại trong hệ thống.");
-
+        RuleFor(v => v.Username).NotEmpty().MinimumLength(3).WithMessage("Tên đăng nhập tối thiểu 3 ký tự.");
         RuleFor(v => v.Password).NotEmpty().MinimumLength(6).WithMessage("Mật khẩu tối thiểu 6 ký tự.");
         RuleFor(v => v.Fullname).NotEmpty().MaximumLength(100);
-
-        RuleFor(v => v.Email)
-            .NotEmpty()
-            .EmailAddress().WithMessage("Định dạng email không hợp lệ.")
-            .MustAsync(BeUniqueEmail).WithMessage("Email đã tồn tại trong hệ thống.");
-
-        RuleFor(v => v.ContactPhone)
-            .NotEmpty()
-            .MustAsync(BeUniqueContactPhone).WithMessage("Số điện thoại đã được sử dụng.");
-    }
-
-    private async Task<bool> BeUniqueUsername(string username, CancellationToken cancellationToken)
-    {
-        return !await _context.Accounts.AnyAsync(
-            a => a.Username.ToLower() == username.ToLower(),
-            cancellationToken);
-    }
-
-    private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken)
-    {
-        return !await _context.Accounts.AnyAsync(
-            a => a.Email.ToLower() == email.ToLower(),
-            cancellationToken);
-    }
-
-    private async Task<bool> BeUniqueContactPhone(string? contactPhone, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(contactPhone))
-        {
-            return true;
-        }
-
-        return !await _context.Accounts.AnyAsync(
-            a => a.ContactPhone == contactPhone,
-            cancellationToken);
+        RuleFor(v => v.Email).NotEmpty().EmailAddress().WithMessage("Định dạng email không hợp lệ.");
+        RuleFor(v => v.ContactPhone).NotEmpty();
     }
 }
 
@@ -91,23 +48,32 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
 
     public async Task<bool> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        // 1. Băm mật khẩu bằng BCrypt
+        // 1. Kiểm tra Username hoặc Email đã tồn tại chưa
+        var isExisted = await _context.Accounts.AnyAsync(a =>
+            a.Username == request.Username || a.Email == request.Email, cancellationToken);
+
+        if (isExisted)
+        {
+            throw new DuplicateException("Tên đăng nhập hoặc email đã tồn tại trong hệ thống.");
+        }
+
+        // 2. Băm mật khẩu bằng BCrypt
         var passwordHash = _passwordService.HashPassword(request.Password);
         if (passwordHash == null)
         {
-            throw new Exception("Lỗi tạo pass");
+            throw new BusinessException("Không thể mã hóa mật khẩu.");
         }
-        // 2. Khởi tạo Account mới
+        // 3. Khởi tạo Account mới
         var newAccount = new Account
         {
-            Username = request.Username.ToLower(),
+            Username = request.Username,
             PasswordHash = passwordHash,
             Fullname = request.Fullname,
-            Email = request.Email.ToLower(),
+            Email = request.Email,
             ContactPhone = request.ContactPhone,
         };
 
-        // 3. Khởi tạo thông tin Customer liên kết với Account
+        // 4. Khởi tạo thông tin Customer liên kết với Account
         // Vì đây là đăng ký từ phía khách hàng nên mặc định tạo bảng Customer
         var newCustomer = new Customer
         {
@@ -118,7 +84,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, bool>
         _context.Accounts.Add(newAccount);
         _context.Customers.Add(newCustomer);
 
-        // 4. Lưu xuống Database
+        // 5. Lưu xuống Database
         var result = await _context.SaveChangesAsync(cancellationToken);
 
         return result > 0;

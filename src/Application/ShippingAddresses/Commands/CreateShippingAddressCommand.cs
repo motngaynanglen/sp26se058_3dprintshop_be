@@ -5,13 +5,14 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Common.Validation;
-using sp26se058_3dprintshop_be.Application.Shipping;
 using sp26se058_3dprintshop_be.Domain.Entities;
+using sp26se058_3dprintshop_be.Application.Common.Security;
+using sp26se058_3dprintshop_be.Domain.Constants;
+using sp26se058_3dprintshop_be.Application.ShippingAddresses.Queries;
 
 namespace sp26se058_3dprintshop_be.Application.ShippingAddresses.Commands;
-public record CreateShippingAddressCommand : IRequest<Guid>
+[Authorize(Roles = Roles.CUSTOMER)]
+public record CreateShippingAddressCommand : IRequest<ShippingAddressDTO>
 {
     [Required]
     [DefaultValue("Nguyễn Văn A")]
@@ -37,55 +38,37 @@ public record CreateShippingAddressCommand : IRequest<Guid>
     [DefaultValue("Việt Nam")]
     public string Province { get; set; } = "Việt Nam";
 
-    [DefaultValue(false)]
-    public bool IsDefault { get; set; } = false;
-
     public int? GhnDistrictId { get; set; }
 
     public string? GhnWardCode { get; set; }
-}
 
-public class CreateShippingAddressCommandValidator : AbstractValidator<CreateShippingAddressCommand>
-{
-    public CreateShippingAddressCommandValidator()
-    {
-        RuleFor(v => v.ReceiverName).NotEmpty().MaximumLength(255);
-        RuleFor(v => v.Phone)
-            .NotEmpty()
-            .ValidVietnamesePhone();
-        RuleFor(v => v.AddressLine).NotEmpty().MaximumLength(500);
-    }
+    [DefaultValue(false)]
+    public bool IsDefault { get; set; } = false;
 }
-
-public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, Guid>
+public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddressCommand, ShippingAddressDTO>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IGhnAddressResolver _ghnResolver;
     private readonly IUser _user;
-
-    public CreateShippingAddressHandler(
-        IApplicationDbContext context,
-        IGhnAddressResolver ghnResolver,
-        IUser user)
+    private readonly IMapper _mapper;
+    public CreateShippingAddressHandler(IApplicationDbContext context, IUser user, IMapper mapper)
     {
         _context = context;
-        _ghnResolver = ghnResolver;
         _user = user;
+        _mapper = mapper;
     }
-    public async Task<Guid> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
+    public async Task<ShippingAddressDTO> Handle(CreateShippingAddressCommand request, CancellationToken cancellationToken)
     {
         Guid userId= _user.Id.ToGuid();
         var account = await _context.Accounts.Include(a => a.Customer).FirstOrDefaultAsync(a => a.Id == userId);
         if (account == null)
         {
-            throw new Exception("Hãy đăng nhập!");
+            throw new UnauthorizedAccessException("Hãy đăng nhập!");
         }
         var customer = account.Customer;
         if (customer == null)
         {
-            throw new Exception("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
+            throw new ForbiddenAccessException("Chỉ có khách hàng mới có thể tạo địa chỉ gửi hàng!");
         }
-
         // Nếu IsDefault = true, phải bỏ default của các địa chỉ cũ
         if (request.IsDefault)
         {
@@ -94,28 +77,33 @@ public class CreateShippingAddressHandler : IRequestHandler<CreateShippingAddres
                 .ToListAsync();
             defaults.ForEach(x => x.IsDefault = false);
         }
-
         var entity = new ShippingAddress
         {
             Id = Guid.NewGuid(),
             CustomerId = customer.Id,
             Customer = customer,
             ReceiverName = request.ReceiverName,
-            Phone = PhoneValidationExtensions.NormalizeVietnamesePhone(request.Phone),
+            Phone = request.Phone,
             AddressLine = request.AddressLine,
             Ward = request.Ward,
             District = request.District,
             City = request.City,
             Province = request.Province,
             GhnDistrictId = request.GhnDistrictId,
-            GhnWardCode = request.GhnWardCode,
+            GhnWardCode = request.GhnWardCode?.Trim(),
             IsDefault = request.IsDefault,
         };
 
-        await GhnAddressResolveHelper.EnsureGhnCodesAsync(entity, _ghnResolver, cancellationToken);
-
         _context.ShippingAddresses.Add(entity);
-        await _context.SaveChangesAsync(cancellationToken);
-        return entity.Id;
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new CreateFailureException(nameof(ShippingAddress), $"{ex.InnerException?.Message ?? ex.Message}");
+        }
+        return _mapper.Map<ShippingAddressDTO>(entity);
     }
 }

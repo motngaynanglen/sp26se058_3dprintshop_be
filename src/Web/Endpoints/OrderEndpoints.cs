@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using sp26se058_3dprintshop_be.Application.Accounts.Queries.GetAccountsWithPagination;
 using sp26se058_3dprintshop_be.Application.Common.Constants;
 using sp26se058_3dprintshop_be.Application.Common.Models.ResponseModels;
 using sp26se058_3dprintshop_be.Application.Orders.Commands;
-using sp26se058_3dprintshop_be.Application.Orders.Models;
 using sp26se058_3dprintshop_be.Application.Orders.Queries;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -19,208 +18,148 @@ public class OrderEndpoints : EndpointGroupBase
         var group = app.MapGroup("/api/order")
                        .WithTags("Order")
                        .WithOpenApi();
+
+
+        // --- TRUY VẤN ---
         group.MapPost("/query", Query)
                     .WithSummary("[All] Truy vấn danh sách đơn hàng.");
 
-        group.MapPost("/checkout", CheckOut)
-                .WithSummary("[Customer] Tạo đơn hàng (thống nhất 3 luồng).")
-                .WithDescription(
-                    "IN_STOCK / PRE_ORDER: Items[].DesignVariantId. " +
-                    "CUSTOM_QUOTE_MF2: sau khi khách duyệt báo giá — Items[].DesignWorkId. " +
-                    "AI_GENERATED: sau POST /api/ai-generated-design/register — Items[].DesignWorkId. " +
-                    "Luôn cần ShippingAddressId. Sau checkout: thanh toán + tracking qua chi tiết đơn. " +
-                    "SourceType: " + SourceTypes.ListString);
-
         group.MapGet("/{id}/detail", GetDetail)
-                .WithSummary("[All] lấy thông tin chi tiết đơn hàng có ID.");
+                    .WithSummary("[All] Lấy thông tin chi tiết đơn hàng.");
+
+
+        // --- FLOW KHỞI TẠO & HỦY ---
+        group.MapPost("/checkout", CheckOut)
+                .WithSummary("[Customer] Tạo đơn hàng mới từ giỏ hàng.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.InStock +", " + SourceTypes.PreOrder);
+
+        group.MapPost("/checkout-design", CheckOutDesignAsync)
+                .WithSummary("[Customer] Tạo đơn hàng mới từ thiết kế.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.DesignService);
+
+        group.MapPost("/checkout-draft", CheckOutDraft)
+                .WithSummary("[Customer] Tạo đơn sản xuất các bản thiết kế từ dịch vụ thiết kế.")
+                .WithDescription("Hỗ trợ các loại nguồn hàng: " + SourceTypes.PrintService);
+
         group.MapPatch("/{id}/cancel", CancelOrder)
-                .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng có ID.")
-                .WithDescription("Chỉ hỗ trợ đơn hàng chưa thanh toán, hoặc đã tạo link thanh toán nhưng chưa thanh toán.");
-        group.MapPatch("/{id}/status", UpdateStatus)
-                .WithSummary("[Staff/Manager] Cập nhật trạng thái đơn hàng + shipment + tracking number.")
-                .WithDescription("OrderStatus: PROCESSING / FINISHED / COMPLETED. ShipmentStatus (tùy chọn): PREPARING / READY_FOR_PICKUP / IN_TRANSIT / DELIVERED.")
-                .RequireAuthorization();
+                .WithSummary("[Customer/Staff/Manager] Hủy đơn hàng.")
+                .WithDescription("Chỉ hỗ trợ khi đơn hàng chưa thanh toán hoặc chưa đi vào sản xuất.");
 
-        group.MapPost("/production-queue", GetProductionQueue)
-                .WithSummary("[Staff/Manager] Hàng đợi sản xuất (flow 2/3, pre-order).")
-                .RequireAuthorization();
+        group.MapPost("/sync-expired-pending-cancellations", SyncExpiredPendingOrders)
+                .WithSummary("[Staff/Manager] Đồng bộ hủy các đơn hàng chờ thanh toán đã quá hạn.")
+                .WithDescription("Chủ động quét các đơn PENDING đã quá hạn thanh toán, hủy đơn, hủy giao dịch, hủy vận đơn và hoàn kho nếu cần.");
 
-        group.MapPatch("/items/{orderItemId}/fulfillment", UpdateItemFulfillment)
-                .WithSummary("[Staff/Manager] Cập nhật tiến độ in / hoàn thiện từng dòng hàng.")
-                .RequireAuthorization();
+        // --- FLOW SẢN XUẤT & HOÀN TẤT (NEW) ---
 
-        //group.MapPut("/update/{id}", Update);
+        group.MapPatch("/item/{orderItemId}/finish-package", FinishOrderItem)
+                .WithSummary("[Staff] Xác nhận một món hàng vật lý đã làm xong.")
+                .WithDescription("Chuyển trạng thái Item sang FINISHED. Nếu là món cuối cùng, hệ thống tự động cập nhật Shipment sang READY_FOR_PICKUP.");
 
-        /*
-        của customer
-        group.MapPost("/add", Add); //Tạo đơn hàng mới
-        group.MapPost("/invoice", CreateInvoice); // Tạo hóa đơn cho đơn hàng
-        group.MapPut("/query", Query); // Truy vấn đơn hàng với phân trang
-        group.MapGet("/detail/{id}", GetById); // Lấy chi tiết đơn hàng
+        group.MapPatch("/{id}/complete", CompleteOrder)
+                .WithSummary("[Customer/Staff/Manager] Hoàn thành đơn hàng (Đóng đơn).")
+                .WithDescription("Khách có thể bấm bất cứ lúc nào sau khi nhận hàng. Nhân viên/quản lý chỉ được bấm sau 3 ngày kể từ khi đơn được giao thành công.");
 
-        của staff
-        group.MapPost("/confirm", ConfirmOrder); // Xác nhận đơn hàng
-        group.MapPatch("/update-status/{id}", UpdateStatus); // Cập nhật trạng thái đơn hàng (ví dụ: đang in, đã hoàn thành, đã giao hàng)
-         */
+       
     }
 
-    public async Task<IResult> Query ([FromServices] ISender sender, [FromBody] GetOrdersWithPaginationQuery query)
+    public async Task<IResult> Query([FromServices] ISender sender, [FromBody] GetOrdersWithPaginationQuery query)
     {
-        try
-        {
-            var result = await sender.Send(query);
 
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result.Items,
-                    additionalData: new { paging = result.Metadata },
-                    message: "Lấy danh sách thành công"
-                ));
+        var result = await sender.Send(query);
 
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
+        return TypedResults.Ok(BaseResponseModel<IEnumerable<OrderDTO>>.ListResponseModel(
+                data: result.Items,
+                additionalData: new { paging = result.Metadata },
+                successMessage: "Lấy danh sách đơn hàng thành công.",
+                emptyMessage: "Không tìm thấy đơn hàng nào."
+            ));
 
-        }
     }
 
     public async Task<IResult> GetDetail([FromServices] ISender sender, [FromRoute] Guid id)
     {
-        try
-        {
-            var result = await sender.Send(new GetOrderDetailQuery { Id = id });
-            return TypedResults.Ok(BaseResponseModel<OrderDTO>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Lấy chi tiết đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
+        var result = await sender.Send(new GetOrderDetailQuery { Id = id });
+        return TypedResults.Ok(BaseResponseModel<OrderDTO>.OkResponseModel(
+                code: ResponseCodeConstants.SUCCESS,
+                data: result,
+                message: "Lấy chi tiết đơn hàng thành công"
+            ));
+
     }
     public async Task<IResult> CheckOut([FromServices] ISender sender, [FromBody] CheckoutCommand command)
     {
-        try
-        {
-            var result = await sender.Send(command);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Tạo đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
+                data: result,
+                message: "Tạo đơn hàng thành công"
+            ));
+
+    }
+
+    public async Task<IResult> CheckOutDesignAsync([FromServices] ISender sender, [FromBody] CheckoutDesignWorkCommand command)
+    {
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
+                data: result,
+                message: "Tạo đơn hàng từ thiết kế"
+            ));
+    }
+    public async Task<IResult> CheckOutDraft([FromServices] ISender sender, [FromBody] CheckoutDraftsCommand command)
+    {
+        var result = await sender.Send(command);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.CREATED,
+                data: result,
+                message: "Tạo đơn hàng thành công."
+            ));
     }
     public async Task<IResult> CancelOrder([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] CancelOrderCommand command)
     {
-        try
-        {
-            var finalCommand = command with { OrderId = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
-                    code: ResponseCodeConstants.SUCCESS,
-                    data: result,
-                    message: "Hủy đơn hàng thành công"
-                ));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.NOT_FOUND),
-                statusCode: StatusCodes.Status404NotFound);
 
-        }
-    }
-
-    public async Task<IResult> GetProductionQueue(
-        [FromServices] ISender sender,
-        [FromBody] GetProductionQueueQuery query)
-    {
-        try
-        {
-            var result = await sender.Send(query);
-            return TypedResults.Ok(BaseResponseModel<IEnumerable<ProductionQueueOrderDto>>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result.Items,
-                additionalData: new { paging = result.Metadata },
-                message: "Lấy hàng đợi sản xuất thành công."));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    public async Task<IResult> UpdateItemFulfillment(
-        [FromServices] ISender sender,
-        [FromRoute] Guid orderItemId,
-        [FromBody] UpdateOrderItemFulfillmentBody body)
-    {
-        try
-        {
-            var result = await sender.Send(new UpdateOrderItemFulfillmentCommand
-            {
-                OrderItemId = orderItemId,
-                FulfillmentStatus = body.FulfillmentStatus,
-                Note = body.Note
-            });
-            return TypedResults.Ok(BaseResponseModel<UpdateOrderItemFulfillmentResult>.OkResponseModel(
-                code: ResponseCodeConstants.SUCCESS,
-                data: result,
-                message: result.Message ?? "Cập nhật tiến độ sản xuất thành công."));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-
-    public record UpdateOrderItemFulfillmentBody(string FulfillmentStatus, string? Note);
-
-    public async Task<IResult> UpdateStatus([FromServices] ISender sender, [FromRoute] Guid id, [FromBody] UpdateOrderStatusCommand command)
-    {
-        try
-        {
-            var finalCommand = command with { OrderId = id };
-            var result = await sender.Send(finalCommand);
-            return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+        var finalCommand = command with { OrderId = id };
+        var result = await sender.Send(finalCommand);
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
                 code: ResponseCodeConstants.UPDATED,
                 data: result,
-                message: "Cập nhật trạng thái đơn hàng thành công."));
-        }
-        catch (Exception ex)
-        {
-            return TypedResults.Json(
-                BaseResponseModel<object>.BadRequestResponseModel(ex.Message, code: ResponseCodeConstants.FAILED),
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-    }
-    //public async Task<IResult> Create(ISender sender)
-    //{
-    //    return TypedResults.Ok();
-    //}
+                message: "Hủy đơn hàng thành công"
+            ));
 
-    //public async Task<IResult> Update(ISender sender)
-    //{
-    //    var order = await sender.Send(sender);
-    //    return TypedResults.Ok();
-    //}
+    }
+
+    public async Task<IResult> SyncExpiredPendingOrders([FromServices] ISender sender)
+    {
+        var result = await sender.Send(new SyncExpiredPendingOrdersCommand());
+        return TypedResults.Ok(BaseResponseModel<SyncExpiredPendingOrdersResultDTO>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
+                data: result,
+                message: result.CancelledCount > 0
+                    ? $"Đã đồng bộ hủy {result.CancelledCount} đơn hàng chờ thanh toán quá hạn."
+                    : "Không có đơn hàng chờ thanh toán quá hạn cần hủy."
+            ));
+    }
+
+    public async Task<IResult> FinishOrderItem([FromServices] ISender sender, [FromRoute] Guid orderItemId)
+    {
+        var result = await sender.Send(new MarkOrderItemAsFinishedPackageCommand { Id = orderItemId});
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
+                data: result,
+                message: "Xác nhận món hàng đã hoàn tất sản xuất/đóng gói."
+            ));
+    }
+
+    // API mới chốt vòng đời đơn hàng
+    public async Task<IResult> CompleteOrder([FromServices] ISender sender, [FromRoute] Guid id)
+    {
+        var result = await sender.Send(new CompleteOrderCommand { Id = id });
+        return TypedResults.Ok(BaseResponseModel<object>.OkResponseModel(
+                code: ResponseCodeConstants.UPDATED,
+                data: result,
+                message: "Đơn hàng đã hoàn thành và đóng lại thành công."
+            ));
+    }
 }

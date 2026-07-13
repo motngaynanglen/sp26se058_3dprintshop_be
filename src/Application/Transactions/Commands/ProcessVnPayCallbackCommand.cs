@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Options;
 using sp26se058_3dprintshop_be.Application.Common.Config;
 using sp26se058_3dprintshop_be.Application.Common.Interfaces;
-using sp26se058_3dprintshop_be.Application.Mainflow2;
 using sp26se058_3dprintshop_be.Application.Orders;
 using sp26se058_3dprintshop_be.Domain.Constants.Statuses;
 using sp26se058_3dprintshop_be.Domain.Constants.Types;
@@ -50,8 +49,6 @@ public class ProcessVnPayCallbackCommandHandler : IRequestHandler<ProcessVnPayCa
 
         var transaction = await _context.Transactions
             .Include(t => t.Invoice)
-                .ThenInclude(i => i!.Transactions)
-            .Include(t => t.Invoice)
                 .ThenInclude(i => i!.Order)
                     .ThenInclude(o => o.OrderItems)
             .FirstOrDefaultAsync(
@@ -68,16 +65,11 @@ public class ProcessVnPayCallbackCommandHandler : IRequestHandler<ProcessVnPayCa
             transaction.Note = (transaction.Note ?? "") + " [VNPay] Chữ ký không hợp lệ.";
             transaction.LastModified = CoreHelper.SystemTimeNow;
             await _context.SaveChangesAsync(cancellationToken);
-            return FailRedirect("Chữ ký VNPay không hợp lệ.", request.IsIpn, transaction.Invoice.Order);
+            return FailRedirect("Chữ ký VNPay không hợp lệ.", request.IsIpn, transaction.Invoice.Order.Code);
         }
 
         if (transaction.TransactionStatus == "SUCCESS" || transaction.TransactionStatus == "PAID")
         {
-            OrderPaymentHelper.ApplySuccessfulPayment(
-                transaction.Invoice,
-                transaction.Invoice.Order,
-                CoreHelper.SystemTimeNow);
-            await _context.SaveChangesAsync(cancellationToken);
             return SuccessRedirect(transaction.Invoice.Order, request.IsIpn, alreadyPaid: true);
         }
 
@@ -85,31 +77,15 @@ public class ProcessVnPayCallbackCommandHandler : IRequestHandler<ProcessVnPayCa
         {
             transaction.TransactionStatus = "SUCCESS";
             transaction.ExternalTransactionId = verified.TransactionNo;
-            transaction.PaidAt = CoreHelper.SystemTimeNow;
             transaction.Note = $"[VNPay] {verified.Message}";
             transaction.LastModified = CoreHelper.SystemTimeNow;
 
-            OrderPaymentHelper.ApplySuccessfulPayment(transaction.Invoice, transaction.Invoice.Order, CoreHelper.SystemTimeNow);
-
-            if (OrderPaymentHelper.IsInvoicePartiallyPaid(transaction.Invoice))
-            {
-                await Mainflow2DesignFlowHelper.AfterDepositPaidAsync(
-                    _context,
-                    transaction.Invoice.Order,
-                    cancellationToken);
-            }
-            else
-            {
-                await OrderMaterialInventoryHelper.DeductMaterialAfterPaymentAsync(
-                    _context,
-                    transaction.Invoice.Order,
-                    "system",
-                    CoreHelper.SystemTimeNow,
-                    cancellationToken);
-            }
+            transaction.Invoice.PaymentStatus = InvoiceStatuses.Paid;
+            var order = transaction.Invoice.Order;
+            OrderPaymentHelper.StartProductionAfterPayment(order, CoreHelper.SystemTimeNow);
 
             await _context.SaveChangesAsync(cancellationToken);
-            return SuccessRedirect(transaction.Invoice.Order, request.IsIpn);
+            return SuccessRedirect(order, request.IsIpn);
         }
 
         transaction.TransactionStatus = "FAILED";
@@ -117,7 +93,7 @@ public class ProcessVnPayCallbackCommandHandler : IRequestHandler<ProcessVnPayCa
         transaction.LastModified = CoreHelper.SystemTimeNow;
         await _context.SaveChangesAsync(cancellationToken);
 
-        return FailRedirect($"Thanh toán VNPay thất bại (mã {verified.ResponseCode}).", request.IsIpn, transaction.Invoice.Order);
+        return FailRedirect($"Thanh toán VNPay thất bại (mã {verified.ResponseCode}).", request.IsIpn, transaction.Invoice.Order.Code);
     }
 
     private ProcessVnPayCallbackResult SuccessRedirect(Domain.Entities.Order order, bool isIpn, bool alreadyPaid = false)
@@ -135,17 +111,17 @@ public class ProcessVnPayCallbackCommandHandler : IRequestHandler<ProcessVnPayCa
             IpnResponse: "OK");
     }
 
-    private ProcessVnPayCallbackResult FailRedirect(string message, bool isIpn, Domain.Entities.Order? order = null)
+    private ProcessVnPayCallbackResult FailRedirect(string message, bool isIpn, string? orderCode = null)
     {
         var feBase = (_vnPaySettings.FrontendReturnUrl ?? "http://localhost:3000").TrimEnd('/');
-        var redirect = order != null
-            ? $"{feBase}/order-confirmation?orderId={order.Id}&code={Uri.EscapeDataString(order.Code)}&failed=1&message={Uri.EscapeDataString(message)}"
+        var redirect = orderCode != null
+            ? $"{feBase}/orders?payFailed=1&message={Uri.EscapeDataString(message)}"
             : $"{feBase}/checkout?payFailed=1&message={Uri.EscapeDataString(message)}";
 
         return new ProcessVnPayCallbackResult(
             Handled: false,
             PaymentSuccess: false,
-            OrderCode: order?.Code,
+            OrderCode: orderCode,
             RedirectUrl: isIpn ? null : redirect,
             IpnResponse: "FAILED");
     }

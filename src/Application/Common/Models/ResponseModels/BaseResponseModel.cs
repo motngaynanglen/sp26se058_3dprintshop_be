@@ -35,9 +35,9 @@ public class BaseResponseModel<T>
         return new BaseResponseModel<T>(200, code, data, additionalData,message);
     }
 
-    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string code = ResponseCodeConstants.NOT_FOUND)
+    public static BaseResponseModel<T> NotFoundResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.NOT_EXIST)
     {
-        return new BaseResponseModel<T>(404, code, data, additionalData);
+        return new BaseResponseModel<T>(404, code, data, additionalData, message);
     }
 
     public static BaseResponseModel<T> BadRequestResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.FAILED)
@@ -45,9 +45,26 @@ public class BaseResponseModel<T>
         return new BaseResponseModel<T>(400, code, data, additionalData, message);
     }
 
-    public static BaseResponseModel<T> InternalErrorResponseModel(T? data, object? additionalData = null, string code = ResponseCodeConstants.FAILED)
+    public static BaseResponseModel<T> InternalErrorResponseModel(T? data, object? additionalData = null, string? message = null, string code = ResponseCodeConstants.FAILED)
     {
-        return new BaseResponseModel<T>(500, code, data, additionalData);
+        return new BaseResponseModel<T>(500, code, data, additionalData, message);
+    }
+    public static BaseResponseModel<IEnumerable<TItem>> ListResponseModel<TItem>(
+        IEnumerable<TItem>? data,
+        object? additionalData = null,
+        string? successMessage = "Lấy danh sách thành công.",
+        string? emptyMessage = "Không tìm thấy kết quả nào.")
+    {
+        var items = data?.ToList() ?? new List<TItem>();
+        bool hasData = items.Any();
+
+        return new BaseResponseModel<IEnumerable<TItem>>(
+            statusCode: 200,
+            code: hasData ? ResponseCodeConstants.SUCCESS : ResponseCodeConstants.EMPTY_RESULT,
+            data: items,
+            additionalData: additionalData,
+            message: hasData ? successMessage : emptyMessage
+        );
     }
 }
 

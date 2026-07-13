@@ -9,11 +9,11 @@ public class ServiceSelection : BaseAuditableEntity
 {
     public Guid DesignWorkId { get; set; }
 
-    public Guid? ServicePackageId { get; set; }
-
-    public string SelectionType { get; set; } = null!; // FREE_AI | PAID
+    public decimal TotalPrice { get; set; }
+    public string? Note { get; set; }
     public bool IsLocked { get; set; }
+    public int AdjustmentRoundLimit { get; set; }
+    public int UsedAdjustmentRoundCount { get; set; }
     public virtual DesignWork DesignWork { get; set; } = null!;
-    public virtual ServicePackage? ServicePackage { get; set; }
-    public virtual ICollection<ServiceSelectionOption> SelectedOptions { get; set; } = new List<ServiceSelectionOption>();
+    public virtual ICollection<ServiceSelectedOption> ServiceSelectedOptions { get; set; } = new List<ServiceSelectedOption>();
 }

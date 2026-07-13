@@ -1,6 +1,6 @@
 namespace sp26se058_3dprintshop_be.Domain.Constants.Types;
 
-/// <summary>Đơn vị vận chuyển bên thứ ba.</summary>
+/// <summary>Don vi van chuyen ben thu ba.</summary>
 public static class ShippingCarriers
 {
     public const string Manual = "MANUAL";
